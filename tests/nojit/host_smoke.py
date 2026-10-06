@@ -120,9 +120,8 @@ try:
                 if proc.poll() is not None or time.monotonic() >= until:
                     raise RuntimeError('QMP did not become ready for snapshot restore')
                 time.sleep(1)
-        with control:
+        with control, control.makefile('rwb',buffering=0) as stream:
             control.settimeout(600)  # Loading several GiB can hold the QMP main loop.
-            stream = control.makefile('rwb',buffering=0)
             stream.readline()
             def qmp_command(name, arguments=None):
                 stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
@@ -200,8 +199,7 @@ try:
     audit_maps('apk')
     exchange('uiautomator dump /data/local/tmp/window.xml',timeout=300)
     report['ui_xml'] = exchange('cat /data/local/tmp/window.xml')
-    with socket.create_connection(('127.0.0.1',15598),timeout=30) as qmp:
-        f = qmp.makefile('rwb',buffering=0)
+    with socket.create_connection(('127.0.0.1',15598),timeout=180) as qmp, qmp.makefile('rwb',buffering=0) as f:
         f.readline()
         def request(name, arguments=None):
             f.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
@@ -240,8 +238,7 @@ finally:
         bridge.close()
     if proc.poll() is None:
         try:
-            with socket.create_connection(('127.0.0.1',15598),timeout=30) as control:
-                stream = control.makefile('rwb',buffering=0)
+            with socket.create_connection(('127.0.0.1',15598),timeout=60) as control, control.makefile('rwb',buffering=0) as stream:
                 stream.readline()
                 def diagnostic(name, arguments=None):
                     stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
