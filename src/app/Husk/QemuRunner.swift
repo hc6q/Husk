@@ -187,7 +187,7 @@ final class QemuRunner: ObservableObject {
     /// restore is even possible. Was just the display; sound joins it because
     /// it changes the same thing.
     nonisolated static var machineStamp: String {
-        (glProven ? "gl" : "sw")
+        (ExecutionMode.noJIT ? "tci+" : "") + (glProven ? "gl" : "sw")
             + (soundEnabled ? "+snd" : "")
             + (landscapeGuest ? "+land" : "")
             + (customResolution.map { "+\($0.w)x\($0.h)" } ?? "")
@@ -239,7 +239,7 @@ final class QemuRunner: ObservableObject {
             // Forcing it on (rather than "auto") also disables the RWX fallback,
             // so a genuine failure surfaces as itself instead of as a confusing
             // "Operation not permitted".
-            "-accel", "tcg,tb-size=256,thread=multi,split-wx=on",
+            "-accel", ExecutionMode.accelerator,
 
             "-kernel", "\(bundle)/vmlinuz-virt",
             "-initrd", "\(bundle)/initramfs-virt",
@@ -966,7 +966,7 @@ final class QemuRunner: ObservableObject {
         // cannot be walked back. Another app reaching a larger number does not
         // transfer -- clean file-backed pages are evictable and charged
         // differently.
-        let jitMiB = 256          // tb-size
+        let jitMiB = ExecutionMode.noJIT ? 128 : 256 // Bytecode/native buffer
         let qemuOverheadMiB = 750 // measured, not guessed
         // Real margin, in megabytes rather than a fraction. A fraction of what
         // was left quietly cost ~375 MiB the guest could have had; the run that
@@ -983,7 +983,11 @@ final class QemuRunner: ObservableObject {
         // claims it before this runs, so os_proc_available_memory() has already
         // fallen by that much -- subtracting again charged for it twice and cut
         // the guest from 1906 MiB to 1650.
+        #if HUSK_NO_JIT
+        let jitStillToCome = jitMiB
+        #else
         let jitStillToCome = JITBootstrap.prewarmed ? 0 : jitMiB
+        #endif
         let anonymousTarget = max(1024, min(6144,
             availableMiB - safetyMarginMiB - jitStillToCome - qemuOverheadMiB))
 
@@ -1100,7 +1104,7 @@ final class QemuRunner: ObservableObject {
             "-cpu", machineCpu,
             "-smp", "\(machineSmp)",
             "-m", "\(memMiB)",
-            "-accel", "tcg,tb-size=256,thread=multi,split-wx=on",
+            "-accel", ExecutionMode.accelerator,
 
             // The balloon was written earlier and never put on the machine, so
             // nothing could ever reclaim guest memory. With it present the guest
@@ -1409,11 +1413,14 @@ final class QemuRunner: ObservableObject {
         // in saveState().
         if QemuRunner.glProven { setenv("HUSK_VIRGL_SNAPSHOT", "1", 1) }
 
-        HuskLog.log("qemu", "calling qemu_init() -- JIT allocation happens inside this")
+        HuskLog.log("qemu", ExecutionMode.noJIT
+                    ? "calling qemu_init() with TCI bytecode backend"
+                    : "calling qemu_init() -- JIT allocation happens inside this")
         argv.withUnsafeMutableBufferPointer { buf in
             qemu_init(Int32(args.count), buf.baseAddress)
         }
         HuskLog.log("qemu", "qemu_init() returned")
+        ExecutionMode.auditMemory()
         // Nothing in QEMU may be called before this point -- its locks do not
         // exist yet, and bql_lock() on an uninitialised mutex aborts the
         // process. husk_display_gl_early() says so in its own comment and I

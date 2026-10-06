@@ -896,6 +896,47 @@ final class AndroidHost: ObservableObject {
 
     private var polling = false
 
+    #if HUSK_NO_JIT
+    /// Own imported files before the document picker's security scope expires.
+    /// Preserve each split APK set as one transaction until Android is ready.
+    private var pendingInstalls: [[URL]] = []
+    private var pendingDirectory: URL {
+        Self.support.appendingPathComponent("husk-pending-apks", isDirectory: true)
+    }
+
+    private func queueInstall(_ apks: [URL]) {
+        let directory = pendingDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            var copies: [URL] = []
+            for (index, source) in apks.enumerated() {
+                let scoped = source.startAccessingSecurityScopedResource()
+                defer { if scoped { source.stopAccessingSecurityScopedResource() } }
+                let copy = directory.appendingPathComponent("\(index)-\(source.lastPathComponent)")
+                try FileManager.default.copyItem(at: source, to: copy)
+                copies.append(copy)
+            }
+            pendingInstalls.append(copies)
+            say("APK imported", "Starting Android; installation waits for boot completion.")
+            NotificationCenter.default.post(name: .huskStartAndroid, object: nil)
+        } catch {
+            try? FileManager.default.removeItem(at: directory)
+            say("Import failed", error.localizedDescription, good: false)
+        }
+    }
+
+    private func installNextPending() {
+        guard isReady, busy == nil, !pendingInstalls.isEmpty else { return }
+        install(pendingInstalls.removeFirst())
+    }
+    #endif
+
+    func resumeImportedAPKs() {
+        #if HUSK_NO_JIT
+        installNextPending()
+        #endif
+    }
+
     /// Set once the guest has answered with a package list of its own.
     ///
     /// Until it has, an empty answer is far more likely to be a bridge round
@@ -927,6 +968,8 @@ final class AndroidHost: ObservableObject {
                     let booted = try GuestBridge.shared.shell("getprop sys.boot_completed")
                         .trimmingCharacters(in: .whitespacesAndNewlines)
                     if booted == "1" {
+                        ExecutionMode.log("Android boot completed")
+                        ExecutionMode.auditMemory()
                         await MainActor.run {
                             self?.isReady = true
                             self?.status = "Android is ready"
@@ -941,6 +984,9 @@ final class AndroidHost: ObservableObject {
                         await self?.quietAbsentHardware()
                         await self?.refreshPackages()
                         await MainActor.run { self?.dumpDiagnostics() }
+                        #if HUSK_NO_JIT
+                        await MainActor.run { self?.installNextPending() }
+                        #endif
                         return
                     }
                     await MainActor.run { self?.status = "Android is booting…" }
@@ -1529,6 +1575,7 @@ final class AndroidHost: ObservableObject {
     /// it from there. This is the path for an APK that arrived through the
     /// Files tab, or that a browser in the guest downloaded itself.
     func installFromGuest(_ path: String, name: String) {
+        ExecutionMode.log("Installing APK: \(name)")
         busy = "Installing \(name)…"
         Task.detached { [weak self] in
             let out = (try? GuestBridge.shared.shell(
@@ -1593,6 +1640,12 @@ final class AndroidHost: ObservableObject {
     /// work, because each is incomplete by itself.
     func install(_ apks: [URL]) {
         guard let first = apks.first else { return }
+        #if HUSK_NO_JIT
+        if !isReady || busy != nil {
+            queueInstall(apks)
+            return
+        }
+        #endif
         let name = apks.count == 1 ? first.lastPathComponent
                                    : "\(apks.count) APKs (\(first.lastPathComponent))"
         busy = "Installing \(name)…"
@@ -1665,7 +1718,7 @@ final class AndroidHost: ObservableObject {
                 // dex2oat compiles the whole APK on an emulated CPU, and it
                 // scales with the code in it. Ten minutes fits a small game and
                 // not a large one.
-                let installBudget: TimeInterval = expected > 50 << 20 ? 2400 : 600
+                let installBudget: TimeInterval = ExecutionMode.noJIT ? 3600 : (expected > 50 << 20 ? 2400 : 600)
                 // install-multiple for a split set, which has to be handed over
                 // as one transaction: the base APK alone carries no native code.
                 let command = apks.count == 1
@@ -1674,6 +1727,12 @@ final class AndroidHost: ObservableObject {
                 let out = try GuestBridge.shared.shell(command, timeout: installBudget)
                 for r in remotes { _ = try? GuestBridge.shared.shell("rm -f \(r)") }
                 let ok = out.contains("Success")
+                #if HUSK_NO_JIT
+                let queuedDirectory = first.deletingLastPathComponent()
+                if ok, queuedDirectory.deletingLastPathComponent().lastPathComponent == "husk-pending-apks" {
+                    try? FileManager.default.removeItem(at: queuedDirectory)
+                }
+                #endif
                 HuskLog.log("bridge", "install \(name): "
                           + out.trimmingCharacters(in: .whitespacesAndNewlines))
                 if !ok, out.contains("native libraries") {
@@ -1900,11 +1959,12 @@ final class AndroidHost: ObservableObject {
     }
 
     func launch(_ pkg: String, then: @escaping () -> Void) {
+        ExecutionMode.log("Launching package: \(pkg)")
         markLaunched(pkg)
         busy = "Opening…"
         Task.detached { [weak self] in
             let out = (try? GuestBridge.shared.shell(
-                "monkey -p \(pkg) -c android.intent.category.LAUNCHER 1", timeout: 60)) ?? ""
+                "monkey -p \(pkg) -c android.intent.category.LAUNCHER 1", timeout: ExecutionMode.noJIT ? 300 : 60)) ?? ""
             HuskLog.log("bridge", "launch \(pkg): \(out.split(separator: "\n").last ?? "")")
             await MainActor.run { self?.busy = nil; then() }
         }

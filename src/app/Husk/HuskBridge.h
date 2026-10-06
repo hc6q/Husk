@@ -39,6 +39,9 @@ void     husk_display_send_pointer(int32_t x, int32_t y, bool button_down);
 bool     husk_display_send_key(const char *qcode_name, bool down);
 void     husk_display_request_update(void);
 
+bool husk_tci_enabled(void);
+bool husk_nojit_memory_is_safe(void);
+
 /* --- Husk's JIT substrate --- */
 void husk_ios_jit_install_trap_handler(void);
 /* Claim the JIT region while StikDebug is still attached, before the guest
@@ -102,6 +105,7 @@ void husk_snapshot_save(void (*cb)(bool ok, const char *what));
 void husk_balloon_set_bytes(int64_t target_bytes);
 
 /* --- On-device pairing for Built-in StikJIT (JITPairing.swift) --- */
+#ifndef HUSK_NO_JIT
 #include "HuskRPPairing.h"
 
 /* --- The experimental translation layer --- */
@@ -109,5 +113,7 @@ void husk_balloon_set_bytes(int64_t target_bytes);
    docs/04-translation-layer.md for why the two are kept apart. */
 #include "../../translation-layer/husk-tl.h"
 #include "../../translation-layer-next/husk-tl-unity-app.h"
+
+#endif /* !HUSK_NO_JIT */
 
 #endif /* HUSK_BRIDGE_H */

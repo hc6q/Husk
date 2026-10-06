@@ -39,7 +39,7 @@ struct BootScreen: View {
         "No, it has not frozen",
         "Unpacking the guest",
         "Almost worth the wait",
-        "Negotiating with the JIT",
+        ExecutionMode.noJIT ? "Interpreting Android instructions" : "Negotiating with the JIT",
         "Nearly there",
     ]
 

@@ -11,6 +11,9 @@ struct SettingsTab: View {
                     NavigationLink { AboutSettings() } label: { appCard }
                 }
 
+                #if HUSK_NO_JIT
+                Section("Execution") { InterpreterNotice() }
+                #else
                 Section {
                     row(JITSettings(), "bolt.fill", .yellow, "JIT & Sideload", "StikJIT is built in — the recommended way")
                 } header: {
@@ -18,6 +21,8 @@ struct SettingsTab: View {
                 } footer: {
                     Text("Android and Translation Layer games need JIT. StikJIT, built into Husk, turns it on without a computer.")
                 }
+
+                #endif
 
                 Section("General") {
                     row(DiscoverView(), "sparkle.magnifyingglass", .mint, "Discover", "Find apps in F-Droid and other repositories")
@@ -393,6 +398,7 @@ struct NetworkSettings: View {
 
 // MARK: - JIT and sideloading
 
+#if !HUSK_NO_JIT
 struct JITSettings: View {
     @ObservedObject private var runner = QemuRunner.shared
     @ObservedObject private var jit = JITCoordinator.shared
@@ -522,6 +528,7 @@ struct JITSettings: View {
     }
 }
 
+#endif
 // MARK: - Saved machine
 
 struct SavedMachineSettings: View {
@@ -713,7 +720,9 @@ struct AppearanceSettings: View {
 struct AboutSettings: View {
     @ObservedObject private var runner = QemuRunner.shared
     @State private var showLogs = false
+    #if !HUSK_NO_JIT
     @AppStorage(TranslationLayer.devInfoKey) private var devInfo = false
+    #endif
 
     var body: some View {
         List {
@@ -739,6 +748,7 @@ struct AboutSettings: View {
             }
 
             Section {
+#if !HUSK_NO_JIT
                 Toggle(isOn: $devInfo) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Developer Info")
@@ -747,6 +757,7 @@ struct AboutSettings: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
+#endif
                 Button { showLogs = true } label: {
                     Label("Open Console", systemImage: "terminal")
                 }
