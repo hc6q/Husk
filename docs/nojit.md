@@ -231,9 +231,14 @@ continuam. APKs ARM32 dependem do suporte já oferecido pela imagem.
 TCI reduz exigências de execução, não a RAM que Android precisa. Assinatura
 comum sujeita o app ao limite de memória/jetsam do aparelho; o snapshot de
 4 GB pode exceder esse limite. Reduza resolução e teste num aparelho com RAM suficiente. O target No-JIT
-usa cold boot por padrão para evitar restaurar 4 GB; o teste Linux de cold boot
-falhou no prazo de duas horas. Nenhuma das opções está certificada num iPhone.
+preserva a preferência original por snapshot, também exibida nos Settings.
+TCI não altera o stamp de hardware: caches de tradução não fazem parte da
+migração. Snapshot e GPU/áudio ainda devem ter topologia compatível; o snapshot
+oficial é software, sem virtio-sound. Para reproduzir o caminho de boot validado
+no host, habilite o snapshot e selecione a opção de GPU software existente.
+O snapshot de 4 GB pode ultrapassar o orçamento do aparelho. Cold boot continua
+disponível, mas o teste Linux falhou no prazo de duas horas. Nenhuma das opções
+está certificada num iPhone.
 Uma importação enfileirada não deve ser interrompida encerrando o app antes da
 instalação; reimporte caso a sessão seja encerrada. Áudio continua opt-in nos
 Settings porque altera a configuração de hardware/snapshots da VM.
-
