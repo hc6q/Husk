@@ -8,7 +8,7 @@ on:
 
 concurrency:
   group: nojit-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -28,10 +28,37 @@ jobs:
           python3 -m venv build/ci-python
           build/ci-python/bin/pip install PyYAML
           echo "$PWD/build/ci-python/bin" >> "$GITHUB_PATH"
+      - name: Identify iOS toolchain
+        id: toolchain
+        run: echo "key=$(xcodebuild -version | shasum -a 256 | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+      - name: Restore iOS dependencies
+        id: deps
+        uses: actions/cache/restore@v4
+        with:
+          key: husk-ios-deps-${{ runner.arch }}-${{ steps.toolchain.outputs.key }}-${{ hashFiles('scripts/build_ios.sh', 'scripts/build_angle_ios.sh', 'scripts/build_gpu_ios.sh', 'scripts/sources.sh', 'patches/*') }}
+          path: |
+            build/ios-arm64/sysroot
+            build/stamps/libffi-3.5.0
+            build/stamps/glib-2.83.0
+            build/stamps/pixman-0.38.0
+            build/stamps/libucontext
+            build/stamps/libslirp-v4.9.1
       - name: Check target isolation
         run: python3 tests/nojit/test_build_contract.py
       - name: Build interpreter IPA
         run: ./scripts/ci_build.sh "$PWD/build/Husk-NoJIT.ipa"
+      - name: Save completed dependencies
+        if: always() && steps.deps.outputs.cache-hit != 'true' && hashFiles('build/stamps/libslirp-v4.9.1') != ''
+        uses: actions/cache/save@v4
+        with:
+          key: ${{ steps.deps.outputs.cache-primary-key }}
+          path: |
+            build/ios-arm64/sysroot
+            build/stamps/libffi-3.5.0
+            build/stamps/glib-2.83.0
+            build/stamps/pixman-0.38.0
+            build/stamps/libucontext
+            build/stamps/libslirp-v4.9.1
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
@@ -54,6 +81,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check executable-memory guard
+        run: python3 tests/nojit/test_memory_guard.py
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

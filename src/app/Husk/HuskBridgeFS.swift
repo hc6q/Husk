@@ -1646,6 +1646,7 @@ final class AndroidHost: ObservableObject {
             return
         }
         #endif
+        ExecutionMode.log("Installing APK: \(first.lastPathComponent)")
         let name = apks.count == 1 ? first.lastPathComponent
                                    : "\(apks.count) APKs (\(first.lastPathComponent))"
         busy = "Installing \(name)…"

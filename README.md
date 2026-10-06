@@ -12,6 +12,15 @@ Android app launcher for iOS.
 
 Drop in an APK, tap it, and the Android app opens full-screen.
 
+## No-JIT variant
+
+`HUSK_NO_JIT=1` builds a separate `Husk-NoJIT.ipa` using the pinned QEMU TCI
+interpreter, with no debugger, StikJIT or pairing path. The existing Android
+VM and ANGLE/Metal stack are retained. See [docs/nojit.md](docs/nojit.md) for
+build/install instructions and the distinction between host tests and physical
+iPhone validation. The [No-JIT workflow](.github/workflows/nojit.yml) publishes
+the IPA and an offline smoke-test APK; device boot is not certified by CI.
+
 ## JIT
 
 Husk needs JIT, which on iOS takes an attached debugger. Use StikDebug, or
