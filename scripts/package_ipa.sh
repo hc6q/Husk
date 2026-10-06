@@ -13,8 +13,10 @@ set -euo pipefail
 
 HUSK_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DD="${DD:-/tmp/husk_ipa}"
-OUT="${1:-$HOME/Desktop/Husk.ipa}"
 HUSK_NO_JIT="${HUSK_NO_JIT:-0}"
+IPA_NAME=Husk.ipa
+if [ "$HUSK_NO_JIT" = 1 ]; then IPA_NAME=Husk-NoJIT.ipa; fi
+OUT="${1:-$HOME/Desktop/$IPA_NAME}"
 QEMU_BUILD=_husk_build
 STAGE_LIB=lib
 PROJECT=Husk.xcodeproj

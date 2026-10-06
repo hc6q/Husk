@@ -12,16 +12,47 @@ Não confunda um IPA compilado com um emulador validado num iPhone.
 
 | Verificação | Evidência nesta implementação |
 |---|---|
-| Backend TCI da versão exata | QEMU ARM64 compilado no host Linux; `CONFIG_TCG_INTERPRETER` e `tcg/tci.c` conferidos |
+| Backend TCI da versão exata | QEMU compilado para iOS arm64 e host Linux; `CONFIG_TCG_INTERPRETER`, objetos e bundle auditados |
 | Sem objetos BreakpointJIT | Auditoria de `compile_commands.json`; `husk-ios-jit.c` e `husk-brk.S` ausentes |
 | Buffer sem execução | Log real `TCI bytecode buffer RW`; guarda `LD_PRELOAD` rejeita `mmap` W+X, memória anônima executável e `mprotect` EXEC |
-| Kernel/serviços Android | Imagem v12 alcançou kernel ARM64 e init sob TCI com a guarda ativa |
-| APK de teste | `NoJITSmoke.apk` compilado e assinado no GitHub Actions; fonte em `tests/nojit/fixture` |
-| Boot completo/APK aberto | Teste real em andamento; somente `report.json` com os três campos verdadeiros comprova esta etapa |
+| Android pronto | Snapshot oficial da imagem v12 restaurado sob TCI; `sys.boot_completed=1`, guarda ativa e mapas sem W+X |
+| APK de teste | `NoJITSmoke.apk` Java, offline, instalado no Android com `pm install` retornando `Success`; fonte em `tests/nojit/fixture` |
+| APK aberto, touch e áudio | Não confirmados: a tentativa via `monkey` sofreu timeout e System UI apresentou ANR; lançamento direto em teste |
 | iPhone, assinatura comum, Metal, touch, áudio | Ainda sem dispositivo conectado para validação; não certificadas |
 
 O critério `iPhone → importar APK → iniciar Android → instalar → abrir app` exige
 o teste físico descrito abaixo. Um teste Linux não substitui esse critério.
+
+
+### Evidências publicadas em 6 de outubro de 2026
+
+O [build iOS bem-sucedido](https://github.com/hc6q/Husk/actions/runs/37511157027)
+usa o commit `7d8e52ca90e103fb7845c7b91b91caa6b1d01485`.
+O [artifact Husk-NoJIT](https://github.com/hc6q/Husk/actions/runs/37511157027/artifacts/11434913868)
+contém o IPA unsigned; o
+[artifact NoJITSmoke-APK](https://github.com/hc6q/Husk/actions/runs/37511157027/artifacts/11435032574)
+contém o APK de teste. A auditoria de build/bundle e os testes de isolamento
+passaram; isso não certifica a execução física.
+
+A [tentativa Linux com snapshot](https://github.com/hc6q/Husk/actions/runs/37511146658)
+registrou Android pronto em 180,9 segundos e instalação concluída em 541,6
+segundos desde o início. A guarda de memória permaneceu ativa; o buffer TCI
+foi RW e não houve região W+X no mapa conferido após o boot. O comando
+`monkey` ultrapassou 300 segundos. O relatório contém
+`boot_completed=true`, `apk_installed=true`, `apk_resumed=false`.
+A captura final mostra “System UI isn't responding”.
+[Relatório, mapas, serial e captura](https://github.com/hc6q/Husk/actions/runs/37511146658/artifacts/11437230597).
+
+Esses números medem **restauração do snapshot**, não cold boot, nem desempenho
+de iPhone, nem uma comparação JIT/TCI. A imagem e o snapshot são os originais:
+nenhum Google Play Services foi necessário para instalar o fixture.
+Ainda não existe evidência de APK aberto e utilizável.
+
+O snapshot foi criado num host com páginas de 16 KiB. No Linux de 4 KiB,
+`tests/nojit/align_snapshot_roms.py` alinha as regiões ROM de migração para
+16 KiB antes de compilar o QEMU de teste. Sem isso, a restauração falha com
+`Size too large: /rom@etc/acpi/rsdp: 0x4000 > 0x1000`.
+Esse ajuste pertence ao teste Linux; o build iOS já usa páginas de 16 KiB.
 
 ## QEMU e seleção do interpretador
 
@@ -79,8 +110,15 @@ O modo JIT continua em `HUSK_NO_JIT=0` (padrão), com o projeto/scheme original.
 Os diretórios `_husk_build_nojit`, `build/ios-arm64/nojit/lib` e
 `DerivedData-nojit` impedem que um dylib JIT antigo entre no artifact No-JIT.
 XcodeGen deriva `project-nojit.yml` do projeto canônico. O bundle separado é
-`com.husk.nojit`, com entitlements vazios e sem extensão, framework, script,
+`com.husk.nojit`, sem entitlements de JIT/debugger e sem extensão, framework, script,
 URL schemes ou biblioteca Rust de pairing de JIT.
+
+São preservadas apenas as capabilities públicas de memória do projeto original:
+[`increased-memory-limit`](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.kernel.increased-memory-limit)
+e [`extended-virtual-addressing`](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.kernel.extended-virtual-addressing).
+O limite aumentado só funciona em aparelhos compatíveis. O orçamento deve ser
+conferido com `os_proc_available_memory`; estas capabilities não habilitam JIT,
+não substituem RAM física e não comprovam sideload neste dispositivo.
 
 ## Instalação e APK
 
@@ -163,7 +201,7 @@ e sem debugger, pairing, Stik ou VPN de JIT.
 | GPU da VM | virgl → ANGLE → Metal, com fallback | Mesmo caminho |
 | Áudio/input | Backend Husk/USB HID | Mesmos backends |
 | Runtime Android nativo experimental | Disponível | Excluído do target |
-| Startup/import | Mais rápido | Pode demorar muitos minutos; timeouts maiores |
+| Boot/instalação/abertura de APK | Backend nativo mais rápido; sem medição comparável | Instalação levou vários minutos no host; ANRs observados |
 | Benchmark numérico comparável | Não medido nesta alteração | Não medido nesta alteração |
 
 O suporte inicial visa APKs pequenos Java/Kotlin ou ARM64 sem Play Services.
