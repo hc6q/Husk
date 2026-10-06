@@ -2,7 +2,7 @@ name: No-JIT TCTI Android experiment (ARM64)
 on:
   push:
     branches: ['feat/nojit-tcti']
-    paths: ['.github/workflows/nojit-tcti.yml', 'tests/nojit/host_smoke.py', 'tests/nojit/enable_tcti_host.py', 'tests/nojit/verify_tcti_host.py']
+    paths: ['.github/workflows/nojit-tcti.yml', 'tests/nojit/host_smoke.py', 'tests/nojit/enable_tcti_host.py', 'tests/nojit/verify_tcti_host.py', 'tests/nojit/split_tcti_gadgets.py']
   workflow_dispatch:
 permissions:
   contents: read
@@ -49,6 +49,7 @@ jobs:
           ./scripts/integrate_husk.sh
           python3 tests/nojit/align_snapshot_roms.py third_party/build/qemu-10.0.12-utm
           python3 tests/nojit/enable_tcti_host.py third_party/build/qemu-10.0.12-utm
+          python3 tests/nojit/split_tcti_gadgets.py third_party/build/qemu-10.0.12-utm
           # The fork's static gadgets require naked AArch64 functions. Fail if
           # the compiler ignores the attribute, rather than testing bad code.
           python3 -c 'from pathlib import Path; Path("build/naked.c").write_text("__attribute__((naked)) void probe(void) { __asm__(\"ret\"); }\n")'
@@ -90,3 +91,4 @@ jobs:
             build/NoJITSmoke.apk
             third_party/build/qemu-10.0.12-utm/_husk_host_nojit/config-host.h
             third_party/build/qemu-10.0.12-utm/_husk_host_nojit/compile_commands.json
+            third_party/build/qemu-10.0.12-utm/tcg/husk-tcti-split-report.json

@@ -32,6 +32,7 @@ p.add_argument('--output', type=Path, required=True)
 p.add_argument('--timeout', type=int, default=7200)
 p.add_argument('--memory', type=int, default=2048)
 p.add_argument('--cpus', type=int, choices=(1,2,4), default=4)
+p.add_argument('--threads', choices=('single','multi'), default='single')
 p.add_argument('--snapshot', help='Restore the original userdata snapshot through QMP')
 p.add_argument('--file-ram', action='store_true')
 p.add_argument('--interactive', action='store_true', help='Read shell/QMP JSON commands after install')
@@ -40,6 +41,8 @@ p.add_argument('--icount', action='store_true', help='Experimental instruction c
 p.add_argument('--icount-shift', type=int, choices=range(0,11), default=0, help='Experimental ns per instruction exponent')
 p.add_argument('--snapshot-clock-aligned', action='store_true', help='Requires the experimental timer migration patch')
 a = p.parse_args()
+if a.icount and a.threads == 'multi':
+    p.error('--icount is incompatible with MTTCG')
 if a.icount_shift and not a.icount:
     p.error('--icount-shift requires --icount')
 if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+', a.package):
@@ -57,6 +60,7 @@ report = {'platform': f'Linux {platform.machine()} host / Android ARM64 guest', 
           'ios_device_tested': False, 'package_id': a.package,
           'apk_sha256': hashlib.sha256(a.apk.read_bytes()).hexdigest(),
           'ui_timeout_seconds': a.ui_timeout}
+report.update(cpu_threads=a.threads, vcpus=a.cpus, memory_mib=a.memory)
 started = time.monotonic()
 def log(message):
     line = f'[{time.monotonic()-started:.1f}s] {message}'
@@ -69,7 +73,7 @@ guest = a.guest.resolve()
 machine = 'virt,highmem=on,memory-backend=huskram' if a.file_ram else 'virt,highmem=on'
 args = [str(qemu), '-M', machine, '-cpu',
         'max,pauth-impdef=on,sve=off,sme=off', '-smp', str(a.cpus), '-m', str(a.memory),
-        '-accel', 'tcg,tb-size=128,thread=single,split-wx=off',
+        '-accel', f'tcg,tb-size=128,thread={a.threads},split-wx=off',
         '-device', 'virtio-balloon-pci,id=huskballoon',
         '-drive', f'if=pflash,unit=0,format=raw,readonly=on,file={guest}/firmware.fd',
         '-drive', f'if=pflash,unit=1,format=qcow2,file={guest}/vars.qcow2',
