@@ -43,5 +43,8 @@ if args.app:
     assert "StikJIT" not in links
     entitlements = plistlib.loads((pathlib.Path(__file__).resolve().parents[1]
                                   / "src/app/Husk/Husk-NoJIT.entitlements").read_bytes())
-    assert not entitlements, "No-JIT target must use ordinary signing entitlements"
+    allowed = {"com.apple.developer.kernel.increased-memory-limit",
+               "com.apple.developer.kernel.extended-virtual-addressing"}
+    assert set(entitlements) == allowed and all(v is True for v in entitlements.values()), \
+        "No-JIT permits only the original public memory capabilities"
 print("[NoJIT] build audit passed (device boot/APK validation is still required)")

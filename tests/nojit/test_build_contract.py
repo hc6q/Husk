@@ -32,7 +32,10 @@ class NoJITTarget(unittest.TestCase):
 
     def test_ordinary_signing_and_no_pairing(self):
         entitlements = plistlib.loads((ROOT / 'src/app/Husk/Husk-NoJIT.entitlements').read_bytes())
-        self.assertEqual(entitlements, {})
+        self.assertEqual(entitlements, {
+            "com.apple.developer.kernel.increased-memory-limit": True,
+            "com.apple.developer.kernel.extended-virtual-addressing": True,
+        })
         plist = plistlib.loads((ROOT / 'src/app/Husk/Info-NoJIT.plist').read_bytes())
         self.assertEqual(plist['HuskExecutionMode'], 'TCI')
         for key in ['LSApplicationQueriesSchemes', 'NSBonjourServices', 'BGTaskSchedulerPermittedIdentifiers']:

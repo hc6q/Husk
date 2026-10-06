@@ -47,5 +47,10 @@ plist["CFBundleDisplayName"] = "Husk No-JIT"
 plist["CFBundleURLTypes"][0]["CFBundleURLSchemes"] = ["husk-nojit"]
 plist["HuskExecutionMode"] = "TCI"
 (app / "Husk/Info-NoJIT.plist").write_bytes(plistlib.dumps(plist))
-(app / "Husk/Husk-NoJIT.entitlements").write_bytes(plistlib.dumps({}))
+# Keep the original public memory capabilities; neither grants code execution.
+original_entitlements = plistlib.loads((app / "Husk/Husk.entitlements").read_bytes())
+memory_keys = ("com.apple.developer.kernel.increased-memory-limit",
+               "com.apple.developer.kernel.extended-virtual-addressing")
+entitlements = {key: original_entitlements[key] for key in memory_keys}
+(app / "Husk/Husk-NoJIT.entitlements").write_bytes(plistlib.dumps(entitlements))
 (app / "project-nojit.yml").write_text(yaml.safe_dump(project, sort_keys=False))
