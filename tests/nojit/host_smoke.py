@@ -254,3 +254,9 @@ finally:
     except (OSError, EOFError, wave.Error):
         pass
     (a.output/'report.json').write_text(json.dumps(report,indent=2)+'\n')
+    print(json.dumps(report, indent=2), flush=True)
+    for name in ('qemu.log', 'serial.log'):
+        path = a.output/name
+        if path.exists():
+            print(f'--- {name} (last 60 lines) ---', flush=True)
+            print('\n'.join(path.read_text(errors='replace').splitlines()[-60:]), flush=True)
