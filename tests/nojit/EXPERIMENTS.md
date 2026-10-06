@@ -79,3 +79,26 @@ O relatório normal não chegou à sua etapa de lançamento/contador, pois o
 probe interativo falhou antes. `probe-report.json` separa a segunda instalação
 dessa aprovação não alcançada. Nenhum resultado foi convertido em sucesso
 somente por `am start` retornar. O experimento de relógio não será incluído no IPA.
+
+## Ensaio TCTI ARM64 separado
+
+A branch `feat/nojit-tcti` usa o workflow `nojit-tcti.yml` em
+`ubuntu-24.04-arm`; o APK Java é construído em outro job x86_64, pois os
+executáveis do Android SDK Linux não são ARM64. O configure exato é
+`--disable-tcg-interpreter --enable-tcg-threaded-interpreter`, com Clang para
+as funções AArch64 `naked` dos gadgets. Um probe rejeita atributo ignorado.
+A documentação do GCC não lista AArch64 entre os targets com suporte a `naked`:
+https://gcc.gnu.org/onlinedocs/gcc/Common-Attributes.html
+
+`enable_tcti_host.py` amplia somente os guards necessários do backend para
+permitir bytecode TCTI em memória RW e selecionar o substrato sem JIT.
+`verify_tcti_host.py` exige CONFIG_TCG_THREADED_INTERPRETER, ausência de TCI
+e dos objetos BreakpointJIT, e presença dos gadgets compilados estaticamente.
+O getter `husk_tci_enabled` retorna false nesse build: não falsifica TCI.
+O runner repete proteção mmap/mprotect, boot, instalação, Activity retomada e
+contador de toque USB. Restaurar o snapshot mantém áudio fora deste ensaio.
+
+Isso não muda o IPA publicado nem permite carregar TCTI no app Swift atual.
+Para adotá-lo no iOS ainda seriam necessários identificação explícita do
+backend, build Apple separado e comprovação de app/input/áudio em dispositivo.
+Compilação ou retorno de am start não certificam funcionamento.
