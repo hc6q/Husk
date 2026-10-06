@@ -34,6 +34,7 @@ jobs:
           curl -fL --retry 3 https://github.com/utmapp/qemu/releases/download/v10.0.12-utm/qemu-10.0.12-utm.tar.xz -o build/qemu.tar.xz
           tar -xf build/qemu.tar.xz -C third_party/build
           ./scripts/integrate_husk.sh
+          python3 tests/nojit/align_snapshot_roms.py third_party/build/qemu-10.0.12-utm
           cd third_party/build/qemu-10.0.12-utm
           mkdir _husk_host_nojit
           cd _husk_host_nojit
