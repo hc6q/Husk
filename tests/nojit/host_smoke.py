@@ -23,6 +23,7 @@ p.add_argument('--apk', type=Path, required=True)
 p.add_argument('--guard', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--timeout', type=int, default=7200)
+p.add_argument('--memory', type=int, default=2048)
 a = p.parse_args()
 a.output.mkdir(parents=True, exist_ok=True)
 report = {'platform': 'Linux x86_64 host / Android ARM64 guest', 'backend': 'TCI',
@@ -39,7 +40,7 @@ def log(message):
 qemu = a.qemu.resolve()
 guest = a.guest.resolve()
 args = [str(qemu), '-M', 'virt,highmem=on', '-cpu',
-        'max,pauth-impdef=on,sve=off,sme=off', '-smp', '4', '-m', '2048',
+        'max,pauth-impdef=on,sve=off,sme=off', '-smp', '4', '-m', str(a.memory),
         '-accel', 'tcg,tb-size=128,thread=single,split-wx=off',
         '-device', 'virtio-balloon-pci,id=huskballoon',
         '-drive', f'if=pflash,unit=0,format=raw,readonly=on,file={guest}/firmware.fd',
