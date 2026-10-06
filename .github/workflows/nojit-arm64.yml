@@ -54,7 +54,7 @@ jobs:
           ../configure --target-list=aarch64-softmmu --enable-tcg-interpreter --disable-tcg-threaded-interpreter --disable-shared-lib --extra-cflags=-DHUSK_NO_JIT=1 --enable-slirp --disable-werror --disable-docs --disable-gtk --disable-sdl --disable-opengl --disable-virglrenderer
           ninja -j2 qemu-system-aarch64 qemu-img
           cd "$GITHUB_WORKSPACE"
-          python3 tests/nojit/verify_nojit.py --build third_party/build/qemu-10.0.12-utm/_husk_host_nojit
+          python3 scripts/verify_nojit.py --build third_party/build/qemu-10.0.12-utm/_husk_host_nojit
           python3 tests/nojit/test_memory_guard.py
           cc -shared -fPIC tests/nojit/mmap_guard.c -ldl -o build/nojit-mmap-guard.so
       - name: Prepare original Android v12 guest
