@@ -33,6 +33,7 @@ p.add_argument('--cpus', type=int, choices=(1,2,4), default=4)
 p.add_argument('--snapshot', help='Restore the original userdata snapshot through QMP')
 p.add_argument('--file-ram', action='store_true')
 p.add_argument('--interactive', action='store_true', help='Read shell/QMP JSON commands after install')
+p.add_argument('--qmp-socket', type=Path, help='Optional second QMP endpoint for live display/input probes')
 p.add_argument('--icount', action='store_true', help='Experimental instruction clock')
 p.add_argument('--icount-shift', type=int, choices=range(0,11), default=0, help='Experimental ns per instruction exponent')
 p.add_argument('--snapshot-clock-aligned', action='store_true', help='Requires the experimental timer migration patch')
@@ -85,6 +86,12 @@ args = [str(qemu), '-M', machine, '-cpu',
         '-qmp', 'tcp:127.0.0.1:15598,server=on,wait=off', '-monitor', 'none']
 if a.file_ram:
     args += ['-object', f'memory-backend-file,id=huskram,size={a.memory}M,mem-path={guest}/ram.bin,share=on,prealloc=off']
+if a.qmp_socket:
+    endpoint = a.qmp_socket.resolve()
+    if endpoint.exists() or ',' in str(endpoint):
+        p.error('--qmp-socket must be an unused path without commas')
+    endpoint.parent.mkdir(parents=True, exist_ok=True)
+    args += ['-qmp', f'unix:{endpoint},server=on,wait=off']
 if a.snapshot:
     args += ['-S']
     # The shipped snapshot has no virtio-sound device; preserve its topology.
