@@ -30,12 +30,14 @@ jobs:
           echo "$PWD/build/ci-python/bin" >> "$GITHUB_PATH"
       - name: Identify iOS toolchain
         id: toolchain
-        run: echo "key=$(xcodebuild -version | shasum -a 256 | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "key=$(xcodebuild -version | shasum -a 256 | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          python3 scripts/dependency_cache_key.py >> "$GITHUB_OUTPUT"
       - name: Restore iOS dependencies
         id: deps
         uses: actions/cache/restore@v4
         with:
-          key: husk-ios-deps-${{ runner.arch }}-${{ steps.toolchain.outputs.key }}-${{ hashFiles('scripts/build_ios.sh', 'scripts/build_angle_ios.sh', 'scripts/build_gpu_ios.sh', 'scripts/sources.sh', 'patches/*') }}
+          key: husk-ios-deps-${{ runner.arch }}-${{ steps.toolchain.outputs.key }}-${{ steps.toolchain.outputs.deps }}
           path: |
             build/ios-arm64/sysroot
             build/stamps/libffi-3.5.0
