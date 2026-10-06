@@ -24,7 +24,12 @@ p.add_argument('--guard', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--timeout', type=int, default=7200)
 p.add_argument('--memory', type=int, default=2048)
+p.add_argument('--snapshot', help='Restore the original userdata snapshot through QMP')
+p.add_argument('--file-ram', action='store_true')
+p.add_argument('--icount', action='store_true', help='Experimental instruction clock for cold boot only')
 a = p.parse_args()
+if a.icount and a.snapshot:
+    p.error('--icount cannot restore the wall-clock snapshot')
 a.output.mkdir(parents=True, exist_ok=True)
 report = {'platform': 'Linux x86_64 host / Android ARM64 guest', 'backend': 'TCI',
           'boot_completed': False, 'apk_installed': False, 'apk_resumed': False,
@@ -39,14 +44,15 @@ def log(message):
 
 qemu = a.qemu.resolve()
 guest = a.guest.resolve()
-args = [str(qemu), '-M', 'virt,highmem=on', '-cpu',
+machine = 'virt,highmem=on,memory-backend=huskram' if a.file_ram else 'virt,highmem=on'
+args = [str(qemu), '-M', machine, '-cpu',
         'max,pauth-impdef=on,sve=off,sme=off', '-smp', '4', '-m', str(a.memory),
         '-accel', 'tcg,tb-size=128,thread=single,split-wx=off',
         '-device', 'virtio-balloon-pci,id=huskballoon',
         '-drive', f'if=pflash,unit=0,format=raw,readonly=on,file={guest}/firmware.fd',
         '-drive', f'if=pflash,unit=1,format=qcow2,file={guest}/vars.qcow2',
         '-drive', f'file={guest}/vda.qcow2,if=none,id=vda,format=qcow2,discard=unmap',
-        '-drive', f'file={guest}/userdata.qcow2,if=none,id=vdb,format=qcow2,discard=unmap',
+        '-drive', f'file={guest}/userdata.qcow2,if=none,id=vdb,node-name=huskvmstate,format=qcow2,discard=unmap',
         '-device', 'virtio-blk-pci,drive=vda,bootindex=0',
         '-device', 'virtio-blk-pci,drive=vdb,bootindex=1',
         '-netdev', 'user,id=net0,hostfwd=tcp:127.0.0.1:15599-:5599',
@@ -58,6 +64,16 @@ args = [str(qemu), '-M', 'virt,highmem=on', '-cpu',
         '-device', 'virtio-sound-pci,audiodev=audio',
         '-serial', f'file:{a.output.resolve()}/serial.log', '-display', 'none',
         '-qmp', 'tcp:127.0.0.1:15598,server=on,wait=off', '-monitor', 'none']
+if a.file_ram:
+    args += ['-object', f'memory-backend-file,id=huskram,size={a.memory}M,mem-path={guest}/ram.bin,share=on,prealloc=off']
+if a.snapshot:
+    args += ['-S']
+    # The shipped snapshot has no virtio-sound device; preserve its topology.
+    index = args.index('-audiodev')
+    del args[index:index+4]
+if a.icount:
+    args += ['-icount', 'shift=0,sleep=off,align=off', '-rtc', 'clock=vm']
+    report['instruction_clock'] = 'shift=0,sleep=off,align=off'
 env = dict(os.environ, LD_PRELOAD=str(a.guard.resolve()))
 stderr = (a.output/'qemu.log').open('w')
 proc = subprocess.Popen(args, stdout=stderr, stderr=stderr, env=env)
@@ -100,6 +116,48 @@ def exchange(command, timeout=300, payload=None):
 
 try:
     log('[NoJIT] Starting Android under mmap/mprotect guard')
+    if a.snapshot:
+        until = time.monotonic()+120
+        while True:
+            try:
+                control = socket.create_connection(('127.0.0.1',15598),timeout=5)
+                break
+            except OSError:
+                if proc.poll() is not None or time.monotonic() >= until:
+                    raise RuntimeError('QMP did not become ready for snapshot restore')
+                time.sleep(1)
+        with control:
+            control.settimeout(600)  # Loading several GiB can hold the QMP main loop.
+            stream = control.makefile('rwb',buffering=0)
+            stream.readline()
+            def qmp_command(name, arguments=None):
+                stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
+                while True:
+                    response = json.loads(stream.readline())
+                    if 'error' in response:
+                        raise RuntimeError(response)
+                    if 'return' in response:
+                        return response['return']
+            qmp_command('qmp_capabilities')
+            qmp_command('snapshot-load', {'job-id':'husk-load', 'tag':a.snapshot,
+                'vmstate':'huskvmstate', 'devices':['huskvmstate']})
+            until = time.monotonic()+600
+            while time.monotonic() < until:
+                jobs = qmp_command('query-jobs')
+                job = next((j for j in jobs if j['id']=='husk-load'),None)
+                if job is None:
+                    break
+                if job.get('error'):
+                    raise RuntimeError(job['error'])
+                if job['status'] == 'concluded':
+                    qmp_command('job-dismiss', {'id':'husk-load'})
+                    break
+                time.sleep(1)
+            else:
+                raise TimeoutError('snapshot restore did not finish')
+            qmp_command('cont')
+            report['snapshot_requested'] = a.snapshot
+            log('[NoJIT] Snapshot load job completed; checking Android readiness')
     deadline = started+a.timeout
     while time.monotonic() < deadline:
         if proc.poll() is not None:
@@ -137,9 +195,9 @@ try:
     exchange('settings put global device_provisioned 1; settings put secure user_setup_complete 1')
     exchange('input keyevent 82')
     log('[NoJIT] Launching package')
-    exchange('monkey -p org.husk.nojitsmoke -c android.intent.category.LAUNCHER 1')
-    for _ in range(20):
-        activity = exchange('dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity"',timeout=180)
+    exchange('am start -n org.husk.nojitsmoke/.MainActivity', timeout=900)
+    for _ in range(60):
+        activity = exchange('dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true',timeout=180)
         if 'org.husk.nojitsmoke' in activity:
             report['apk_resumed'] = True
             break
@@ -186,6 +244,26 @@ finally:
     report['elapsed_seconds'] = round(time.monotonic()-started,1)
     if bridge:
         bridge.close()
+    if proc.poll() is None:
+        try:
+            with socket.create_connection(('127.0.0.1',15598),timeout=30) as control:
+                stream = control.makefile('rwb',buffering=0)
+                stream.readline()
+                def diagnostic(name, arguments=None):
+                    stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
+                    while True:
+                        response = json.loads(stream.readline())
+                        if 'error' in response:
+                            raise RuntimeError(response)
+                        if 'return' in response:
+                            return response['return']
+                diagnostic('qmp_capabilities')
+                report['qmp_status'] = diagnostic('query-status')
+                for name in ('info cpus', 'info registers', 'info network'):
+                    report[name] = diagnostic('human-monitor-command', {'command-line':name})
+                diagnostic('screendump', {'filename':str(a.output.resolve()/'final-screen.ppm')})
+        except (OSError, ValueError, RuntimeError) as error:
+            report['qmp_diagnostic_error'] = str(error)
     proc.terminate()
     try:
         proc.wait(timeout=15)
@@ -202,3 +280,9 @@ finally:
     except (OSError, EOFError, wave.Error):
         pass
     (a.output/'report.json').write_text(json.dumps(report,indent=2)+'\n')
+    print(json.dumps(report, indent=2), flush=True)
+    for name in ('qemu.log', 'serial.log'):
+        path = a.output/name
+        if path.exists():
+            print(f'--- {name} (last 60 lines) ---', flush=True)
+            print('\n'.join(path.read_text(errors='replace').splitlines()[-60:]), flush=True)
