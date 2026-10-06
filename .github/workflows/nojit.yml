@@ -1,0 +1,66 @@
+name: Husk No-JIT
+
+on:
+  push:
+    branches: [main, 'feat/nojit', 'feat/nojit/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    runs-on: macos-15
+    timeout-minutes: 180
+    env:
+      HUSK_NO_JIT: '1'
+      DD: ${{ github.workspace }}/build/DerivedData
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: |
+          brew install meson ninja pkg-config xcodegen qemu autoconf automake libtool
+          python3 -m venv build/ci-python
+          build/ci-python/bin/pip install PyYAML
+          echo "$PWD/build/ci-python/bin" >> "$GITHUB_PATH"
+      - name: Check target isolation
+        run: python3 tests/nojit/test_build_contract.py
+      - name: Build interpreter IPA
+        run: ./scripts/ci_build.sh "$PWD/build/Husk-NoJIT.ipa"
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Husk-NoJIT
+          path: build/Husk-NoJIT.ipa
+          if-no-files-found: error
+      - name: Save build evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Husk-NoJIT-build-evidence
+          path: |
+            build/logs/
+            build/DerivedData-nojit/build.log
+            third_party/build/qemu-10.0.12-utm/_husk_build_nojit/config-host.h
+            third_party/build/qemu-10.0.12-utm/_husk_build_nojit/meson-info/
+            third_party/build/qemu-10.0.12-utm/_husk_build_nojit/compile_commands.json
+
+  fixture-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Build offline test APK
+        run: |
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          ./tests/nojit/build_fixture_apk.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NoJITSmoke-APK
+          path: build/NoJITSmoke.apk
+          if-no-files-found: error
