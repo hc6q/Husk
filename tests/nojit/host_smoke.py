@@ -121,6 +121,7 @@ try:
                     raise RuntimeError('QMP did not become ready for snapshot restore')
                 time.sleep(1)
         with control:
+            control.settimeout(600)  # Loading several GiB can hold the QMP main loop.
             stream = control.makefile('rwb',buffering=0)
             stream.readline()
             def qmp_command(name, arguments=None):
