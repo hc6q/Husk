@@ -14,6 +14,15 @@ def replace(path, old, new):
         raise SystemExit(f"{path}: unsupported QEMU source shape")
     file.write_text(source.replace(old, new, 1))
 
+# ARM64 macOS can execute ARM64 macOS binaries, but not iOS binaries. Meson
+# cannot infer this from configure's generic Darwin machine description.
+replace("configure", '  echo "[properties]" >> $cross\n',
+        '''  echo "[properties]" >> $cross
+  if test "${HUSK_QEMU_IOS_CROSS:-0}" = 1; then
+    echo "needs_exe_wrapper = true" >> $cross
+  fi
+''')
+
 # Never compile the breakpoint allocator or its traps into a No-JIT dylib.
 replace("tcg/meson.build", "  'husk-ios-jit.c',\n  'husk-brk.S',\n",
         "  # HUSK_NO_JIT selects one substrate at configure time.\n")

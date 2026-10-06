@@ -52,6 +52,7 @@ export CXXFLAGS="$CFLAGS"
 export CPPFLAGS="-arch $ARCH -isysroot $SDKROOT -I$PREFIX/include $CFLAGS_TARGET"
 export OBJCFLAGS="$CFLAGS"
 export LDFLAGS="-arch $ARCH -isysroot $SDKROOT -L$PREFIX/lib $CFLAGS_TARGET"
+export HUSK_QEMU_IOS_CROSS=1
 
 # Cross pkg-config: look ONLY in our sysroot so host Homebrew libraries can never
 # leak into an iOS link.
