@@ -9,6 +9,7 @@ import argparse
 import hashlib
 import json
 import os
+import platform
 from pathlib import Path
 import re
 import socket
@@ -21,6 +22,7 @@ import wave
 
 p = argparse.ArgumentParser()
 p.add_argument('--qemu', type=Path, required=True)
+p.add_argument('--backend', choices=('TCI','TCTI'), default='TCI')
 p.add_argument('--guest', type=Path, required=True)
 p.add_argument('--apk', type=Path, required=True)
 p.add_argument('--package', default='org.husk.nojitsmoke')
@@ -49,7 +51,7 @@ if a.snapshot_clock_aligned and not (a.icount and a.snapshot):
 if a.snapshot and a.cpus != 4:
     p.error('the official snapshot requires four vCPUs')
 a.output.mkdir(parents=True, exist_ok=True)
-report = {'platform': 'Linux x86_64 host / Android ARM64 guest', 'backend': 'TCI',
+report = {'platform': f'Linux {platform.machine()} host / Android ARM64 guest', 'backend': a.backend,
           'boot_completed': False, 'apk_installed': False, 'apk_resumed': False,
           'usb_touch_confirmed': False, 'guest_audio_confirmed': False,
           'ios_device_tested': False, 'package_id': a.package,
@@ -235,6 +237,7 @@ try:
                 report['boot_completed'] = True
                 report['boot_seconds'] = round(time.monotonic()-started,1)
                 log('[NoJIT] Android boot completed')
+                assert f'[NoJIT] {a.backend} bytecode buffer RW' in (a.output/'qemu.log').read_text(), 'Expected interpreter backend not confirmed by allocator'
                 audit_maps('boot')
                 break
         time.sleep(5)

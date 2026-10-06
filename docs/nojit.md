@@ -27,12 +27,12 @@ o teste físico descrito abaixo. Um teste Linux não substitui esse critério.
 
 ### Evidências publicadas em 6 de outubro de 2026
 
-O [build iOS bem-sucedido](https://github.com/hc6q/Husk/actions/runs/37521025306)
-usa o commit `c64fd0b2903819aa4b8fc3b2523e32709305b6ff`.
-O [artifact Husk-NoJIT](https://github.com/hc6q/Husk/actions/runs/37521025306/artifacts/11441036823)
+O [build iOS bem-sucedido](https://github.com/hc6q/Husk/actions/runs/37528384216)
+usa o commit `7b2ab022e98340aac9968f99cb931f32b71d7dfc`.
+O [artifact Husk-NoJIT](https://github.com/hc6q/Husk/actions/runs/37528384216/artifacts/11443392414)
 contém `Husk-NoJIT.ipa` unsigned, SHA-256
-`45a8718bf74553011c3c3ee1dae34fdd3732991b1df536fd21817c8bceaba381`.
-O [artifact NoJITSmoke-APK](https://github.com/hc6q/Husk/actions/runs/37521025306/artifacts/11440201371)
+`b0fee9e36ed112d3a67573b7aa8362ef0e2f6d38629db506f0786ae7c56c0814`.
+O [artifact NoJITSmoke-APK](https://github.com/hc6q/Husk/actions/runs/37528384216/artifacts/11443231802)
 contém o fixture Java offline. Build, auditoria do bundle e testes de isolamento
 passaram; isso não certifica execução física.
 
@@ -66,6 +66,16 @@ com guarda de memória ativa. A interface permaneceu bloqueada por
 “Bluetooth keeps stopping” e `uiautomator` ultrapassou 300 segundos.
 Relógio virtual lento altera timers: não foi adotado como solução de produção.
 Não há evidência de APK utilizável, touch ou áudio funcionando nessa variante.
+
+A variante Java sem aceleração gráfica do APK também foi tentada com relógio
+de 16 ns/instrução. Instalação e `am start` retornaram sem erro, mas a
+verificação posterior não encontrou Activity retomada nem XML de interface.
+Houve ANRs/crash de SurfaceFlinger e o diálogo continuou visível.
+A [evidência do segundo APK](https://github.com/hc6q/Husk/blob/feat/nojit-clock-aligned/tests/nojit/evidence/snapshot-clock-shift4/probe-report.json)
+registra o SHA-256 do APK conferido dentro do guest e mantém o resultado
+como falha. `NoJITSmoke.apk` e `NoJITSmoke-Software.apk` usam o mesmo fixture
+Java offline; nenhum dos dois foi certificado como utilizável no iPhone.
+O script para produzir o segundo APK está na branch de experimento.
 
 O snapshot foi criado num host com páginas de 16 KiB. No Linux de 4 KiB,
 `tests/nojit/align_snapshot_roms.py`, nas branches de teste, alinha regiões ROM para
