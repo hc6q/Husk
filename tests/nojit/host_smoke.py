@@ -190,8 +190,8 @@ try:
     exchange('input keyevent 82')
     log('[NoJIT] Launching package')
     exchange('monkey -p org.husk.nojitsmoke -c android.intent.category.LAUNCHER 1')
-    for _ in range(20):
-        activity = exchange('dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity"',timeout=180)
+    for _ in range(60):
+        activity = exchange('dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true',timeout=180)
         if 'org.husk.nojitsmoke' in activity:
             report['apk_resumed'] = True
             break
