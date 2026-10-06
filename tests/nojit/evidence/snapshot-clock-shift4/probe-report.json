@@ -19,6 +19,7 @@
   "product_ipa_includes_clock_experiment": false,
   "guest_bluetooth_disable_returned_success": true,
   "ui_xml_created": false,
-  "surfaceflinger_crash_observed": true,
-  "notes": "pm install and am start succeeded. Later dumpsys found no resumed activity; uiautomator created no XML. Final framebuffer still contains the Bluetooth crash dialog. Host cursor moved; this does not confirm Android touch."
+  "notes": "pm install and am start succeeded. Later dumpsys found no resumed activity; uiautomator created no XML. Final framebuffer still contains the Bluetooth crash dialog. Host cursor moved; this does not confirm Android touch. Evidence correction: the serial records an untracked SurfaceFlinger-named subprocess exiting 0 and crash_dump diagnostic processes, without a fatal backtrace; this does not establish that the main SurfaceFlinger service crashed.",
+  "surfaceflinger_crash_confirmed": false,
+  "surfaceflinger_named_untracked_process_exit_observed": true
 }
