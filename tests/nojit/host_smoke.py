@@ -189,7 +189,7 @@ try:
     exchange('settings put global device_provisioned 1; settings put secure user_setup_complete 1')
     exchange('input keyevent 82')
     log('[NoJIT] Launching package')
-    exchange('monkey -p org.husk.nojitsmoke -c android.intent.category.LAUNCHER 1')
+    exchange('am start -n org.husk.nojitsmoke/.MainActivity', timeout=900)
     for _ in range(60):
         activity = exchange('dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true',timeout=180)
         if 'org.husk.nojitsmoke' in activity:
