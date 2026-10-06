@@ -23,6 +23,7 @@ for source in target["sources"]:
     source.setdefault("excludes", []).extend([
         "JIT*.swift", "TranslationLayer.swift", "TL*.swift",
         "HuskGamepad.swift", "VirtualPad.swift", "husk-jit.js",
+        "Info*.plist", "*.entitlements",
     ])
 settings = target["settings"]["base"]
 settings["INFOPLIST_FILE"] = "Husk/Info-NoJIT.plist"

@@ -31,6 +31,8 @@ targets:
       - HuskGamepad.swift
       - VirtualPad.swift
       - husk-jit.js
+      - Info*.plist
+      - '*.entitlements'
     - path: Husk/Resources
       buildPhase: resources
       excludes:
@@ -40,6 +42,8 @@ targets:
       - HuskGamepad.swift
       - VirtualPad.swift
       - husk-jit.js
+      - Info*.plist
+      - '*.entitlements'
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(HUSK_BUNDLE_IDENTIFIER)
