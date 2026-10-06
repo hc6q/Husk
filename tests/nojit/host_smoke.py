@@ -238,6 +238,26 @@ finally:
     report['elapsed_seconds'] = round(time.monotonic()-started,1)
     if bridge:
         bridge.close()
+    if proc.poll() is None:
+        try:
+            with socket.create_connection(('127.0.0.1',15598),timeout=30) as control:
+                stream = control.makefile('rwb',buffering=0)
+                stream.readline()
+                def diagnostic(name, arguments=None):
+                    stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
+                    while True:
+                        response = json.loads(stream.readline())
+                        if 'error' in response:
+                            raise RuntimeError(response)
+                        if 'return' in response:
+                            return response['return']
+                diagnostic('qmp_capabilities')
+                report['qmp_status'] = diagnostic('query-status')
+                for name in ('info cpus', 'info registers', 'info network'):
+                    report[name] = diagnostic('human-monitor-command', {'command-line':name})
+                diagnostic('screendump', {'filename':str(a.output.resolve()/'final-screen.ppm')})
+        except (OSError, ValueError, RuntimeError) as error:
+            report['qmp_diagnostic_error'] = str(error)
     proc.terminate()
     try:
         proc.wait(timeout=15)
