@@ -70,7 +70,9 @@ Não há evidência de APK utilizável, touch ou áudio funcionando nessa varian
 A variante Java sem aceleração gráfica do APK também foi tentada com relógio
 de 16 ns/instrução. Instalação e `am start` retornaram sem erro, mas a
 verificação posterior não encontrou Activity retomada nem XML de interface.
-Houve ANRs/crash de SurfaceFlinger e o diálogo continuou visível.
+Houve ANRs e o diálogo continuou visível. O serial mostra um subprocesso
+nomeado SurfaceFlinger saindo, mas não contém backtrace que confirme uma
+falha fatal do serviço ou sua causa.
 A [evidência do segundo APK](https://github.com/hc6q/Husk/blob/feat/nojit-clock-aligned/tests/nojit/evidence/snapshot-clock-shift4/probe-report.json)
 registra o SHA-256 do APK conferido dentro do guest e mantém o resultado
 como falha. `NoJITSmoke.apk` e `NoJITSmoke-Software.apk` usam o mesmo fixture

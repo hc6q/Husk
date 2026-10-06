@@ -71,8 +71,9 @@ Android chegou ao boot em 43,4 segundos e o APK original instalou.
 O APK software também instalou e `am start` retornou sem erro, com SHA-256
 `34098a43ff38034deeb40a8c1d0807e82f7de1467bd2abf1c11c03bcff18e4f9`
 conferido dentro do guest. A verificação posterior não encontrou Activity
-retomada nem XML de interface. O serial registra falhas/ANRs e crash de
-SurfaceFlinger. A captura final ainda mostra o diálogo Bluetooth e o cursor
+retomada nem XML de interface. O serial registra ANRs e coleta de diagnóstico, incluindo um subprocesso
+nomeado SurfaceFlinger saindo com status 0. Sem backtrace, isso não confirma
+crash fatal do serviço. A captura final ainda mostra o diálogo Bluetooth e o cursor
 sobre Close app; movimento do cursor QEMU não prova resposta ao touch Android.
 
 O relatório normal não chegou à sua etapa de lançamento/contador, pois o
