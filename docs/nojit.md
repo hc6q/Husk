@@ -17,7 +17,8 @@ Não confunda um IPA compilado com um emulador validado num iPhone.
 | Buffer sem execução | Log real `TCI bytecode buffer RW`; guarda `LD_PRELOAD` rejeita `mmap` W+X, memória anônima executável e `mprotect` EXEC |
 | Android pronto | Snapshot oficial da imagem v12 restaurado sob TCI; `sys.boot_completed=1`, guarda ativa e mapas sem W+X |
 | APK de teste | `NoJITSmoke.apk` Java, offline, instalado no Android com `pm install` retornando `Success`; fonte em `tests/nojit/fixture` |
-| APK aberto, touch e áudio | Não confirmados: a tentativa via `monkey` sofreu timeout e System UI apresentou ANR; lançamento direto em teste |
+| APK retomado | Confirmado no host Linux por `topResumedActivity` após `am start`; conteúdo utilizável ainda não confirmado |
+| Touch e áudio | Não confirmados; diálogos de falha da imagem e timeout de UI impedem aprovação do teste |
 | iPhone, assinatura comum, Metal, touch, áudio | Ainda sem dispositivo conectado para validação; não certificadas |
 
 O critério `iPhone → importar APK → iniciar Android → instalar → abrir app` exige
@@ -26,30 +27,48 @@ o teste físico descrito abaixo. Um teste Linux não substitui esse critério.
 
 ### Evidências publicadas em 6 de outubro de 2026
 
-O [build iOS bem-sucedido](https://github.com/hc6q/Husk/actions/runs/37511157027)
-usa o commit `7d8e52ca90e103fb7845c7b91b91caa6b1d01485`.
-O [artifact Husk-NoJIT](https://github.com/hc6q/Husk/actions/runs/37511157027/artifacts/11434913868)
-contém o IPA unsigned; o
-[artifact NoJITSmoke-APK](https://github.com/hc6q/Husk/actions/runs/37511157027/artifacts/11435032574)
-contém o APK de teste. A auditoria de build/bundle e os testes de isolamento
-passaram; isso não certifica a execução física.
+O [build iOS bem-sucedido](https://github.com/hc6q/Husk/actions/runs/37521025306)
+usa o commit `c64fd0b2903819aa4b8fc3b2523e32709305b6ff`.
+O [artifact Husk-NoJIT](https://github.com/hc6q/Husk/actions/runs/37521025306/artifacts/11441036823)
+contém `Husk-NoJIT.ipa` unsigned, SHA-256
+`45a8718bf74553011c3c3ee1dae34fdd3732991b1df536fd21817c8bceaba381`.
+O [artifact NoJITSmoke-APK](https://github.com/hc6q/Husk/actions/runs/37521025306/artifacts/11440201371)
+contém o fixture Java offline. Build, auditoria do bundle e testes de isolamento
+passaram; isso não certifica execução física.
 
-A [tentativa Linux com snapshot](https://github.com/hc6q/Husk/actions/runs/37511146658)
-registrou Android pronto em 180,9 segundos e instalação concluída em 541,6
-segundos desde o início. A guarda de memória permaneceu ativa; o buffer TCI
-foi RW e não houve região W+X no mapa conferido após o boot. O comando
-`monkey` ultrapassou 300 segundos. O relatório contém
-`boot_completed=true`, `apk_installed=true`, `apk_resumed=false`.
-A captura final mostra “System UI isn't responding”.
-[Relatório, mapas, serial e captura](https://github.com/hc6q/Husk/actions/runs/37511146658/artifacts/11437230597).
+A [tentativa de lançamento direto](https://github.com/hc6q/Husk/actions/runs/37517643167)
+registrou Android pronto em 51,1 segundos, instalação em 327,1 segundos,
+`am start` em 413,1 segundos e `topResumedActivity` do fixture em 520,7 segundos.
+Os mapas foram auditados após boot e lançamento, sem W+X ou memória anônima
+executável. O relatório contém `boot_completed=true`, `apk_installed=true`,
+`apk_resumed=true`, `usb_touch_confirmed=false` e `guest_audio_confirmed=false`.
+A captura contém “System UI isn't responding”; uma atividade retomada não
+prova que o app esteja visível e utilizável.
+[Relatório, mapas, serial e captura](https://github.com/hc6q/Husk/actions/runs/37517643167/artifacts/11439401680).
 
-Esses números medem **restauração do snapshot**, não cold boot, nem desempenho
-de iPhone, nem uma comparação JIT/TCI. A imagem e o snapshot são os originais:
-nenhum Google Play Services foi necessário para instalar o fixture.
-Ainda não existe evidência de APK aberto e utilizável.
+O [cold boot sem snapshot](https://github.com/hc6q/Husk/actions/runs/37502187232)
+não chegou a `sys.boot_completed=1` em 7208,5 segundos. O serial registra
+reinícios de netd/zygote e lockups; instalação e lançamento não ocorreram.
+[Diagnósticos do cold boot](https://github.com/hc6q/Husk/actions/runs/37502187232/artifacts/11437657756).
+Uma [repetição do snapshot](https://github.com/hc6q/Husk/actions/runs/37520812062)
+chegou ao boot, mas perdeu o serviço de instalação: o resultado não é estável.
+
+Os números de snapshot medem **restauração**, não cold boot, iPhone ou uma
+comparação JIT/TCI. Nenhum Play Services foi necessário para instalar o fixture.
+Os testes Linux usam framebuffer 2D; não exercitam virgl/ANGLE/Metal do iOS.
+
+Há um experimento separado de relógio por instrução e alinhamento da migração
+na [branch de experimento](https://github.com/hc6q/Husk/tree/feat/nojit-clock-aligned),
+com script `tests/nojit/align_snapshot_clock.py` e evidência local versionada.
+Ele **não integra o IPA publicado**.
+Em execução local, snapshot restaurou, APK instalou e a Activity retomou,
+com guarda de memória ativa. A interface permaneceu bloqueada por
+“Bluetooth keeps stopping” e `uiautomator` ultrapassou 300 segundos.
+Relógio virtual lento altera timers: não foi adotado como solução de produção.
+Não há evidência de APK utilizável, touch ou áudio funcionando nessa variante.
 
 O snapshot foi criado num host com páginas de 16 KiB. No Linux de 4 KiB,
-`tests/nojit/align_snapshot_roms.py` alinha as regiões ROM de migração para
+`tests/nojit/align_snapshot_roms.py`, nas branches de teste, alinha regiões ROM para
 16 KiB antes de compilar o QEMU de teste. Sem isso, a restauração falha com
 `Size too large: /rom@etc/acpi/rsdp: 0x4000 > 0x1000`.
 Esse ajuste pertence ao teste Linux; o build iOS já usa páginas de 16 KiB.
@@ -171,8 +190,8 @@ python3 tests/nojit/host_smoke.py \
 
 O teste guarda serial, log QEMU, comandos, screenshot e `report.json`. Só passa
 quando `sys.boot_completed=1`, `pm install` retorna `Success` e `dumpsys`
-confirma uma atividade retomada do pacote. Não passa apenas por QEMU continuar
-rodando. O host usa framebuffer software e áudio WAV; não testa a integração
+confirma uma atividade retomada do pacote e USB HID altera o contador visível.
+Não passa apenas por QEMU continuar rodando ou por uma Activity retomada. O host usa framebuffer software e áudio WAV; não testa a integração
 Metal/AudioUnit/touch iOS. O APK contém botões para esses testes físicos.
 
 No iPhone, exporte `husk.log` e confira as seis fases:
@@ -211,8 +230,15 @@ continuam. APKs ARM32 dependem do suporte já oferecido pela imagem.
 
 TCI reduz exigências de execução, não a RAM que Android precisa. Assinatura
 comum sujeita o app ao limite de memória/jetsam do aparelho; o snapshot de
-4 GB pode exceder esse limite. Reduza resolução, prefira cold boot e teste num
-aparelho com RAM suficiente. Isso não está comprovado num iPhone nesta sessão.
+4 GB pode exceder esse limite. Reduza resolução e teste num aparelho com RAM suficiente. O target No-JIT
+preserva a preferência original por snapshot, também exibida nos Settings.
+TCI não altera o stamp de hardware: caches de tradução não fazem parte da
+migração. Snapshot e GPU/áudio ainda devem ter topologia compatível; o snapshot
+oficial é software, sem virtio-sound. Para reproduzir o caminho de boot validado
+no host, habilite o snapshot e selecione a opção de GPU software existente.
+O snapshot de 4 GB pode ultrapassar o orçamento do aparelho. Cold boot continua
+disponível, mas o teste Linux falhou no prazo de duas horas. Nenhuma das opções
+está certificada num iPhone.
 Uma importação enfileirada não deve ser interrompida encerrando o app antes da
 instalação; reimporte caso a sessão seja encerrada. Áudio continua opt-in nos
 Settings porque altera a configuração de hardware/snapshots da VM.

@@ -1,0 +1,50 @@
+[  485.169320][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  485.988264][    T1] init: starting service 'artd'...
+[  486.611605][    T1] init: ... started service 'artd' has pid 3413
+[  486.901857][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  486.979435][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  488.030026][  T232] libbinder.Binder: Binder transaction to android.os.IServiceManager code 2 took 1057ms. Data bytes: 88 Reply bytes: 52 Flags: 16
+[  488.088134][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3413, started 1743ms ago)
+[  488.771608][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  489.434920][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  490.053825][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3413, started 3709ms ago)
+[  490.067764][  T232] servicemanager: Notifying artd they do (previously: don't) have clients when service is guaranteed to be in use
+[  490.329075][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  490.549633][  T232] libbinder.BpBinder: onLastStrongRef automatically unlinking death recipients for descriptor: '(not cached)'
+[  572.630550][  T232] servicemanager: Caller(pid=3476,uid=10137,sid=u:r:untrusted_app_27:s0:c137,c256,c512,c768) Found android.hardware.graphics.allocator.IAllocator/default in device VINTF manifest.
+[  574.229208][  T232] servicemanager: Caller(pid=3476,uid=10137,sid=u:r:untrusted_app_27:s0:c137,c256,c512,c768) Found android.hardware.graphics.allocator.IAllocator/default in device VINTF manifest.
+[  575.751150][  T232] libbinder.Binder: Binder transaction to android.os.IServiceManager code 9 took 1578ms. Data bytes: 188 Reply bytes: 8 Flags: 16
+[  577.113993][  T232] servicemanager: Caller(pid=3476,uid=10137,sid=u:r:untrusted_app_27:s0:c137,c256,c512,c768) Found mapper/minigbm_upstream in device VINTF manifest.
+[  578.108571][  T232] libbinder.Binder: Binder transaction to android.os.IServiceManager code 9 took 1014ms. Data bytes: 124 Reply bytes: 8 Flags: 16
+[  585.473708][    T1] init: starting service 'idmap2d'...
+[  586.049847][    T1] init: ... started service 'idmap2d' has pid 3518
+[  586.316631][    T1] init: Control message: Processed ctl.start for 'idmap2d' from pid: 1662 (system_server)
+[  630.974430][    T1] init: Sending SIGKILL to service 'idmap2d' (pid 3518) process group...
+[  631.600701][    T1] libprocessgroup: Removed cgroup /sys/fs/cgroup/system/uid_1000/pid_3518
+[  631.966751][    T1] init: Control message: Processed ctl.stop for 'idmap2d' from pid: 1662 (system_server)
+[  632.350940][    T1] init: Service 'idmap2d' (pid 3518) received SIGKILL
+[  632.583033][    T1] init: Sending SIGKILL to service 'idmap2d' (pid 3518) process group...
+[  632.935938][    T1] libprocessgroup: Failed to write 1 to /sys/fs/cgroup/system/uid_1000/pid_3518/cgroup.kill: No such file or directory
+[  633.414755][    T1] libprocessgroup: Failed to open /sys/fs/cgroup/system/uid_1000/pid_3518/cgroup.procs: No such file or directory
+[  649.893932][  T242] type=1400 audit(1789288451.133:151): avc:  denied  { read } for  comm="InputDispatcher" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  652.662932][ T2819] binder: release 3553:3555 transaction 194699 out, still active
+[  661.948810][  T242] type=1400 audit(1789288463.317:152): avc:  denied  { read } for  comm="InputDispatcher" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  666.659405][  T242] type=1400 audit(1789288468.137:153): avc:  denied  { read } for  comm="InputDispatcher" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  677.624652][    T1] init: Untracked process (pid: 3564 name: (crash_dump64) ppid: 1 pgrp: 3563 state: Z) exited with status 0
+[  677.995527][    T1] init: Untracked process (pid: 3564 name: (crash_dump64) ppid: 1 pgrp: 3563 state: Z) did not have an associated service entry and will not be reaped
+[  678.469221][    T1] init: Untracked process (pid: 3566 name: (surfaceflinger) ppid: 1 pgrp: 3566 state: Z) exited with status 0
+[  678.816913][    T1] init: Untracked process (pid: 3566 name: (surfaceflinger) ppid: 1 pgrp: 3566 state: Z) did not have an associated service entry and will not be reaped
+[  710.967215][ T2050] binder: 2050:1662 reply target not found
+[  711.240711][ T2050] binder: 1662:2050 transaction reply to 0:0 failed 199678/29189/0, code 0 size 4-0 line 3365
+[  712.443674][ T2050] binder: send failed reply for transaction 194699, target dead
+[  719.401692][  T242] type=1400 audit(1789288520.933:154): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  720.885277][  T242] type=1400 audit(1789288522.417:155): avc:  denied  { read } for  comm="InputDispatcher" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  721.881294][    T1] init: Untracked process (pid: 3570 name: (crash_dump64) ppid: 1 pgrp: 3561 state: Z) received SIGALRM
+[  722.267326][    T1] init: Untracked process (pid: 3570 name: (crash_dump64) ppid: 1 pgrp: 3561 state: Z) did not have an associated service entry and will not be reaped
+[  722.610162][  T242] type=1400 audit(1789288524.145:156): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  732.250176][  T242] type=1400 audit(1789288533.777:157): avc:  denied  { read } for  comm="InputDispatcher" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  734.136220][  T242] type=1400 audit(1789288535.669:158): avc:  denied  { read } for  comm="AnrConsumer" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  738.993849][    T1] init: Untracked process (pid: 3584 name: (binder:1662_9) ppid: 1 pgrp: 3584 state: Z) exited with status 0
+[  739.347087][    T1] init: Untracked process (pid: 3584 name: (binder:1662_9) ppid: 1 pgrp: 3584 state: Z) did not have an associated service entry and will not be reaped
+[  741.637746][  T242] type=1400 audit(1789288543.157:159): avc:  denied  { read } for  comm="AnrConsumer" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  754.061252][  T242] type=1400 audit(1789288555.553:160): avc:  denied  { read } for  comm="AnrConsumer" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0

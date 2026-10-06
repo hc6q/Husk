@@ -1,0 +1,58 @@
+[0.0s] [NoJIT] Starting Android under mmap/mprotect guard
+[11.9s] [NoJIT] Snapshot load job completed; checking Android readiness
+[43.4s] $ getprop sys.boot_completed
+1
+exit=0
+[43.4s] [NoJIT] Android boot completed
+[43.4s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+[43.4s] [NoJIT] Installing APK
+[51.4s] $ head -c 8553 > /data/local/tmp/NoJITSmoke.apk
+
+exit=0
+[57.8s] $ wc -c < /data/local/tmp/NoJITSmoke.apk
+8553
+exit=0
+[311.0s] $ pm install -r -t /data/local/tmp/NoJITSmoke.apk
+Success
+exit=0
+[311.0s] Interactive probe: JSON shell/qmp commands; {"continue":true} resumes acceptance
+[454.1s] $ svc bluetooth disable; am force-stop com.android.bluetooth; settings put global device_provisioned 1; settings put secure user_setup_complete 1; input keyevent 82; am start -n org.husk.nojitsmoke/.MainActivity
+ShellCommand: Exec disable
+disable: Success
+Starting: Intent { cmp=org.husk.nojitsmoke/.MainActivity }
+exit=0
+[454.3s] $ : > /data/local/tmp/NoJITSmoke-Software.apk
+
+exit=0
+[466.6s] $ [APK payload transfer omitted]
+
+exit=0
+[477.4s] $ [APK payload transfer omitted]
+
+exit=0
+[486.2s] $ [APK payload transfer omitted]
+
+exit=0
+[529.7s] $ [APK payload transfer omitted]
+
+exit=0
+[563.3s] $ [APK payload transfer omitted]
+
+exit=0
+[580.6s] $ [APK payload transfer omitted]
+
+exit=0
+[589.8s] $ [APK payload transfer omitted]
+
+exit=0
+[596.6s] $ [APK payload transfer omitted]
+
+exit=0
+[867.1s] $ sha256sum /data/local/tmp/NoJITSmoke-Software.apk; pm install -r -t /data/local/tmp/NoJITSmoke-Software.apk; am start -n org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity
+34098a43ff38034deeb40a8c1d0807e82f7de1467bd2abf1c11c03bcff18e4f9  /data/local/tmp/NoJITSmoke-Software.apk
+Success
+Starting: Intent { cmp=org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity }
+exit=0
+[1425.9s] $ dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'; uiautomator dump /data/local/tmp/software-window.xml; cat /data/local/tmp/software-window.xml
+cat: /data/local/tmp/software-window.xml: No such file or directory
+exit=1

@@ -187,7 +187,9 @@ final class QemuRunner: ObservableObject {
     /// restore is even possible. Was just the display; sound joins it because
     /// it changes the same thing.
     nonisolated static var machineStamp: String {
-        (ExecutionMode.noJIT ? "tci+" : "") + (glProven ? "gl" : "sw")
+        // TCG translation caches are not migrated. TCI changes the CPU
+        // backend, not the devices described by this hardware stamp.
+        (glProven ? "gl" : "sw")
             + (soundEnabled ? "+snd" : "")
             + (landscapeGuest ? "+land" : "")
             + (customResolution.map { "+\($0.w)x\($0.h)" } ?? "")

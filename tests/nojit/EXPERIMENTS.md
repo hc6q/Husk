@@ -63,3 +63,19 @@ experimental e incompleto. Ele usa `CONFIG_TCG_THREADED_INTERPRETER`, diferente
 de `CONFIG_TCG_INTERPRETER`; não basta trocar uma opção e reaproveitar a auditoria
 TCI. O ambiente local é x86_64 e não executa esse backend. Ele não foi adotado nem
 certificado como alternativa funcional para Android/iOS nesta implementação.
+
+## Resultado com 16 ns por instrução
+
+`evidence/snapshot-clock-shift4` registra a tentativa de 1425,9 segundos.
+Android chegou ao boot em 43,4 segundos e o APK original instalou.
+O APK software também instalou e `am start` retornou sem erro, com SHA-256
+`34098a43ff38034deeb40a8c1d0807e82f7de1467bd2abf1c11c03bcff18e4f9`
+conferido dentro do guest. A verificação posterior não encontrou Activity
+retomada nem XML de interface. O serial registra falhas/ANRs e crash de
+SurfaceFlinger. A captura final ainda mostra o diálogo Bluetooth e o cursor
+sobre Close app; movimento do cursor QEMU não prova resposta ao touch Android.
+
+O relatório normal não chegou à sua etapa de lançamento/contador, pois o
+probe interativo falhou antes. `probe-report.json` separa a segunda instalação
+dessa aprovação não alcançada. Nenhum resultado foi convertido em sucesso
+somente por `am start` retornar. O experimento de relógio não será incluído no IPA.
