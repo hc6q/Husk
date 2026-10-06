@@ -1975,9 +1975,9 @@ final class AndroidHost: ObservableObject {
                     throw BridgeError.io(output.isEmpty ? "Android did not confirm the launch." : output)
                 }
                 var resumed = false
-                for _ in 0..<10 {
+                for _ in 0..<60 {
                     let activity = try GuestBridge.shared.shell(
-                        "dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'", timeout: 120)
+                        "dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' || true", timeout: 120)
                     if activity.contains("\(pkg)/") { resumed = true; break }
                     try await Task.sleep(nanoseconds: 3_000_000_000)
                 }
