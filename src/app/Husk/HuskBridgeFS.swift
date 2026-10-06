@@ -1969,9 +1969,18 @@ final class AndroidHost: ObservableObject {
         busy = "Opening…"
         Task.detached { [weak self] in
             do {
+                // Resolve with the existing package service; launching monkey
+                // starts another ART process and can time out under TCI.
+                let resolution = try GuestBridge.shared.shell(
+                    "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER \(Self.quote(pkg))", timeout: 300)
+                let components = resolution.split(whereSeparator: \.isNewline)
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                guard let component = components.last(where: { $0.hasPrefix("\(pkg)/") }) else {
+                    throw BridgeError.io("Android could not resolve a launcher activity.")
+                }
                 let output = try GuestBridge.shared.shell(
-                    "monkey -p \(pkg) -c android.intent.category.LAUNCHER 1", timeout: 300)
-                guard output.contains("Events injected: 1") else {
+                    "am start -n \(Self.quote(component))", timeout: 900)
+                guard output.contains("Starting: Intent"), !output.contains("Error:") else {
                     throw BridgeError.io(output.isEmpty ? "Android did not confirm the launch." : output)
                 }
                 var resumed = false
