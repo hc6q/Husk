@@ -2,7 +2,7 @@ name: No-JIT Android snapshot acceptance (Linux)
 on:
   push:
     branches: ['feat/nojit-snapshot']
-    paths: ['.github/workflows/nojit-snapshot.yml']
+    paths: ['.github/workflows/nojit-snapshot.yml', 'tests/nojit/host_smoke.py']
   workflow_dispatch:
 permissions:
   contents: read
