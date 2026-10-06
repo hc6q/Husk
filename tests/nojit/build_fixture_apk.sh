@@ -7,7 +7,7 @@ TOOLS="$SDK/build-tools/35.0.0"
 ANDROID="$SDK/platforms/android-35/android.jar"
 WORK="$ROOT/build/nojit-apk"
 mkdir -p "$WORK/classes" "$WORK/dex"
-javac -source 8 -target 8 -bootclasspath "$ANDROID" -d "$WORK/classes" \
+javac -source 8 -target 8 -classpath "$ANDROID" -d "$WORK/classes" \
     "$ROOT/tests/nojit/fixture/MainActivity.java"
 "$TOOLS/d8" --lib "$ANDROID" --min-api 23 --output "$WORK/dex" \
     "$WORK/classes/org/husk/nojitsmoke/MainActivity.class"

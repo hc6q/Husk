@@ -24,11 +24,13 @@ unpack() {
     touch "$stamp"
 }
 
+# iconv is supplied by the iOS SDK and GLib is built with NLS disabled.
+# The optional GNU pins are not build stages; do not make them prerequisites.
 rc=0
-for u in "$FFI_SRC" "$ICONV_SRC" "$GETTEXT_SRC" "$GLIB_SRC" "$PIXMAN_SRC" "$SLIRP_SRC" "$QEMU_SRC"; do
+for u in "$FFI_SRC" "$GLIB_SRC" "$PIXMAN_SRC" "$SLIRP_SRC" "$QEMU_SRC"; do
     fetch "$u" || rc=1
 done
-for u in "$FFI_SRC" "$ICONV_SRC" "$GETTEXT_SRC" "$GLIB_SRC" "$PIXMAN_SRC" "$SLIRP_SRC" "$QEMU_SRC"; do
+for u in "$FFI_SRC" "$GLIB_SRC" "$PIXMAN_SRC" "$SLIRP_SRC" "$QEMU_SRC"; do
     unpack "$u" || rc=1
 done
 

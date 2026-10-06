@@ -1960,6 +1960,40 @@ final class AndroidHost: ObservableObject {
 
     func launch(_ pkg: String, then: @escaping () -> Void) {
         ExecutionMode.log("Launching package: \(pkg)")
+        #if HUSK_NO_JIT
+        guard isReady, busy == nil else { return }
+        busy = "Opening…"
+        Task.detached { [weak self] in
+            do {
+                let output = try GuestBridge.shared.shell(
+                    "monkey -p \(pkg) -c android.intent.category.LAUNCHER 1", timeout: 300)
+                guard output.contains("Events injected: 1") else {
+                    throw BridgeError.io(output.isEmpty ? "Android did not confirm the launch." : output)
+                }
+                var resumed = false
+                for _ in 0..<10 {
+                    let activity = try GuestBridge.shared.shell(
+                        "dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity'", timeout: 120)
+                    if activity.contains("\(pkg)/") { resumed = true; break }
+                    try await Task.sleep(nanoseconds: 3_000_000_000)
+                }
+                guard resumed else { throw BridgeError.io("The app did not reach a resumed activity.") }
+                ExecutionMode.log("Package launch confirmed: \(pkg)")
+                ExecutionMode.auditMemory()
+                await MainActor.run {
+                    self?.markLaunched(pkg)
+                    self?.busy = nil
+                    then()
+                }
+            } catch {
+                ExecutionMode.log("Package launch failed: \(error.localizedDescription)")
+                await MainActor.run {
+                    self?.busy = nil
+                    self?.say("Launch failed", error.localizedDescription, good: false)
+                }
+            }
+        }
+        #else
         markLaunched(pkg)
         busy = "Opening…"
         Task.detached { [weak self] in
@@ -1968,5 +2002,6 @@ final class AndroidHost: ObservableObject {
             HuskLog.log("bridge", "launch \(pkg): \(out.split(separator: "\n").last ?? "")")
             await MainActor.run { self?.busy = nil; then() }
         }
+        #endif
     }
 }
