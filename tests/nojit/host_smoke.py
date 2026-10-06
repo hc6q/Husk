@@ -6,6 +6,7 @@ same vda image/firmware as Husk and disposable writable vars/userdata disks.
 The mmap guard must be loaded into QEMU throughout this test.
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -22,6 +23,8 @@ p = argparse.ArgumentParser()
 p.add_argument('--qemu', type=Path, required=True)
 p.add_argument('--guest', type=Path, required=True)
 p.add_argument('--apk', type=Path, required=True)
+p.add_argument('--package', default='org.husk.nojitsmoke')
+p.add_argument('--ui-timeout', type=int, default=300)
 p.add_argument('--guard', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--timeout', type=int, default=7200)
@@ -31,8 +34,13 @@ p.add_argument('--snapshot', help='Restore the original userdata snapshot throug
 p.add_argument('--file-ram', action='store_true')
 p.add_argument('--interactive', action='store_true', help='Read shell/QMP JSON commands after install')
 p.add_argument('--icount', action='store_true', help='Experimental instruction clock')
+p.add_argument('--icount-shift', type=int, choices=range(0,11), default=0, help='Experimental ns per instruction exponent')
 p.add_argument('--snapshot-clock-aligned', action='store_true', help='Requires the experimental timer migration patch')
 a = p.parse_args()
+if a.icount_shift and not a.icount:
+    p.error('--icount-shift requires --icount')
+if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z][A-Za-z0-9_]*)+', a.package):
+    p.error('--package must be an Android package ID')
 if a.icount and a.snapshot and not a.snapshot_clock_aligned:
     p.error('--icount cannot restore the wall-clock snapshot without alignment')
 if a.snapshot_clock_aligned and not (a.icount and a.snapshot):
@@ -43,7 +51,9 @@ a.output.mkdir(parents=True, exist_ok=True)
 report = {'platform': 'Linux x86_64 host / Android ARM64 guest', 'backend': 'TCI',
           'boot_completed': False, 'apk_installed': False, 'apk_resumed': False,
           'usb_touch_confirmed': False, 'guest_audio_confirmed': False,
-          'ios_device_tested': False}
+          'ios_device_tested': False, 'package_id': a.package,
+          'apk_sha256': hashlib.sha256(a.apk.read_bytes()).hexdigest(),
+          'ui_timeout_seconds': a.ui_timeout}
 started = time.monotonic()
 def log(message):
     line = f'[{time.monotonic()-started:.1f}s] {message}'
@@ -81,8 +91,9 @@ if a.snapshot:
     index = args.index('-audiodev')
     del args[index:index+4]
 if a.icount:
-    args += ['-icount', 'shift=0,sleep=off,align=off', '-rtc', 'clock=vm']
-    report['instruction_clock'] = 'shift=0,sleep=off,align=off'
+    clock = f'shift={a.icount_shift},sleep=off,align=off'
+    args += ['-icount', clock, '-rtc', 'clock=vm']
+    report['instruction_clock'] = clock
 env = dict(os.environ, LD_PRELOAD=str(a.guard.resolve()))
 stderr = (a.output/'qemu.log').open('w')
 proc = subprocess.Popen(args, stdout=stderr, stderr=stderr, env=env)
@@ -253,18 +264,18 @@ try:
     exchange('settings put global device_provisioned 1; settings put secure user_setup_complete 1')
     exchange('input keyevent 82')
     log('[NoJIT] Launching package')
-    launcher = exchange('cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER org.husk.nojitsmoke',timeout=300).strip().splitlines()[-1]
-    assert launcher.startswith('org.husk.nojitsmoke/'), launcher
+    launcher = exchange('cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER '+shlex.quote(a.package),timeout=300).strip().splitlines()[-1]
+    assert launcher.startswith(a.package+'/'), launcher
     exchange('am start -n '+shlex.quote(launcher), timeout=900)
     for _ in range(60):
         activity = exchange('dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true',timeout=180)
-        if 'org.husk.nojitsmoke' in activity:
+        if a.package+'/' in activity:
             report['apk_resumed'] = True
             break
         time.sleep(5)
     assert report['apk_resumed'], 'APK was installed but did not resume'
     audit_maps('apk')
-    exchange('uiautomator dump /data/local/tmp/window.xml',timeout=300)
+    exchange('uiautomator dump /data/local/tmp/window.xml',timeout=a.ui_timeout)
     report['ui_xml'] = exchange('cat /data/local/tmp/window.xml')
     with socket.create_connection(('127.0.0.1',15598),timeout=180) as qmp, qmp.makefile('rwb',buffering=0) as f:
         f.readline()
@@ -291,7 +302,7 @@ try:
                 {'type':'btn','data':{'button':'left','down':False}}]})
         touch('Count touch')
         time.sleep(5)
-        exchange('uiautomator dump /data/local/tmp/window.xml',timeout=300)
+        exchange('uiautomator dump /data/local/tmp/window.xml',timeout=a.ui_timeout)
         report['ui_xml_after_touch'] = exchange('cat /data/local/tmp/window.xml')
         report['usb_touch_confirmed'] = 'Touches: 1' in report['ui_xml_after_touch']
         assert report['usb_touch_confirmed'], 'USB HID did not change the touch counter'
