@@ -102,3 +102,10 @@ Isso não muda o IPA publicado nem permite carregar TCTI no app Swift atual.
 Para adotá-lo no iOS ainda seriam necessários identificação explícita do
 backend, build Apple separado e comprovação de app/input/áudio em dispositivo.
 Compilação ou retorno de am start não certificam funcionamento.
+
+A revisão do bootstrap TCTI também encontrou clobbers ausentes no inline asm:
+x24 é temporário dos gadgets, BLR altera x30/LR, e helpers C podem destruir
+registradores voláteis. O patch do ensaio declara x16/x17, x18 apenas fora de
+Apple, x24/LR e SIMD para preservar a ABI e impedir operandos de memória em
+registradores destruídos. Isso altera o código estático compilado; não cria
+código executável em runtime. A correção ainda precisa passar pela execução.

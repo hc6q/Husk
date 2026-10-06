@@ -32,4 +32,17 @@ change('tcg/region.c', 'fprintf(stderr, "[NoJIT] TCI bytecode buffer RW, size=%z
 #endif''')
 change('tcg/region.c', '#if defined(__APPLE__) && TARGET_OS_IPHONE && !defined(CONFIG_TCG_INTERPRETER)', '#if defined(__APPLE__) && TARGET_OS_IPHONE && !defined(CONFIG_TCG_INTERPRETER) && !defined(CONFIG_TCG_THREADED_INTERPRETER)')
 change('include/tcg/tcg-apple-jit.h', '#if defined(__aarch64__) && defined(CONFIG_DARWIN) && !defined(CONFIG_TCG_INTERPRETER)', '#if defined(__aarch64__) && defined(CONFIG_DARWIN) && !defined(CONFIG_TCG_INTERPRETER) && !defined(CONFIG_TCG_THREADED_INTERPRETER)')
+# Gadgets use x24 and BLR overwrites LR. C helper calls also clobber the
+# caller-saved GPRs/SIMD registers. Describe these to the host compiler so it
+# saves the ABI state and cannot keep an asm memory operand in a destroyed GPR.
+change('tcg/aarch64-tcti/tcg-target.c.inc', '"x25", "x26", "x27", "x28", "cc", "memory"', '''"x16", "x17",
+#ifndef __APPLE__
+        "x18",
+#endif
+        "x24", "x25", "x26", "x27", "x28", "x30",
+        "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7",
+        "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15",
+        "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23",
+        "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31",
+        "cc", "memory"''')
 print('[NoJIT] Isolated TCTI host experiment configured; allocator remains RW')
