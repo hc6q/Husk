@@ -36,7 +36,7 @@ jobs:
       - name: Install host dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential clang meson ninja-build pkg-config libglib2.0-dev libpixman-1-dev libffi-dev libslirp-dev libzstd-dev zlib1g-dev libfdt-dev
+          sudo apt-get install -y build-essential clang time meson ninja-build pkg-config libglib2.0-dev libpixman-1-dev libffi-dev libslirp-dev libzstd-dev zlib1g-dev libfdt-dev
       - uses: actions/download-artifact@v4
         with:
           name: NoJIT-TCTI-fixture
@@ -56,8 +56,9 @@ jobs:
           cd third_party/build/qemu-10.0.12-utm
           mkdir _husk_host_nojit
           cd _husk_host_nojit
-          ../configure --cc=clang --cxx=clang++ --target-list=aarch64-softmmu --disable-tcg-interpreter --enable-tcg-threaded-interpreter --disable-shared-lib --extra-cflags=-DHUSK_NO_JIT=1 --enable-slirp --disable-werror --disable-docs --disable-gtk --disable-sdl --disable-opengl --disable-virglrenderer
-          ninja -j2 qemu-system-aarch64 qemu-img
+          ../configure --cc=clang --cxx=clang++ --target-list=aarch64-softmmu --disable-tcg-interpreter --enable-tcg-threaded-interpreter --disable-shared-lib --disable-debug-info --extra-cflags=-DHUSK_NO_JIT=1 --enable-slirp --disable-werror --disable-docs --disable-gtk --disable-sdl --disable-opengl --disable-virglrenderer
+          free -m > "$GITHUB_WORKSPACE/build/logs/build-memory-before.txt"
+          /usr/bin/time -v ninja -j1 qemu-system-aarch64 qemu-img 2>&1 | tee "$GITHUB_WORKSPACE/build/logs/tcti-build.log"
           cd "$GITHUB_WORKSPACE"
           python3 tests/nojit/verify_tcti_host.py third_party/build/qemu-10.0.12-utm/_husk_host_nojit
           python3 tests/nojit/test_memory_guard.py
