@@ -25,7 +25,9 @@ for row in commands:
 
 if args.app:
     app = args.app
-    assert not list(app.glob("**/*Stik*")), "StikJIT payload present"
+    # Legal notices are text resources, not executable Stik dependencies.
+    stik = list((app / "Frameworks").glob("*Stik*"))
+    assert not stik, f"StikJIT framework present: {stik}"
     assert not list(app.glob("**/*JITHelper*")), "debugger helper present"
     assert not list(app.glob("**/husk-jit.js")), "JIT script present"
     plist = plistlib.loads((app / "Info.plist").read_bytes())
