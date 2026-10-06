@@ -24,12 +24,15 @@ p.add_argument('--guard', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--timeout', type=int, default=7200)
 p.add_argument('--memory', type=int, default=2048)
+p.add_argument('--cpus', type=int, choices=(1,2,4), default=4)
 p.add_argument('--snapshot', help='Restore the original userdata snapshot through QMP')
 p.add_argument('--file-ram', action='store_true')
 p.add_argument('--icount', action='store_true', help='Experimental instruction clock for cold boot only')
 a = p.parse_args()
 if a.icount and a.snapshot:
     p.error('--icount cannot restore the wall-clock snapshot')
+if a.snapshot and a.cpus != 4:
+    p.error('the official snapshot requires four vCPUs')
 a.output.mkdir(parents=True, exist_ok=True)
 report = {'platform': 'Linux x86_64 host / Android ARM64 guest', 'backend': 'TCI',
           'boot_completed': False, 'apk_installed': False, 'apk_resumed': False,
@@ -46,7 +49,7 @@ qemu = a.qemu.resolve()
 guest = a.guest.resolve()
 machine = 'virt,highmem=on,memory-backend=huskram' if a.file_ram else 'virt,highmem=on'
 args = [str(qemu), '-M', machine, '-cpu',
-        'max,pauth-impdef=on,sve=off,sme=off', '-smp', '4', '-m', str(a.memory),
+        'max,pauth-impdef=on,sve=off,sme=off', '-smp', str(a.cpus), '-m', str(a.memory),
         '-accel', 'tcg,tb-size=128,thread=single,split-wx=off',
         '-device', 'virtio-balloon-pci,id=huskballoon',
         '-drive', f'if=pflash,unit=0,format=raw,readonly=on,file={guest}/firmware.fd',
