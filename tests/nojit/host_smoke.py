@@ -124,7 +124,7 @@ try:
             stream = control.makefile('rwb',buffering=0)
             stream.readline()
             def qmp_command(name, arguments=None):
-                stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\\n').encode())
+                stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
                 while True:
                     response = json.loads(stream.readline())
                     if 'error' in response:
