@@ -623,6 +623,8 @@ wanted = [
     "husk_ios_jit_detach",
     "husk_ios_jit_log_footprint",
     "husk_ios_available_memory",
+    "husk_tci_enabled",
+    "husk_nojit_memory_is_safe",
 ]
 _present = _re.findall(r"^\s*(husk_\w+);", s, _re.M)
 for _stale in [n for n in _present if n not in wanted]:
@@ -639,5 +641,8 @@ if missing:
 else:
     print("  system/qemu.symbols: already exported")
 PY2
+
+cp "$HUSK_ROOT/src/ios-jit/husk-nojit.c" "$Q/tcg/"
+python3 "$HUSK_ROOT/scripts/configure_nojit.py" "$Q"
 
 echo "[ok  ] integrated"

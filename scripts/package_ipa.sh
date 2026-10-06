@@ -14,6 +14,19 @@ set -euo pipefail
 HUSK_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DD="${DD:-/tmp/husk_ipa}"
 OUT="${1:-$HOME/Desktop/Husk.ipa}"
+HUSK_NO_JIT="${HUSK_NO_JIT:-0}"
+QEMU_BUILD=_husk_build
+STAGE_LIB=lib
+PROJECT=Husk.xcodeproj
+SCHEME=Husk
+if [ "$HUSK_NO_JIT" = 1 ]; then
+    QEMU_BUILD=_husk_build_nojit
+    STAGE_LIB=nojit/lib
+    PROJECT=Husk-NoJIT.xcodeproj
+    SCHEME=Husk-NoJIT
+    DD="${DD}-nojit"
+    python3 "$HUSK_ROOT/scripts/generate_nojit_project.py"
+fi
 mkdir -p "$DD"
 
 # The .app is not the only thing that can be stale. The Xcode target links the
@@ -21,8 +34,8 @@ mkdir -p "$DD"
 # stage -- so rebuilding QEMU with plain ninja produces a new dylib that never
 # reaches the app, and the IPA ships the previous one with no warning at all.
 # That happened once and looked exactly like a fix that did not work.
-BUILT="$HUSK_ROOT/third_party/build/qemu-10.0.12-utm/_husk_build/libqemu-aarch64-softmmu.dylib"
-STAGED="$HUSK_ROOT/build/ios-arm64/lib/libqemu-aarch64-softmmu.dylib"
+BUILT="$HUSK_ROOT/third_party/build/qemu-10.0.12-utm/$QEMU_BUILD/libqemu-aarch64-softmmu.dylib"
+STAGED="$HUSK_ROOT/build/ios-arm64/$STAGE_LIB/libqemu-aarch64-softmmu.dylib"
 if [ -f "$BUILT" ] && [ "$BUILT" -nt "$STAGED" ]; then
     echo "==> staged dylib is older than the built one; restaging"
     cp "$BUILT" "$STAGED"
@@ -37,13 +50,14 @@ fi
 # is plainly right there on disk.
 if command -v xcodegen >/dev/null 2>&1; then
     echo "==> regenerating the project from project.yml"
-    (cd "$HUSK_ROOT/src/app" && xcodegen generate --quiet)
+    (cd "$HUSK_ROOT/src/app" && if [ "$HUSK_NO_JIT" = 1 ]; then xcodegen generate --spec project-nojit.yml --quiet; else xcodegen generate --quiet; fi)
 else
+    [ "$HUSK_NO_JIT" != 1 ] || { echo "No-JIT requires xcodegen" >&2; exit 1; }
     echo "==> xcodegen not installed; using the checked-in project as-is" >&2
 fi
 
 echo "==> building"
-xcodebuild -project "$HUSK_ROOT/src/app/Husk.xcodeproj" -scheme Husk \
+xcodebuild -project "$HUSK_ROOT/src/app/$PROJECT" -scheme "$SCHEME" \
     -sdk iphoneos -configuration Release -derivedDataPath "$DD" \
     CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
     build 2>&1 | tee "$DD/build.log" | grep -E "error:|BUILD (SUCCEEDED|FAILED)" || true
@@ -58,13 +72,13 @@ if ! grep -q "BUILD SUCCEEDED" "$DD/build.log"; then
     exit 1
 fi
 
-APP="$DD/Build/Products/Release-iphoneos/Husk.app"
+APP="$DD/Build/Products/Release-iphoneos/$SCHEME.app"
 [ -d "$APP" ] || { echo "no app bundle at $APP" >&2; exit 1; }
 
 # Stamp the build's identity into the bundle so its logs can name themselves.
 # A log from a stale install is otherwise indistinguishable from a log proving a
 # fix did not work.
-APP_PLIST="$DD/Build/Products/Release-iphoneos/Husk.app/Info.plist"
+APP_PLIST="$DD/Build/Products/Release-iphoneos/$SCHEME.app/Info.plist"
 if [ -f "$APP_PLIST" ]; then
     COMMIT="$(git -C "$HUSK_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)"
     git -C "$HUSK_ROOT" diff --quiet 2>/dev/null || COMMIT="$COMMIT-dirty"
@@ -115,7 +129,7 @@ for lib in libqemu-aarch64-softmmu.dylib libANGLE-shared.dylib; do
 done
 
 # Guest images, firmware, and blank disk seeds required by first launch.
-for f in vmlinuz-virt initramfs-virt husk-jit.js \
+for f in vmlinuz-virt initramfs-virt \
          edk2-aarch64-code.fd lineage-efi-vars-seed.fd lineage-vdb-seed.qcow2; do
     if [ ! -f "$APP/$f" ]; then
         echo "  MISSING  $f" >&2
@@ -127,7 +141,8 @@ done
 
 # Built-in StikJIT's helper. Without it the app still installs and runs with
 # StikDebug, but its JIT setup would offer a method that can only fail.
-for f in "$APP/PlugIns/HuskJITHelper.appex/HuskJITHelper" \
+if [ "$HUSK_NO_JIT" != 1 ]; then
+for f in "$APP/husk-jit.js" "$APP/PlugIns/HuskJITHelper.appex/HuskJITHelper" \
          "$APP/Frameworks/StikJIT.framework/StikJIT" \
          "$APP/Frameworks/StikJIT.framework/Info.plist"; do
     if [ ! -f "$f" ]; then
@@ -137,6 +152,10 @@ for f in "$APP/PlugIns/HuskJITHelper.appex/HuskJITHelper" \
         printf "  ok       %-28s %s\n" "$(basename "$f")" "${f#$APP/}"
     fi
 done
+
+else
+    python3 "$HUSK_ROOT/scripts/verify_nojit.py" --build "$HUSK_ROOT/third_party/build/qemu-10.0.12-utm/$QEMU_BUILD" --app "$APP" || rc=1
+fi
 
 [ $rc -eq 0 ] || { echo "==> bundle is not installable; refusing to package" >&2; exit 1; }
 
