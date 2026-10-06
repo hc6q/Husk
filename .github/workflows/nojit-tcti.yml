@@ -36,7 +36,7 @@ jobs:
       - name: Install host dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential meson ninja-build pkg-config libglib2.0-dev libpixman-1-dev libffi-dev libslirp-dev libzstd-dev zlib1g-dev libfdt-dev
+          sudo apt-get install -y build-essential clang meson ninja-build pkg-config libglib2.0-dev libpixman-1-dev libffi-dev libslirp-dev libzstd-dev zlib1g-dev libfdt-dev
       - uses: actions/download-artifact@v4
         with:
           name: NoJIT-TCTI-fixture
@@ -49,10 +49,14 @@ jobs:
           ./scripts/integrate_husk.sh
           python3 tests/nojit/align_snapshot_roms.py third_party/build/qemu-10.0.12-utm
           python3 tests/nojit/enable_tcti_host.py third_party/build/qemu-10.0.12-utm
+          # The fork's static gadgets require naked AArch64 functions. Fail if
+          # the compiler ignores the attribute, rather than testing bad code.
+          python3 -c 'from pathlib import Path; Path("build/naked.c").write_text("__attribute__((naked)) void probe(void) { __asm__(\"ret\"); }\n")'
+          clang -Werror=attributes -S build/naked.c -o build/naked.s
           cd third_party/build/qemu-10.0.12-utm
           mkdir _husk_host_nojit
           cd _husk_host_nojit
-          ../configure --target-list=aarch64-softmmu --disable-tcg-interpreter --enable-tcg-threaded-interpreter --disable-shared-lib --extra-cflags=-DHUSK_NO_JIT=1 --enable-slirp --disable-werror --disable-docs --disable-gtk --disable-sdl --disable-opengl --disable-virglrenderer
+          ../configure --cc=clang --cxx=clang++ --target-list=aarch64-softmmu --disable-tcg-interpreter --enable-tcg-threaded-interpreter --disable-shared-lib --extra-cflags=-DHUSK_NO_JIT=1 --enable-slirp --disable-werror --disable-docs --disable-gtk --disable-sdl --disable-opengl --disable-virglrenderer
           ninja -j2 qemu-system-aarch64 qemu-img
           cd "$GITHUB_WORKSPACE"
           python3 tests/nojit/verify_tcti_host.py third_party/build/qemu-10.0.12-utm/_husk_host_nojit
