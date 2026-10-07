@@ -260,12 +260,15 @@ nem aceita apenas Activity retomada:
 [execução 37568981358](https://github.com/hc6q/Husk/actions/runs/37568981358),
 commit `2316cd9659ef165cf5b283408d055adf13c442ea`.
 
-O artifact atual [Rottweiler.ipa](https://github.com/hc6q/Husk/actions/runs/37569613800/artifacts/11459653974)
-foi compilado no commit `375b16e`, com nome Rottweiler e bundle
+O artifact atual [Rottweiler.ipa](https://github.com/hc6q/Husk/actions/runs/37582649499/artifacts/11465351300)
+foi compilado no commit `4d291d7`, com nome Rottweiler e bundle
 `com.husk.nojit`. SHA-256 do IPA:
-`6807d7326d9acf827d182494c8d9c8d7d474a8d21e034d34d97033ea67e52ca7`.
-O build e a auditoria passaram; ainda é uma versão experimental para repetir
-o teste físico, e não uma entrega aprovada pelo critério mínimo.
+`dcab3206cca144d4effb41151d5d9059882388ca0e92899e62871f98d20ae313`.
+O build e a auditoria passaram. O caminho No-JIT agora desativa e encerra o
+pacote Bluetooth ausente da VM depois de o bridge ficar disponível e envia
+`ACTION_CLOSE_SYSTEM_DIALOGS` para retirar o diálogo antigo. Tudo permanece
+sob `HUSK_NO_JIT`; o target JIT não executa essa rotina adicional. A correção
+ainda precisa de repetição física e não aprova, sozinha, o critério mínimo.
 
 O commit `1bd661d` separa a listagem de pacotes das leituras opcionais de
 ícones/metadados no boot e após instalar em No-JIT. A atualização detalhada
@@ -316,8 +319,9 @@ read-only já estavam em cache. Só aceita boot após confirmar
 continuam obrigatórios. O modo multi terminou reprovado em 899,0 s:
 o serial confirmou a opção de boot e seu early-init, mas o Android acionou
 `reboot,RescueParty` e encerrou `husk_agent`. `sys.boot_completed=1`, instalação,
-Activity e toque não foram confirmados. O teste single ainda estava em
-execução na verificação de 7 de outubro às 02:43 de Brasília.
+Activity e toque não foram confirmados. O teste single também terminou
+reprovado após 5403,9 s: confirmou `ro.hw_timeout_multiplier=50`, mas não
+`sys.boot_completed=1`, instalação, Activity ou toque.
 [Evidências e trecho do serial](../tests/nojit/evidence/low-perf-first/README.md).
 A opção continua ausente do IPA. O pacote Bluetooth não é desativado nessa tentativa.
 
@@ -328,7 +332,22 @@ sem repetir instalação ou lançamento. Coleta o buffer de crashes antes de
 Quatro testes passaram (reconexão, prazo fixo, rejeição de propriedades antigas
 de snapshot e saída do QEMU).
 [Repetição com diagnóstico antecipado](https://github.com/hc6q/Husk/actions/runs/37577435425).
-Ela permanece pendente; reconexão não é uma correção do crash de System UI.
+Single e multi esgotaram 5400 s sem `sys.boot_completed=1`. Ambos observaram
+`ro.boot.low_perf=1` e `ro.hw_timeout_multiplier=50`; nenhum instalou o APK.
+O buffer de crash atual identificou uma repetição de System UI:
+`RootTaskDesksOrganizer` tenta criar uma root task com `windowingMode=5`, que
+o low-RAM da opção low-performance não suporta. O Android então chega a
+`reboot,RescueParty`. Reconexão não corrige esse crash.
+
+O ensaio seguinte persistiu antes do reboot a preferência que desativa os
+recursos experimentais de desktop, o rádio e o pacote Bluetooth, verificando
+os três valores no guest. Mesmo assim, a
+[execução 37582279935](https://github.com/hc6q/Husk/actions/runs/37582279935)
+falhou nos dois modos após 5400 s. No multi, o System UI continuou tentando
+`windowingMode=5` e acionou RescueParty; no single, o agente não voltou depois
+do reboot. Não houve instalação, Activity retomada, frame com contador 0→1 ou
+áudio. Isso mostra que a preferência testada não controla esse caminho do
+System UI nessa imagem. A opção low-performance continua fora do IPA.
 
 Um [teste local anterior](../tests/nojit/evidence/local-tci-radio/README.md)
 confirmou boot, instalação e Activity retomada, mas continuou bloqueado
