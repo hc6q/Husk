@@ -212,6 +212,39 @@ As duas tentativas terminaram reprovadas:
 Nenhuma modifica ExecutionMode.swift ou o IPA de 7b2ab02. Nenhum resultado
 nesta documentação certifica o critério mínimo no iPhone.
 
+## Rottweiler: validação exploratória no iPhone e correções
+
+Em 7 de outubro de 2026, o usuário abriu o IPA de commit `7b2ab02` em um
+iPhone 13 com iOS 27.0.1. O log confirmou TCI ativo, JIT desativado e auditorias
+iniciais sem W+X. Com renderer GPU, a incompatibilidade de topologia impediu
+usar o snapshot e iniciou cold boot. Ao selecionar CPU e manter Sound desligado,
+o snapshot `husk-ready` restaurou em aproximadamente 21,4 segundos e a tela
+inicial do LineageOS apareceu. O diálogo “Bluetooth keeps stopping” bloqueou a
+interface; o usuário informou que tocar em Close app não produziu resposta.
+O log recebido terminou antes de confirmar `sys.boot_completed` pelo bridge.
+Não houve APK instalado/aberto, contador de toque ou áudio confirmado no aparelho.
+
+O commit `13319ca` adia a conexão No-JIT do bridge até a restauração terminar,
+exige marcadores completos e status terminado por newline, preserva UTF-8
+fragmentado e evita repetir operações após timeout. O teste Swift percorre
+fragmentações de TCP, status não zero e respostas antigas; o build iOS passou
+na [execução 37567356236](https://github.com/hc6q/Husk/actions/runs/37567356236).
+A opção CPU torna-se padrão para instalações novas No-JIT; preferências já
+escolhidas continuam válidas. GPU/ANGLE/Metal permanece disponível para cold boot.
+
+O commit `496f926` recupera APKs importados e copiados para staging após reabrir
+o app e prioriza sua instalação sobre buscas de ícones e sondagens de renderer.
+A [execução 37567843484](https://github.com/hc6q/Husk/actions/runs/37567843484)
+valida esse build. Essas correções ainda precisam de repetição física; não são
+prova de que o diálogo Bluetooth foi resolvido.
+
+A [branch de diagnóstico](https://github.com/hc6q/Husk/tree/feat/rottweiler-diagnostic)
+compara TCI single/multi, aplica settings/svc de rádio antes de instalar o APK e
+guarda logcat, crash, input e Bluetooth do Android. Não desativa o pacote
+Bluetooth nem suprime diálogos de erros para passar o teste. A aceitação continua
+exigindo interface visível e contador 0 → 1 após USB HID. Resultados pendentes:
+[37567494260](https://github.com/hc6q/Husk/actions/runs/37567494260).
+
 ## QEMU e seleção do interpretador
 
 O projeto fixa **UTM QEMU 10.0.12-utm** em `scripts/sources.sh`. A opção foi
@@ -381,5 +414,5 @@ O snapshot de 4 GB pode ultrapassar o orçamento do aparelho. Cold boot continua
 disponível, mas o teste Linux falhou no prazo de duas horas. Nenhuma das opções
 está certificada num iPhone.
 Uma importação enfileirada não deve ser interrompida encerrando o app antes da
-instalação; reimporte caso a sessão seja encerrada. Áudio continua opt-in nos
+instalação; em builds anteriores a `496f926`, reimporte caso a sessão seja encerrada; builds novos recuperam o staging ao iniciar. Áudio continua opt-in nos
 Settings porque altera a configuração de hardware/snapshots da VM.

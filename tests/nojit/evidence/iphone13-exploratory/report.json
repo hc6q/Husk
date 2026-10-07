@@ -1,0 +1,20 @@
+{
+  "source": "User-provided iPhone logs and screenshots in this conversation, 2026-10-07; raw personal logs not published",
+  "device": "iPhone 13 (iPhone14,5)",
+  "ios": "27.0.1",
+  "ipa_build_commit": "7b2ab02",
+  "tci_enabled_log_observed": true,
+  "jit_disabled_log_observed": true,
+  "initial_wx_memory_audits_passed": true,
+  "software_snapshot_restored_seconds": 21.4,
+  "lineageos_welcome_screen_visible": true,
+  "bluetooth_error_dialog_visible": true,
+  "pointer_delivery_logs_observed": true,
+  "android_boot_property_confirmed": false,
+  "apk_install_confirmed": false,
+  "usable_apk_confirmed": false,
+  "touch_response_confirmed": false,
+  "audio_confirmed": false,
+  "user_touch_observation": "Tapped Close app; no visible response reported",
+  "minimum_acceptance_passed": false
+}
