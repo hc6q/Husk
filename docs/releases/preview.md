@@ -4,8 +4,6 @@ Android APK launcher for iOS arm64, based on Husk and QEMU 10.0.12-utm TCI.
 This is an experimental test build, not a validated daily-use release.
 
 ## Changes
-- Rottweiler branding, amber interface and custom Rottweiler icon.
-- Correct Rottweiler name on boot and startup screens.
 - Guest Bluetooth shell waits moved off the iOS main actor to avoid blocking the APK file picker.
 - No-JIT path attempts to disable the absent Android Bluetooth service and close its stale crash dialog.
 - Dependency cache isolated by checkout path after the repository rename.
