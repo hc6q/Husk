@@ -1,0 +1,65 @@
+name: Publish audited Rottweiler preview
+on:
+  push:
+    branches: ['feat/nojit']
+    paths: ['config/publish-preview.json', '.github/workflows/publish-preview.yml']
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: github.repository == 'hc6q/Rottweiler' && contains(github.event.head_commit.message, '[publish-built]')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify successful source build
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json, os, subprocess
+          config=json.load(open('config/publish-preview.json'))
+          run=json.loads(subprocess.check_output(['gh','api',f"repos/{os.environ['GH_REPO']}/actions/runs/{config['run_id']}"]))
+          assert run['conclusion']=='success' and run['head_sha']==config['source_sha']
+          assert run['head_repository']['full_name']==os.environ['GH_REPO']
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write(f"run={config['run_id']}\nsha={config['source_sha']}\n")
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          name: Rottweiler
+          path: release-assets
+          run-id: ${{ steps.source.outputs.run }}
+          github-token: ${{ github.token }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: NoJITSmoke-APK
+          path: release-assets
+          run-id: ${{ steps.source.outputs.run }}
+          github-token: ${{ github.token }}
+      - name: Verify IPA version and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          python3 - <<'PY'
+          import json, plistlib, zipfile
+          expected=json.load(open('config/nojit-version.json'))
+          with zipfile.ZipFile('release-assets/Rottweiler.ipa') as ipa:
+              assert ipa.testzip() is None
+              info=plistlib.loads(ipa.read('Payload/Husk-NoJIT.app/Info.plist'))
+              assert info['CFBundleShortVersionString']==expected['version']
+              assert info['CFBundleVersion']==str(expected['build'])
+              assert info['CFBundleIdentifier']=='com.husk.nojit' and info['HuskExecutionMode']=='TCI'
+              assert 'Payload/Husk-NoJIT.app/nojit-performance.sh' in ipa.namelist()
+          PY
+          version=$(python3 -c 'import json; print(json.load(open("config/nojit-version.json"))["version"])')
+          sha256sum release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk > release-assets/SHA256SUMS.txt
+          cp docs/releases/preview.md release-notes.md
+          printf '\nSource commit: `%s`\n' "$SOURCE_SHA" >> release-notes.md
+          gh release create "v${version}-preview" release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk release-assets/SHA256SUMS.txt --repo "$GH_REPO" --target "$SOURCE_SHA" --title "Rottweiler ${version} — Experimental preview" --prerelease --notes-file release-notes.md
