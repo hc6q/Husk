@@ -7,6 +7,7 @@ The mmap guard must be loaded into QEMU throughout this test.
 """
 import argparse
 from boot_readiness import wait_for_boot
+from guest_preboot import stage_low_performance_boot
 from anr_recovery import wait_button
 import framebuffer_ui
 import hashlib
@@ -188,6 +189,37 @@ def exchange(command, timeout=300, payload=None):
                 return body.decode(errors='replace')
     raise TimeoutError(command)
 
+def drop_boot_connection():
+    global bridge
+    if bridge is not None:
+        bridge.close()
+        bridge = None
+
+def connect_for_boot(timeout):
+    global bridge
+    if bridge is not None:
+        return
+    candidate = socket.create_connection(('127.0.0.1',15599),timeout=timeout)
+    try:
+        candidate.settimeout(timeout)
+        token = b'__HUSK_BRIDGE_READY__\n'
+        candidate.sendall(b'echo __HUSK_BRIDGE_READY__\n')
+        response = b''
+        until = time.monotonic()+timeout
+        while token not in response and time.monotonic() < until:
+            chunk = candidate.recv(4096)
+            if not chunk:
+                raise ConnectionError('guest listener not ready')
+            response += chunk
+            if len(response) > 65536:
+                raise RuntimeError('Invalid boot handshake response')
+        if token not in response:
+            raise TimeoutError('boot handshake incomplete')
+        bridge = candidate
+    except BaseException:
+        candidate.close()
+        raise
+
 try:
     log('[NoJIT] Starting Android under mmap/mprotect guard')
     if a.snapshot:
@@ -229,13 +261,32 @@ try:
             else:
                 raise TimeoutError('snapshot restore did not finish')
             if a.low_performance_guest:
-                # The original snapshot has cached immutable properties and
-                # pre-existing dialogs. Boot its disks afresh; never claim
-                # its old sys.boot_completed flag as this new boot's result.
+                # Persist settings through the already-booted official
+                # snapshot, then reset. low_perf marks the device low-RAM,
+                # which disables freeform support; leaving desktop mode on
+                # makes SystemUI repeatedly request unsupported mode 5 tasks.
+                qmp_command('cont')
+                stage_deadline = min(started+a.timeout, time.monotonic()+600)
+                while True:
+                    try:
+                        connect_for_boot(min(10, max(1, stage_deadline-time.monotonic())))
+                        break
+                    except (ConnectionError, OSError, TimeoutError):
+                        drop_boot_connection()
+                        if proc.poll() is not None or time.monotonic() >= stage_deadline:
+                            raise TimeoutError('Snapshot bridge unavailable for preboot settings')
+                        time.sleep(2)
+                report.update(stage_low_performance_boot(
+                    exchange, quiet_radio=a.quiet_guest_radio,
+                    disable_bluetooth_package=a.disable_guest_bluetooth_package))
+                drop_boot_connection()
+                qmp_command('stop')
                 qmp_command('system_reset')
                 report['reboot_after_snapshot'] = True
-                log('[NoJIT] Reboot restored machine to apply existing low-performance boot option')
-            qmp_command('cont')
+                log('[NoJIT] Guest desktop/radio settings persisted; real low-performance reboot started')
+                qmp_command('cont')
+            else:
+                qmp_command('cont')
             report['snapshot_requested'] = a.snapshot
             if a.snapshot_clock_aligned:
                 text = (a.output/'qemu.log').read_text()
@@ -243,37 +294,6 @@ try:
                 assert match, 'QEMU did not confirm the snapshot clock alignment'
                 report['snapshot_clock_ns'] = int(match.group(1))
             log('[NoJIT] Snapshot load job completed; checking Android readiness')
-    def drop_boot_connection():
-        global bridge
-        if bridge is not None:
-            bridge.close()
-            bridge = None
-
-    def connect_for_boot(timeout):
-        global bridge
-        if bridge is not None:
-            return
-        candidate = socket.create_connection(('127.0.0.1',15599),timeout=timeout)
-        try:
-            candidate.settimeout(timeout)
-            token = b'__HUSK_BRIDGE_READY__\n'
-            candidate.sendall(b'echo __HUSK_BRIDGE_READY__\n')
-            response = b''
-            until = time.monotonic()+timeout
-            while token not in response and time.monotonic() < until:
-                chunk = candidate.recv(4096)
-                if not chunk:
-                    raise ConnectionError('guest listener not ready')
-                response += chunk
-                if len(response) > 65536:
-                    raise RuntimeError('Invalid boot handshake response')
-            if token not in response:
-                raise TimeoutError('boot handshake incomplete')
-            bridge = candidate
-        except BaseException:
-            candidate.close()
-            raise
-
     crash_sequence = 0
     def collect_boot_crash(timeout):
         global crash_sequence
@@ -299,13 +319,14 @@ try:
     log('[NoJIT] Android boot completed')
     assert f'[NoJIT] {a.backend} bytecode buffer RW' in (a.output/'qemu.log').read_text(), 'Expected interpreter backend not confirmed by allocator'
     audit_maps('boot')
-    if a.quiet_guest_radio:
+    if a.quiet_guest_radio and not report.get('guest_radio_disabled_before_reboot'):
         log('[NoJIT] Disable absent guest radio before installation')
         exchange('settings put global bluetooth_on 0; settings put global ble_scan_always_enabled 0',timeout=180)
         exchange('svc bluetooth disable',timeout=180)
         assert exchange('settings get global bluetooth_on',timeout=120).strip() == '0'
         report['guest_radio_disabled_before_install'] = True
-    if a.disable_guest_bluetooth_package:
+    if (a.disable_guest_bluetooth_package and
+            not report.get('guest_bluetooth_package_disabled_before_reboot')):
         log('[NoJIT] Experimental guest Bluetooth package disable (no virtual Bluetooth device)')
         exchange('pm disable-user --user 0 com.android.bluetooth',timeout=300)
         disabled = exchange('pm list packages -d com.android.bluetooth',timeout=180).splitlines()

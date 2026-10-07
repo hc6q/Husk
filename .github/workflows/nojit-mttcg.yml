@@ -2,7 +2,7 @@ name: Rottweiler LineageOS low-performance boot (ARM64 TCI)
 on:
   push:
     branches: ['feat/rottweiler-diagnostic']
-    paths: ['.github/workflows/nojit-mttcg.yml', 'tests/nojit/host_smoke.py', 'tests/nojit/anr_recovery.py', 'tests/nojit/framebuffer_ui.py', 'tests/nojit/low_performance_guest.py', 'tests/nojit/boot_readiness.py', 'tests/nojit/test_boot_readiness.py']
+    paths: ['.github/workflows/nojit-mttcg.yml', 'tests/nojit/host_smoke.py', 'tests/nojit/anr_recovery.py', 'tests/nojit/framebuffer_ui.py', 'tests/nojit/low_performance_guest.py', 'tests/nojit/boot_readiness.py', 'tests/nojit/test_boot_readiness.py', 'tests/nojit/guest_preboot.py', 'tests/nojit/test_guest_preboot.py']
   workflow_dispatch:
 permissions:
   contents: read
@@ -22,6 +22,7 @@ jobs:
       - name: Build offline APK
         run: |
           python3 tests/nojit/test_boot_readiness.py
+          python3 tests/nojit/test_guest_preboot.py
           sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
           HUSK_SMOKE_SOFTWARE_UI=1 ./tests/nojit/build_fixture_apk.sh
       - uses: actions/upload-artifact@v4
@@ -79,7 +80,7 @@ jobs:
           python3 tests/nojit/low_performance_guest.py --base guests/nojit-host/vda.qcow2 --overlay guests/nojit-host/vda-low-perf.qcow2 --qemu-img "$QEMU_IMG" --qemu-io third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-io | tee build/logs/low-performance-preparation.txt
       - name: Boot install open touch test with executable-memory guard
         run: |
-          python3 tests/nojit/host_smoke.py --qemu third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64 --guest guests/nojit-host --apk build/NoJITSmoke-Software.apk --guard build/nojit-mmap-guard.so --package org.husk.nojitsmoke.software --low-performance-guest --quiet-guest-radio --collect-guest-diagnostics --framebuffer-ui --platform-dialog-recovery-attempts 3 --backend TCI --threads ${{ matrix.threads }} --memory 4096 --snapshot husk-ready --file-ram --output build/logs/host-smoke --timeout 5400
+          python3 tests/nojit/host_smoke.py --qemu third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64 --guest guests/nojit-host --apk build/NoJITSmoke-Software.apk --guard build/nojit-mmap-guard.so --package org.husk.nojitsmoke.software --low-performance-guest --quiet-guest-radio --disable-guest-bluetooth-package --collect-guest-diagnostics --framebuffer-ui --platform-dialog-recovery-attempts 3 --backend TCI --threads ${{ matrix.threads }} --memory 4096 --snapshot husk-ready --file-ram --output build/logs/host-smoke --timeout 5400
       - name: Preserve runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
