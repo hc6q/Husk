@@ -93,3 +93,4 @@ jobs:
             third_party/build/qemu-10.0.12-utm/_husk_host_nojit/config-host.h
             third_party/build/qemu-10.0.12-utm/_husk_host_nojit/compile_commands.json
             third_party/build/qemu-10.0.12-utm/tcg/husk-tcti-split-report.json
+            third_party/build/qemu-10.0.12-utm/tcg/aarch64-tcti/tcg-target-has.h

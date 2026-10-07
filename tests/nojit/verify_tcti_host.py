@@ -17,3 +17,8 @@ for c in commands:
 symbols=subprocess.check_output(['nm','-g',str(root/'qemu-system-aarch64')],text=True)
 assert 'BreakGetJITMapping' not in symbols and 'husk_brk_' not in symbols
 print('[NoJIT] TCTI static-gadget build audit passed; runtime still requires guard and APK acceptance')
+
+capabilities = (root.parent/'tcg/aarch64-tcti/tcg-target-has.h').read_text()
+assert '#define TCG_TARGET_HAS_v64              0' in capabilities
+assert '#define TCG_TARGET_HAS_v128             0' in capabilities
+print('[NoJIT] TCTI gvec scalar/helper fallback confirmed in pinned source')

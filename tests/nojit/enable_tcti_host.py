@@ -59,4 +59,14 @@ if old in body:
 else:
     assert body.count(new) == 2, 'Pinned helper prefix patch changed'
 
+# The first executable TCTI test produced distorted frames. Test the
+# existing QEMU gvec scalar/helper fallback rather than relying on the fork's
+# experimental vector gadgets. Guest NEON capabilities remain unchanged.
+change('tcg/aarch64-tcti/tcg-target-has.h',
+       '#define TCG_TARGET_HAS_v64              1',
+       '#define TCG_TARGET_HAS_v64              0')
+change('tcg/aarch64-tcti/tcg-target-has.h',
+       '#define TCG_TARGET_HAS_v128             1',
+       '#define TCG_TARGET_HAS_v128             0')
+
 print('[NoJIT] Isolated TCTI host experiment configured; allocator remains RW')

@@ -119,3 +119,17 @@ Mach-O, também em ELF Linux. O ajuste mantém `_` em Darwin e usa símbolos
 sem prefixo em Linux. O build anterior levou 18m42s e registrou RSS máximo
 de 976268 KiB; isso não demonstra execução Android. O workflow agora também
 usa `pipefail` para preservar a falha de ninja através de tee.
+
+
+A execução 37552278899 finalmente compilou/ligou TCTI e passou na auditoria.
+Sob guarda, restaurou Android em 36,9 segundos, instalou em 278,8 segundos
+e retornou de am start em 458,6 segundos. Não retomou o fixture: o launcher
+reportado continuou em org.lineageos.setupwizard, e a captura final apresentou
+geometria distorcida. Resultado reprovado em 1482,2 segundos. Não foi adotado
+no iOS nem considerado sucesso de app/input/áudio.
+
+A próxima tentativa desativa apenas TCG_TARGET_HAS_v64/v128 do backend TCTI.
+O QEMU exato já oferece fallback gvec escalar/helpers, também usado pelo TCI.
+Isso mantém NEON no CPU guest e evita os gadgets vetoriais experimentais.
+A origem da distorção ainda não está confirmada; esse ensaio isola uma hipótese,
+não declara correção. Buffer continua RW; flags de boot, hardware e APK iguais.
