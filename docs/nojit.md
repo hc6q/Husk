@@ -181,6 +181,20 @@ toque e áudio não foram aprovados.
 Trechos exatos dos logs dos três workflows estão em tests/nojit/evidence;
 os artifacts mantêm relatórios completos, mapas, serial e capturas.
 
+Duas tentativas continuam separadas do IPA publicado:
+
+- [Cold boot TCI/MTTCG](https://github.com/hc6q/Husk/actions/runs/37558207668):
+  imagem v12 original, userdata novo, 4 vCPUs e 2048 MiB, sem snapshot, icount
+  ou desativação do pacote Bluetooth. Mantém guarda e exige contador de toque
+  no framebuffer. A ponte lenta repete a conexão dentro do prazo de boot,
+  sem alterar sys.boot_completed. Virtio-sound/WAV permite observar áudio no host.
+- [TCTI escalar](https://github.com/hc6q/Husk/actions/runs/37556818486):
+  testa fallback gvec escalar/helpers sem remover NEON do Android.
+
+Os resultados dessas tentativas ainda estão pendentes. Nenhuma modifica
+ExecutionMode.swift ou o IPA de 7b2ab02. Nenhum resultado nesta documentação
+certifica o critério mínimo no iPhone.
+
 ## QEMU e seleção do interpretador
 
 O projeto fixa **UTM QEMU 10.0.12-utm** em `scripts/sources.sh`. A opção foi
