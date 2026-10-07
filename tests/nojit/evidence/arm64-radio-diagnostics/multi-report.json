@@ -1,0 +1,51 @@
+{
+  "platform": "Linux aarch64 host / Android ARM64 guest",
+  "backend": "TCI",
+  "boot_completed": true,
+  "apk_installed": true,
+  "apk_resumed": true,
+  "usb_touch_confirmed": false,
+  "guest_audio_confirmed": false,
+  "ios_device_tested": false,
+  "package_id": "org.husk.nojitsmoke.software",
+  "apk_sha256": "9343927b9eecc7072c834bbffe7fed535741d26e9748d5830ce8d6812b97765b",
+  "ui_timeout_seconds": 300,
+  "cpu_threads": "multi",
+  "vcpus": 4,
+  "memory_mib": 4096,
+  "snapshot_requested": "husk-ready",
+  "boot_seconds": 18.2,
+  "guest_radio_disabled_before_install": true,
+  "ui_validation": "raw framebuffer OCR and USB HID",
+  "platform_dialog_recovery": [
+    {
+      "phase": "before-touch",
+      "action": "Close Bluetooth",
+      "x": 125.0,
+      "y": 465.5
+    },
+    {
+      "phase": "before-touch",
+      "action": "Close Bluetooth",
+      "x": 125.0,
+      "y": 465.5
+    },
+    {
+      "phase": "before-touch",
+      "action": "USB Wait",
+      "x": 121.0,
+      "y": 463.5
+    }
+  ],
+  "last_framebuffer_error": "Platform dialog still covers the fixture",
+  "guest_bluetooth_disabled": true,
+  "elapsed_seconds": 353.6,
+  "elapsed_seconds_with_diagnostics": 378.4,
+  "qmp_status": {
+    "status": "running",
+    "running": true
+  },
+  "info cpus": "* CPU #0: thread_id=12053\r\n  CPU #1: thread_id=12054\r\n  CPU #2: thread_id=12055\r\n  CPU #3: thread_id=12056\r\n",
+  "info registers": "\r\nCPU#0\r\n PC=ffffffdece19e140 X00=ffffffded089b950 X01=0000000000000000\r\nX02=0000000000000004 X03=0000000000000000 X04=000000c2938c60f2\r\nX05=0000000000000001 X06=0000000000000000 X07=0000000000000000\r\nX08=0000000000000190 X09=ffffffded0820fc0 X10=000000000000001c\r\nX11=0000000000000014 X12=000000c29249da8a X13=0000000000000004\r\nX14=ffffffded086b608 X15=0000000000000100 X16=00000000c006287d\r\nX17=00000000c006287d X18=ffffffded087cb80 X19=0000000000000004\r\nX20=0000000000000001 X21=ffffff80ff463fc0 X22=0000000000000000\r\nX23=0000000000000004 X24=0000000000000002 X25=0000000000000004\r\nX26=ffffffded089b950 X27=ffffffded086a000 X28=ffffffdecf9d9aff\r\nX29=ffffffc0800abca0 X30=55a1de5ece19e5fc  SP=ffffffc0800abc70\r\nPSTATE=814020c5 N--- EL1h  BTYPE=0     FPCR=00000000 FPSR=00000011\r\nQ00=0000000000000000:0000000000000000 Q01=0000069500000694:0000069300000032\r\nQ02=0000000000000000:920c000000040104 Q03=8060000080600000:8060000080601800\r\nQ04=8060180680601806:0000180680000000 Q05=0000000000000000:0000000000000000\r\nQ06=0000000000000000:0000000000000000 Q07=8060180680601806:8060180680601806\r\nQ08=0000000000000000:0000000000000000 Q09=0000000000000000:0000000000000000\r\nQ10=0000000000000000:0000000000000000 Q11=0000000000000000:0000000000000000\r\nQ12=0000000000000000:0000000000000000 Q13=0000000000000000:0000000000000000\r\nQ14=0000000000000000:0000000000000000 Q15=0000000000000000:0000000000000000\r\nQ16=c0300c03c0300c03:c0300c03c0300c03 Q17=a00aa00a000a8000:aaaa0a80a0a0a0a8\r\nQ18=8020080280200802:0000080280000000 Q19=0000000000000000:bff2495b9b4845e9\r\nQ20=0000000000000000:3ff0002b8b263fc3 Q21=0000000000000000:00000000ebad8085\r\nQ22=0000000000000000:00000000ebad8086 Q23=0000000000000000:00000000ebad8087\r\nQ24=0000000000000000:00000000ebad8088 Q25=0000000000000000:00000000ebad8089\r\nQ26=0000000000000000:00000000ebad808a Q27=0000000000000000:00000000ebad808b\r\nQ28=0000000000000000:00000000ebad808c Q29=0000000000000000:00000000ebad808d\r\nQ30=0000000000000000:00000000ebad808e Q31=0000000000000000:0000000070a6e1a8\r\n",
+  "info network": "virtio-net-pci.0: index=0,type=nic,model=virtio-net-pci,macaddr=52:54:00:12:34:56\r\n \\ net0: index=0,type=user,net=10.0.2.0,restrict=off\r\n"
+}

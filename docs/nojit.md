@@ -23,7 +23,7 @@ Não confunda um IPA compilado com um emulador validado num iPhone.
 | APK de teste | `NoJITSmoke.apk` Java, offline, instalado no Android com `pm install` retornando `Success`; fonte em `tests/nojit/fixture` |
 | APK retomado | Confirmado no host Linux por `topResumedActivity` após `am start`; conteúdo utilizável ainda não confirmado |
 | Touch e áudio | Não confirmados; diálogos de falha da imagem e timeout de UI impedem aprovação do teste |
-| iPhone, assinatura comum, Metal, touch, áudio | Ainda sem dispositivo conectado para validação; não certificadas |
+| iPhone | Abertura do IPA e tela LineageOS confirmadas por logs/capturas enviados pelo usuário; APK utilizável, touch e áudio não confirmados |
 
 O critério `iPhone → importar APK → iniciar Android → instalar → abrir app` exige
 o teste físico descrito abaixo. Um teste Linux não substitui esse critério.
@@ -238,12 +238,48 @@ A [execução 37567843484](https://github.com/hc6q/Husk/actions/runs/37567843484
 valida esse build. Essas correções ainda precisam de repetição física; não são
 prova de que o diálogo Bluetooth foi resolvido.
 
-A [branch de diagnóstico](https://github.com/hc6q/Husk/tree/feat/rottweiler-diagnostic)
-compara TCI single/multi, aplica settings/svc de rádio antes de instalar o APK e
-guarda logcat, crash, input e Bluetooth do Android. Não desativa o pacote
-Bluetooth nem suprime diálogos de erros para passar o teste. A aceitação continua
-exigindo interface visível e contador 0 → 1 após USB HID. Resultados pendentes:
-[37567494260](https://github.com/hc6q/Husk/actions/runs/37567494260).
+### Diagnóstico noturno — 7 de outubro
+
+A [execução 37567494260](https://github.com/hc6q/Husk/actions/runs/37567494260)
+terminou com falha de interface em **ambos** os modos single/multi. Android
+confirmou boot, instalação e Activity retomada; a captura permaneceu coberta
+por diálogos e o contador USB não mudou. `settings` e `svc bluetooth disable`
+foram confirmados antes da instalação. Mapas após boot/lançamento não contêm
+W+X ou execução anônima; a guarda permaneceu ativa.
+
+Os logs de InputDispatcher mostram eventos USB nas coordenadas esperadas,
+seguidos de timeout na janela de erro do Bluetooth. Portanto enviar um toque
+pelo QMP não comprova entrega à Activity. Há ANRs adicionais no launcher e no
+permission controller. Causa única e correção ainda não confirmadas.
+[Relatórios e trecho dos eventos](../tests/nojit/evidence/arm64-radio-diagnostics/README.md).
+
+O teste seguinte usa framing completo, desativa o pacote Bluetooth apenas no
+guest descartável e o encerra antes da coleta de logs. Essa opção **não integra
+o IPA** até demonstrar melhora na interface real. Também não mascara diálogos
+nem aceita apenas Activity retomada:
+[execução 37568981358](https://github.com/hc6q/Husk/actions/runs/37568981358),
+commit `2316cd9659ef165cf5b283408d055adf13c442ea`.
+
+O artifact atual [Rottweiler.ipa](https://github.com/hc6q/Husk/actions/runs/37567843484/artifacts/11459967226)
+foi compilado no commit `496f926`, com nome Rottweiler e bundle
+`com.husk.nojit`. SHA-256 do IPA:
+`ecff1414b244c9870ce8ef22bf22804a60c49cb5d7cced28fb76365eb24a471d`.
+O build e a auditoria passaram; ainda é uma versão experimental para repetir
+o teste físico, e não uma entrega aprovada pelo critério mínimo.
+
+O commit `1bd661d` separa a listagem de pacotes das leituras opcionais de
+ícones/metadados no boot e após instalar em No-JIT. A atualização detalhada
+continua disponível nas configurações. Isso evita manter a instalação e seu
+save bloqueados por leitura de recursos. Rótulos, ícones existentes,
+metadados e último uso continuam preservados. O contador de espera passa a
+usar tempo real. [Build dessa correção](https://github.com/hc6q/Husk/actions/runs/37569220794).
+
+Próxima alternativa, se o rádio não bastar: verificar a configuração de
+`ro.hw_timeout_multiplier` **antes do zygote**, sem mudar a imagem base por
+suposição. AOSP oferece esse multiplicador para emuladores muito lentos:
+[alteração do InputDispatcher](https://android.googlesource.com/platform/frameworks/native/+/c486ab3897247111f261bf5493e4198be2c06187%5E%21/).
+Isso é uma hipótese de diagnóstico; aumentar timeout não substitui prova de
+framebuffer, contador USB e APK utilizável. Não foi aplicado ao IPA.
 
 ## QEMU e seleção do interpretador
 
