@@ -81,6 +81,7 @@ jobs:
             build/DerivedData-nojit/build.log
             third_party/build/qemu-10.0.12-utm/_husk_build_nojit/config-host.h
             third_party/build/qemu-10.0.12-utm/_husk_build_nojit/meson-info/
+            third_party/build/qemu-10.0.12-utm/_husk_build_nojit/meson-logs/
             third_party/build/qemu-10.0.12-utm/_husk_build_nojit/compile_commands.json
 
   fixture-apk:
