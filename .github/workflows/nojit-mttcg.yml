@@ -1,4 +1,4 @@
-name: Rottweiler reversible guest tuning comparison (ARM64 TCI)
+name: Rottweiler ActivityManager watchdog investigation (ARM64 TCI)
 on:
   push:
     branches: ['feat/rottweiler-diagnostic']
@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [baseline, optimized]
+        profile: [baseline]
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
     steps:

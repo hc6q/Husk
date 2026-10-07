@@ -493,6 +493,9 @@ finally:
     report['elapsed_seconds'] = round(time.monotonic()-started,1)
     if bridge and a.collect_guest_diagnostics:
         for name, command in (
+                ('guest-watchdog-dropbox.txt', 'dumpsys -t 30 dropbox --print system_server_watchdog'),
+                ('guest-system-anr-dropbox.txt', 'dumpsys -t 30 dropbox --print system_app_anr'),
+                ('guest-last-anr.txt', 'dumpsys -t 30 activity lastanr'),
                 ('guest-logcat.txt', 'tail -c 2097152 /data/local/tmp/rottweiler-diagnostic.log'),
                 ('guest-crash-after.txt', 'logcat -b crash -d -t 300'),
                 ('guest-environment.txt', 'id; getprop ro.debuggable; getprop ro.hw_timeout_multiplier; getprop ro.boot.hw_timeout_multiplier; command -v su || true'),
