@@ -191,9 +191,22 @@ Duas tentativas continuam separadas do IPA publicado:
 - [TCTI escalar](https://github.com/hc6q/Husk/actions/runs/37556818486):
   testa fallback gvec escalar/helpers sem remover NEON do Android.
 
-Os resultados dessas tentativas ainda estão pendentes. Nenhuma modifica
-ExecutionMode.swift ou o IPA de 7b2ab02. Nenhum resultado nesta documentação
-certifica o critério mínimo no iPhone.
+As duas tentativas terminaram reprovadas:
+- Cold boot TCI/MTTCG não confirmou sys.boot_completed no prazo de 3600 s;
+  duração total 3612,8 s. QEMU confirmou quatro threads e buffer TCI RW,
+  mas os serviços Activity/sensor_privacy continuavam indisponíveis no serial.
+  Não houve instalação de APK nem auditoria de mapas após boot.
+  [Artifact completo](https://github.com/hc6q/Husk/actions/runs/37558207668/artifacts/11458060980).
+- TCTI escalar restaurou Android em 34,2 s, instalou em 286,9 s, lançou em
+  434,7 s e confirmou Activity retomada em 535,9 s. Os mapas após boot e
+  lançamento não continham W+X nem regiões anônimas executáveis, sob guarda.
+  uiautomator retornou raiz nula; não gerou window.xml. Resultado reprovado
+  em 866,6 s, sem confirmação de toque ou áudio. Retomar a Activity não
+  comprova interface utilizável nem corrige por si só a distorção anterior.
+  [Artifact completo](https://github.com/hc6q/Husk/actions/runs/37556818486/artifacts/11455918461).
+
+Nenhuma modifica ExecutionMode.swift ou o IPA de 7b2ab02. Nenhum resultado
+nesta documentação certifica o critério mínimo no iPhone.
 
 ## QEMU e seleção do interpretador
 
