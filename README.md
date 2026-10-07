@@ -1,6 +1,11 @@
+<h1 align="center">Rottweiler</h1>
+
 <p align="center">
-  <img src="docs/assets/rottweiler-banner.svg" alt="Rottweiler — Android on iOS without JIT" width="100%">
+  <a href="https://github.com/trending?since=daily">
+    <img src="docs/assets/github-trending.svg" alt="GitHub Trending: today's five popular repositories and star gains" width="100%">
+  </a>
 </p>
+<p align="center"><sub><a href="https://github.com/trending?since=daily">Explore all trending repositories</a> · Updated daily using GitHub Actions</sub></p>
 
 <p align="center">
   <strong>An experimental way to run Android APKs on iOS without enabling JIT.</strong><br>
