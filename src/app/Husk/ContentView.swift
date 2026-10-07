@@ -468,10 +468,10 @@ struct SetupView: View {
                     .shadow(color: Theme.accent.opacity(0.3), radius: 24, y: 10)
                 // Letterspaced, as a wordmark rather than a heading: this is
                 // the only screen in the app that is allowed to be a title card.
-                Text("HUSK")
+                Text(ExecutionMode.appName.uppercased())
                     .font(.system(size: 26, weight: .semibold))
-                    .tracking(10)
-                    .padding(.leading, 10)
+                    .tracking(ExecutionMode.noJIT ? 3 : 10)
+                    .padding(.leading, ExecutionMode.noJIT ? 3 : 10)
                 Text("Android apps, on your iPhone")
                     .font(.system(size: 13))
                     .foregroundStyle(Theme.textDim)
