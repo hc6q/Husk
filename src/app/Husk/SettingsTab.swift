@@ -145,6 +145,10 @@ struct PerformanceSettings: View {
     @State private var soundDevice =
         UserDefaults.standard.object(forKey: "husk.soundDevice") as? Bool ?? true
 
+    #if HUSK_NO_JIT
+    @AppStorage("rottweiler.optimizedGuest") private var optimizedGuest = true
+    #endif
+
     var body: some View {
         Form {
             Section {
@@ -170,6 +174,16 @@ struct PerformanceSettings: View {
                      + "worth choosing if the GPU misbehaves.")
                 #endif
             }
+
+            #if HUSK_NO_JIT
+            Section {
+                Toggle("Optimize Android rendering", isOn: $optimizedGuest)
+            } header: {
+                Text("Android performance")
+            } footer: {
+                Text("Uses 75% render size, disables animations and touch indicators. Applies on the next Android start. Turning it off restores the previous Android rendering settings. Performance improvements are experimental.")
+            }
+            #endif
 
             Section {
                 DetailRow(label: "Frame rate",

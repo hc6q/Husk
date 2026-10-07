@@ -1939,18 +1939,6 @@ final class AndroidHost: ObservableObject {
     // deliver the document picker's Open action until every command finishes.
     // It reads no AndroidHost UI state; readiness is published by the caller.
     nonisolated func quietAbsentHardware() async {
-        let off = [
-            ("bluetooth", "settings put global bluetooth_on 0"),
-            ("ble scan",  "settings put global ble_scan_always_enabled 0"),
-        ]
-        for (what, cmd) in off {
-            let r = try? GuestBridge.shared.run(cmd, timeout: 60)
-            HuskLog.log("bridge", (r?.status == 0)
-                ? "\(what) disabled -- this machine has no radio for it"
-                : "could not disable \(what): "
-                  + (r?.out.trimmingCharacters(in: .whitespacesAndNewlines) ?? "no answer"))
-        }
-
         #if HUSK_NO_JIT
         // The shipped image has an Android Bluetooth stack but this QEMU
         // machine has no controller. Turning the setting off does not stop an
@@ -1959,6 +1947,7 @@ final class AndroidHost: ObservableObject {
         // that unavailable guest package, stop its current process, then use
         // Android's supported close-system-dialogs broadcast. BaseErrorDialog
         // handles that action itself; no guessed screen coordinate is needed.
+        HuskLog.log("NoJIT", "Disabling absent Bluetooth package before optional guest tuning")
         let disabled = try? GuestBridge.shared.run(
             "pm disable-user --user 0 com.android.bluetooth; "
           + "pm list packages -d com.android.bluetooth | grep -Fx package:com.android.bluetooth",
@@ -1980,6 +1969,36 @@ final class AndroidHost: ObservableObject {
         HuskLog.log("bridge", closed?.status == 0
             ? "asked Android to close stale system error dialogs"
             : "Android did not confirm closing stale system error dialogs")
+        let optimized = UserDefaults.standard.object(forKey: "rottweiler.optimizedGuest") as? Bool ?? true
+        guard let url = Bundle.main.url(forResource: "nojit-performance", withExtension: "sh"),
+              let script = try? String(contentsOf: url, encoding: .utf8) else {
+            HuskLog.log("NoJIT", "Performance script unavailable")
+            return
+        }
+        let started = Date()
+        HuskLog.log("NoJIT", optimized ? "Applying reversible performance profile" : "Restoring original rendering settings")
+        // One shell invocation, no retries or replays after a timeout.
+        let command = "sh -c '" + script.replacingOccurrences(of: "'", with: "'\"'\"'") + "' sh " + (optimized ? "apply" : "restore")
+        do {
+            let result = try GuestBridge.shared.run(command, timeout: 600)
+            HuskLog.log("NoJIT", "Performance profile exit \(result.status), elapsed \(Int(Date().timeIntervalSince(started)))s")
+            for line in result.out.split(separator: "\n") { HuskLog.log("NoJIT", String(line)) }
+        } catch {
+            HuskLog.log("NoJIT", "Performance profile incomplete after \(Int(Date().timeIntervalSince(started)))s: \(error)")
+        }
+        #else
+        let off = [
+            ("bluetooth", "settings put global bluetooth_on 0"),
+            ("ble scan",  "settings put global ble_scan_always_enabled 0"),
+        ]
+        for (what, cmd) in off {
+            let r = try? GuestBridge.shared.run(cmd, timeout: 60)
+            HuskLog.log("bridge", (r?.status == 0)
+                ? "\(what) disabled -- this machine has no radio for it"
+                : "could not disable \(what): "
+                  + (r?.out.trimmingCharacters(in: .whitespacesAndNewlines) ?? "no answer"))
+        }
+
         #endif
     }
 

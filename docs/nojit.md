@@ -524,3 +524,29 @@ está certificada num iPhone.
 Uma importação enfileirada não deve ser interrompida encerrando o app antes da
 instalação; em builds anteriores a `496f926`, reimporte caso a sessão seja encerrada; builds novos recuperam o staging ao iniciar. Áudio continua opt-in nos
 Settings porque altera a configuração de hardware/snapshots da VM.
+
+### Reversible guest tuning trial (7 October 2026)
+
+The No-JIT target now attempts Bluetooth package disable before optional tuning.
+Settings → Performance → Optimize Android rendering applies a reversible
+userspace profile on the next guest start: 75% linear logical resolution/density,
+three animation scales set to zero, and Android touch/pointer overlays disabled.
+For the original 360×800 panel this renders at 270×600, 43.75% fewer logical pixels.
+This arithmetic is not an FPS measurement. The physical scanout and USB tablet
+remain unchanged; the guest compositor handles scaling.
+
+Original setting values and display overrides are stored under
+`/data/local/tmp/rottweiler-performance-v1`. Turning the option off restores them
+on the next guest start. Existing app data and the immutable v12 base are preserved.
+No `low_perf`, low-RAM mode, desktop-mode override, root/SELinux change, ART mode
+change, JIT, CPU topology or snapshot compatibility change is introduced.
+
+Profile apply/restore, idempotence and recovery from a partial density failure
+are tested with fake Android CLI services. These are script tests, not Android
+or iPhone acceptance. A separate ARM64 TCI trial compares the same official
+snapshot with and without the rendering profile, with executable-memory guards,
+visible offline APK and USB counter checks. Performance gain and touch acceptance
+remain pending until real reports support them.
+
+The independent No-JIT version is tracked in `config/nojit-version.json`:
+version 0.8.0, build 23. Future releases must increment both and use matching tags.

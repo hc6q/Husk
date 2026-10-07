@@ -47,7 +47,9 @@ jobs:
             build/stamps/libucontext
             build/stamps/libslirp-v4.9.1
       - name: Check target isolation
-        run: python3 tests/nojit/test_build_contract.py
+        run: |
+          python3 tests/nojit/test_build_contract.py
+          python3 tests/nojit/test_guest_performance.py
       - name: Test fragmented guest shell replies
         run: |
           swiftc src/app/Husk/GuestShellFrame.swift tests/nojit/shell_frame_test.swift -o build/shell-frame-tests
@@ -132,11 +134,12 @@ jobs:
           RELEASE_SHA: ${{ github.sha }}
           RELEASE_REPO: ${{ github.repository }}
         run: |
-          tag="preview-${RELEASE_SHA:0:7}"
+          version=$(python3 -c 'import json; print(json.load(open("config/nojit-version.json"))["version"])')
+          tag="v${version}-preview"
           sha256sum release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk > release-assets/SHA256SUMS.txt
           cp docs/releases/preview.md build-release-notes.md
           printf '\nSource commit: `%s`\n' "$RELEASE_SHA" >> build-release-notes.md
-          gh release create "$tag" release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk release-assets/SHA256SUMS.txt --repo "$RELEASE_REPO" --target "$RELEASE_SHA" --title "Rottweiler No-JIT — Experimental preview" --prerelease --notes-file build-release-notes.md
+          gh release create "$tag" release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk release-assets/SHA256SUMS.txt --repo "$RELEASE_REPO" --target "$RELEASE_SHA" --title "Rottweiler ${version} — Experimental preview" --prerelease --notes-file build-release-notes.md
 
   edit-preview-notes:
     if: github.event_name == 'push' && github.repository == 'hc6q/Rottweiler' && contains(github.event.head_commit.message, '[release-notes]')

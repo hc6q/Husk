@@ -4,9 +4,11 @@ Android APK launcher for iOS arm64, based on Husk and QEMU 10.0.12-utm TCI.
 This is an experimental test build, not a validated daily-use release.
 
 ## Changes
-- Guest Bluetooth shell waits moved off the iOS main actor to avoid blocking the APK file picker.
-- No-JIT path attempts to disable the absent Android Bluetooth service and close its stale crash dialog.
-- Dependency cache isolated by checkout path after the repository rename.
+- Reversible Android performance profile: 75% linear render size, animations and touch overlays disabled, original settings saved for restoration.
+- Bluetooth package disable now runs before optional settings tuning; stage and elapsed-time logs expose stalled operations.
+- Settings → Performance allows restoring the previous Android rendering settings on the next guest start.
+- Independent No-JIT app version 0.8.0, build 23. The original JIT app version is unchanged.
+- Runtime performance and successful iPhone APK interaction remain unverified; this is a test profile, not a measured speedup.
 
 ## Installation
 Download `Rottweiler.ipa`, sign it with your normal sideload tool and install it on an iOS arm64 device. The IPA is unsigned. No JIT helper, debugger, pairing, TrollStore or jailbreak is required by the No-JIT target.

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Derive an isolated No-JIT target from the canonical XcodeGen project."""
 import copy
+import json
 import pathlib
 import plistlib
 import yaml
@@ -49,6 +50,10 @@ plist["CFBundleDisplayName"] = "Rottweiler"
 plist["CFBundleName"] = "Rottweiler"
 plist["CFBundleURLTypes"][0]["CFBundleURLSchemes"] = ["husk-nojit"]
 plist["HuskExecutionMode"] = "TCI"
+# Independent fork versions; never change the original Husk target's version.
+version = json.loads((root / "config/nojit-version.json").read_text())
+plist["CFBundleShortVersionString"] = version["version"]
+plist["CFBundleVersion"] = str(version["build"])
 (app / "Husk/Info-NoJIT.plist").write_bytes(plistlib.dumps(plist))
 # Keep the original public memory capabilities; neither grants code execution.
 original_entitlements = plistlib.loads((app / "Husk/Husk.entitlements").read_bytes())
