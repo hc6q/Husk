@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/hc6q/Husk/actions/workflows/nojit.yml?query=branch%3Afeat%2Fnojit"><img src="https://github.com/hc6q/Husk/actions/workflows/nojit.yml/badge.svg?branch=feat%2Fnojit" alt="No-JIT build"></a>
+  <a href="https://github.com/hc6q/Rottweiler/actions/workflows/nojit.yml?query=branch%3Amain"><img src="https://github.com/hc6q/Rottweiler/actions/workflows/nojit.yml/badge.svg?branch=main" alt="No-JIT build"></a>
   <img src="https://img.shields.io/badge/platform-iOS_arm64-111827?style=flat-square" alt="iOS arm64">
   <img src="https://img.shields.io/badge/CPU-QEMU_TCI-f97316?style=flat-square" alt="QEMU TCI">
   <img src="https://img.shields.io/badge/status-experimental-f59e0b?style=flat-square" alt="Experimental">
@@ -51,7 +51,7 @@ Rottweiler keeps Husk's Android VM, LineageOS v12 image, QCOW2 disks, APK bridge
 
 Only the CPU backend uses interpretation. The GPU path is retained, although the shipped software snapshot requires **CPU** renderer selection. GPU mode has a different VM configuration and uses cold boot when the snapshot is incompatible.
 
-The repository remains **`hc6q/Husk`**. Rottweiler is the fork's user-facing name. Internal identifiers and storage keys remain stable to preserve existing Android downloads, settings and imported APKs during upgrades.
+The repository is **[`hc6q/Rottweiler`](https://github.com/hc6q/Rottweiler)**. Rottweiler is the No-JIT target's user-facing name. Internal identifiers and storage keys remain stable to preserve existing Android downloads, settings and imported APKs during upgrades.
 
 ## Current status
 
@@ -67,7 +67,7 @@ The repository remains **`hc6q/Husk`**. Rottweiler is the fork's user-facing nam
 | Touch counter changing from 0 to 1 | **Not confirmed** |
 | Audio | **Not confirmed** |
 
-Bluetooth crash dialogs, System UI failures and slow guest responses still block acceptance. A fix moves Bluetooth shell commands off the iOS main actor to address the unresponsive import interface; it still needs build and physical validation.
+Bluetooth crash dialogs, System UI failures and slow guest responses still block acceptance. A recent fix moves Bluetooth shell commands off the iOS main actor to address an unresponsive import interface; physical-device validation is still required.
 
 “Android boot completed” after loading a snapshot proves restored guest readiness, not a successful cold boot. Low-performance guest settings and alternate backends remain separate experiments; failed trials are documented and are not silently included in the IPA.
 
@@ -75,7 +75,7 @@ See [the validation record](docs/nojit.md) for exact commits, artifact hashes, t
 
 ## Try Rottweiler
 
-1. Open the [No-JIT builds on `feat/nojit`](https://github.com/hc6q/Husk/actions/workflows/nojit.yml?query=branch%3Afeat%2Fnojit) and choose a **successful** run.
+1. Open the [No-JIT builds on `main`](https://github.com/hc6q/Rottweiler/actions/workflows/nojit.yml?query=branch%3Amain) and choose a **successful** run.
 2. Download the **Rottweiler** artifact and extract `Rottweiler.ipa`. Download and extract **NoJITSmoke-APK** for the small offline test app.
 3. Sign and install the unsigned IPA with your usual sideload method. Embedded dylibs must also be signed. Developer Mode may be required by your signing method.
 4. Open Rottweiler and download the Android image through the existing setup flow.
@@ -119,4 +119,4 @@ Rottweiler is maintained as a fork by [hc6q](https://github.com/hc6q). **Husk an
 
 The original JIT target keeps its original requirements. Rottweiler does not claim authorship of upstream work.
 
-This derivative inherits **GPL-2.0-or-later** from Husk. See [licensing documentation](docs/01-licensing.md) and the bundled notices for component-specific terms. Source changes for this fork are available in [`feat/nojit`](https://github.com/hc6q/Husk/tree/feat/nojit).
+This derivative inherits **GPL-2.0-or-later** from Husk. See [licensing documentation](docs/01-licensing.md) and the bundled notices for component-specific terms. Source changes for this fork are available in [`main`](https://github.com/hc6q/Rottweiler/tree/main).
