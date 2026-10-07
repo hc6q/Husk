@@ -117,10 +117,10 @@ struct OnboardingView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
                     .shadow(color: Theme.accent.opacity(0.35), radius: 22, y: 10)
             }
-            Text("Husk").font(.system(size: 40, weight: .semibold, design: .rounded))
+            Text("\(ExecutionMode.appName)").font(.system(size: 40, weight: .semibold, design: .rounded))
             Text("Android apps, on your iPhone.")
                 .font(.title3).foregroundStyle(.secondary)
-            Text("Husk runs a real Android system and opens APKs inside it. "
+            Text("\(ExecutionMode.appName) runs a real Android system and opens APKs inside it. "
                + "A few questions first — all of them can be changed later in Settings.")
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

@@ -43,7 +43,8 @@ plist = plistlib.loads((app / "Husk/Info.plist").read_bytes())
 for key in ("BGTaskSchedulerPermittedIdentifiers", "LSApplicationQueriesSchemes",
             "NSBonjourServices", "NSLocalNetworkUsageDescription"):
     plist.pop(key, None)
-plist["CFBundleDisplayName"] = "Husk No-JIT"
+plist["CFBundleDisplayName"] = "Rottweiler"
+plist["CFBundleName"] = "Rottweiler"
 plist["CFBundleURLTypes"][0]["CFBundleURLSchemes"] = ["husk-nojit"]
 plist["HuskExecutionMode"] = "TCI"
 (app / "Husk/Info-NoJIT.plist").write_bytes(plistlib.dumps(plist))

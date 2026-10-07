@@ -6,7 +6,7 @@ set -euo pipefail
 
 HUSK_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 IPA_NAME=Husk.ipa
-if [ "${HUSK_NO_JIT:-0}" = 1 ]; then IPA_NAME=Husk-NoJIT.ipa; fi
+if [ "${HUSK_NO_JIT:-0}" = 1 ]; then IPA_NAME=Rottweiler.ipa; fi
 OUT="${1:-$HUSK_ROOT/build/$IPA_NAME}"
 cd "$HUSK_ROOT"
 

@@ -1,4 +1,4 @@
-name: Husk No-JIT
+name: Rottweiler No-JIT
 
 on:
   push:
@@ -48,7 +48,7 @@ jobs:
       - name: Check target isolation
         run: python3 tests/nojit/test_build_contract.py
       - name: Build interpreter IPA
-        run: ./scripts/ci_build.sh "$PWD/build/Husk-NoJIT.ipa"
+        run: ./scripts/ci_build.sh "$PWD/build/Rottweiler.ipa"
       - name: Save completed dependencies
         if: always() && steps.deps.outputs.cache-hit != 'true' && hashFiles('build/stamps/libslirp-v4.9.1') != ''
         uses: actions/cache/save@v4
@@ -64,14 +64,14 @@ jobs:
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: Husk-NoJIT
-          path: build/Husk-NoJIT.ipa
+          name: Rottweiler
+          path: build/Rottweiler.ipa
           if-no-files-found: error
       - name: Save build evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Husk-NoJIT-build-evidence
+          name: Rottweiler-build-evidence
           path: |
             build/logs/
             build/DerivedData-nojit/build.log

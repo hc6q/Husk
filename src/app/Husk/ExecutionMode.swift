@@ -6,6 +6,8 @@ extension Notification.Name {
 }
 
 enum ExecutionMode {
+    static var appName: String { noJIT ? "Rottweiler" : "Husk" }
+
     static var noJIT: Bool {
         #if HUSK_NO_JIT
         return true

@@ -46,7 +46,7 @@ struct SettingsTab: View {
         HStack(spacing: 14) {
             HuskMark(size: 56)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Husk").font(.title3.weight(.semibold))
+                Text("\(ExecutionMode.appName)").font(.title3.weight(.semibold))
                 Text("Version \(Bundle.main.version) · \(Bundle.main.commit)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -126,7 +126,7 @@ struct LibrarySettings: View {
                 .disabled(working || !host.isReady)
             } footer: {
                 Text("Names and icons come from Android's own launcher, which keeps "
-                   + "the version it draws. Re-fetching throws away Husk's copies and "
+                   + "the version it draws. Re-fetching throws away \(ExecutionMode.appName)'s copies and "
                    + "asks again.")
             }
         }
@@ -556,7 +556,7 @@ struct SavedMachineSettings: View {
                 }
                 .disabled(runner.isSavingState)
             } footer: {
-                Text("Husk restores a saved machine instead of booting it, which takes "
+                Text("\(ExecutionMode.appName) restores a saved machine instead of booting it, which takes "
                    + "seconds rather than minutes. The picture freezes while it writes. "
                    + "With this off, nothing saves by itself — including after an "
                    + "install.")
@@ -729,7 +729,7 @@ struct AboutSettings: View {
             Section {
                 VStack(spacing: 8) {
                     HuskMark(size: 84)
-                    Text("Husk").font(.title2.weight(.semibold))
+                    Text("\(ExecutionMode.appName)").font(.title2.weight(.semibold))
                     Text("Version \(Bundle.main.version)")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
@@ -762,8 +762,8 @@ struct AboutSettings: View {
                     Label("Open Console", systemImage: "terminal")
                 }
             } footer: {
-                Text("Husk runs unmodified Android APKs in a real Android system on your iPhone. "
-                   + "The console shows Husk's live log, the guest's serial output and QEMU's own "
+                Text("\(ExecutionMode.appName) runs unmodified Android APKs in a real Android system on your iPhone. "
+                   + "The console shows \(ExecutionMode.appName)'s live log, the guest's serial output and QEMU's own "
                    + "output — the three files any problem here is diagnosed from.")
             }
         }

@@ -1,44 +1,23 @@
-# Husk
+# Rottweiler
 
-<p align="center">
-  <a href="https://trendshift.io/repositories/233057?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-233057" target="_blank" rel="noopener noreferrer">
-    <img src="https://trendshift.io/api/badge/trendshift/repositories/233057/daily?language=Swift" alt="Leviidev/Husk | Trendshift" width="250" height="55"/>
-  </a>
-</p>
+Rottweiler is the No-JIT variant of [Husk by Leviidev](https://github.com/Leviidev/Husk): an Android APK launcher for iOS using QEMU TCI interpretation.
 
-[![Husk Downloads](https://img.shields.io/github/downloads/leviidev/husk/total?style=for-the-badge&color=5865F2&labelColor=111111)](https://github.com/leviidev/husk/releases)
+The repository remains `hc6q/Husk`. Rottweiler is the app name displayed on iOS, onboarding and settings. Original source identifiers and `com.husk.nojit` remain stable so existing installs retain their Android image, settings and imported APKs.
 
-Android app launcher for iOS.
+## Status
 
-Drop in an APK, tap it, and the Android app opens full-screen.
+**Experimental: a usable APK on iPhone is not yet confirmed.** The iOS IPA compiles and has opened the LineageOS setup screen on a physical iPhone using the shipped software snapshot. Bluetooth/System UI failures still block acceptance. Installation and Activity resume have been confirmed in host experiments; touch and audio remain unconfirmed.
 
-## No-JIT variant
+## Build and install
 
-`HUSK_NO_JIT=1` builds a separate `Husk-NoJIT.ipa` using the pinned QEMU TCI
-interpreter, with no debugger, StikJIT or pairing path. The existing Android
-VM and ANGLE/Metal stack are retained. See [docs/nojit.md](docs/nojit.md) for
-build/install instructions and the distinction between host tests and physical
-iPhone validation. The [No-JIT workflow](.github/workflows/nojit.yml) publishes
-the IPA and an offline smoke-test APK; device boot is not certified by CI.
+`HUSK_NO_JIT=1` selects QEMU TCI, without debugger, StikJIT or pairing. The existing Android VM and ANGLE/Metal integration are retained. The [No-JIT workflow](.github/workflows/nojit.yml) publishes `Rottweiler.ipa` and an offline test APK.
 
-## JIT
+See [docs/nojit.md](docs/nojit.md) for installation, exact build configuration, test evidence and limitations. The unsigned IPA requires ordinary sideload signing. For the shipped snapshot select **CPU** renderer, snapshot enabled and Sound disabled; GPU mode uses a different machine configuration and falls back to cold boot.
 
-Husk needs JIT, which on iOS takes an attached debugger. Use StikDebug, or
-Husk's built-in StikJIT helper (iOS 26+), which on iOS 27 can pair with your
-iPhone from Settings with no computer. The app walks you through it; see
-[docs/06-built-in-jit.md](docs/06-built-in-jit.md).
+## Original Husk mode and attribution
 
-## Builds
-
-Every push builds an unsigned `Husk.ipa` in GitHub Actions
-([build-ipa.yml](.github/workflows/build-ipa.yml)). It is attached to the run
-as an artifact, ready for AltStore, SideStore or TrollStore to sign and
-install. The first run builds QEMU and its dependencies from scratch, which
-takes a couple of hours; after that they are cached.
+The original JIT target remains available with `HUSK_NO_JIT=0`. Its original debugger/Stik requirements apply only to that target. Rottweiler preserves Husk's architecture and upstream credits; it does not claim authorship of Husk, QEMU or Android.
 
 ## Licence
 
-GPL-2.0-or-later. Husk links QEMU, which is GPLv2, so the shipped binary is a
-combined GPLv2 work and the full source is public. It cannot go on the App
-Store — both because of that and because it needs `get-task-allow` plus a
-debugger attaching at runtime. See [docs/01-licensing.md](docs/01-licensing.md).
+GPL-2.0-or-later, inherited from Husk. QEMU and other bundled components retain their original licences. See [licensing documentation](docs/01-licensing.md). Full source for this derivative is public here.

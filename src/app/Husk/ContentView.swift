@@ -381,7 +381,7 @@ struct GuestScreenView: View {
 
                         Menu {
                             Button { onBack() } label: {
-                                Label("Back to Husk", systemImage: "chevron.left")
+                                Label("Back to \(ExecutionMode.appName)", systemImage: "chevron.left")
                             }
                             // Android's own Home key, over the bridge. Three-button
                             // navigation is not drawn in this guest, so without it
@@ -546,7 +546,7 @@ struct SetupView: View {
                 }
             case .missing:
                 VStack(spacing: 12) {
-                    Text("Husk needs its Android runtime — about 760 MB. Android itself is downloaded afterwards by the runtime.")
+                    Text("\(ExecutionMode.appName) needs its Android runtime — about 760 MB. Android itself is downloaded afterwards by the runtime.")
                         .font(.callout).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center).padding(.horizontal, 36)
                     Button("Download Android runtime") {
