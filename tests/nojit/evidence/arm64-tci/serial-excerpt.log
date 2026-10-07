@@ -1,0 +1,56 @@
+# Selected diagnostic lines; complete serial in the Actions artifact.
+[  498.877355][   T64] binder: undelivered transaction 179632, process died.
+[  510.172209][  T242] type=1400 audit(1789288311.621:151): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  511.432733][  T242] type=1400 audit(1789288312.933:152): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  533.896308][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  534.843527][    T1] init: starting service 'artd'...
+[  535.772358][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  537.133516][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  537.178777][    T1] init: ... started service 'artd' has pid 3415
+[  537.622988][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  537.874826][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3415, started 2553ms ago)
+[  538.036632][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  538.289174][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3415, started 2976ms ago)
+[  538.516833][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  538.705357][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  539.049194][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3415, started 3736ms ago)
+[  539.263089][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  760.081565][    T1] init: Untracked process (pid: 3463 name: (crash_dump64) ppid: 1 pgrp: 3462 state: Z) received SIGKILL
+[  760.274852][    T1] init: Untracked process (pid: 3463 name: (crash_dump64) ppid: 1 pgrp: 3462 state: Z) did not have an associated service entry and will not be reaped
+[  776.397523][ T1784] binder_alloc: 3041: binder_alloc_buf, no vma
+[  776.513304][ T1784] binder: cannot allocate buffer: vma cleared, target dead or dying
+[  776.513821][ T1784] binder: 1662:1784 transaction async to 3041:0 failed 192176/29189/-3, code 13 size 60-0 line 3612
+[  776.724884][  T242] type=1400 audit(1789288578.153:158): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  777.208527][ T1784] binder_alloc: 3041: binder_alloc_buf, no vma
+[  777.301856][ T1784] binder: cannot allocate buffer: vma cleared, target dead or dying
+[  777.302068][ T1784] binder: 1662:1784 transaction async to 3041:0 failed 192192/29189/-3, code 55 size 436-8 line 3612
+[  777.851701][  T245] binder: undelivered TRANSACTION_COMPLETE
+[  777.973957][  T245] binder: undelivered transaction 191205, process died.
+[  858.845223][    T1] init: Untracked process (pid: 3483 name: (crash_dump64) ppid: 1 pgrp: 3468 state: Z) received SIGALRM
+[  859.606072][    T1] init: Untracked process (pid: 3483 name: (crash_dump64) ppid: 1 pgrp: 3468 state: Z) did not have an associated service entry and will not be reaped
+[  868.764363][  T242] type=1400 audit(1789288670.277:159): avc:  denied  { read } for  comm="watchdog" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  902.116705][    T1] init: Untracked process (pid: 3506 name: (crash_dump64) ppid: 1 pgrp: 3503 state: Z) received SIGALRM
+[  902.279584][    T1] init: Untracked process (pid: 3506 name: (crash_dump64) ppid: 1 pgrp: 3503 state: Z) did not have an associated service entry and will not be reaped
+[  907.348919][    T1] init: Untracked process (pid: 3512 name: (Signal Catcher) ppid: 1 pgrp: 3512 state: Z) exited with status 0
+[  907.586066][    T1] init: Untracked process (pid: 3512 name: (Signal Catcher) ppid: 1 pgrp: 3512 state: Z) did not have an associated service entry and will not be reaped
+[  918.747421][  T242] type=1400 audit(1789288720.241:161): avc:  denied  { read } for  comm="watchdog" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  921.633248][  T242] type=1400 audit(1789288723.093:162): avc:  denied  { read } for  comm="InputDispatcher" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  938.252919][  T242] type=1400 audit(1789288739.777:163): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+[  978.532111][ T1690] sysrq: Show backtrace of all active CPUs
+[  978.628315][ T1690] NMI backtrace for cpu 2
+[  978.628877][ T1690] CPU: 2 UID: 1000 PID: 1690 Comm: watchdog Not tainted 6.12.81-4k-g4f6bf47200d9 #1 f36b71181e26e4b9b09edae426f19ca1379f781a
+[  978.629300][ T1690] Hardware name: QEMU QEMU Virtual Machine, BIOS 0.0.0 02/06/2015
+[  978.629426][ T1690] Call trace:
+[ 1000.535313][    T1] init: Untracked process (pid: 3536 name: (crash_dump64) ppid: 1 pgrp: 3520 state: Z) did not have an associated service entry and will not be reaped
+[ 1006.211247][  T216] binder: release 1662:1677 transaction 200831 in, still active
+[ 1006.343947][  T216] binder: send failed reply for transaction 200831 to 2267:2590
+[ 1006.484306][ T2590] binder_alloc: 1662: binder_alloc_buf, no vma
+[ 1006.487253][  T216] binder: release 1662:1678 transaction 199742 in, still active
+[ 1006.626702][ T2590] binder: cannot allocate buffer: vma cleared, target dead or dying
+[ 1006.723999][ T2590] binder: 2267:2590 transaction async to 1662:0 failed 201479/29189/-3, code 265 size 92-0 line 3612
+[ 1006.830823][  T216] binder: send failed reply for transaction 199742 to 2267:2589
+[ 1006.832828][  T216] binder: release 1662:1745 transaction 199756 in, still active
+[ 1006.833040][  T216] binder: send failed reply for transaction 199756 to 2267:2615
+[ 1006.917898][  T216] binder: release 1662:2070 transaction 199770 in, still active
+[ 1007.388530][  T216] binder: send failed reply for transaction 199770 to 2267:2591
+[ 1010.180905][    T1] init: starting service 'bootanim'...

@@ -1,0 +1,103 @@
+2026-10-07T01:45:53.9407588Z ##[group]Run python3 tests/nojit/host_smoke.py --qemu third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64 --guest guests/nojit-host --apk build/NoJITSmoke-Software.apk --guard build/nojit-mmap-guard.so --package org.husk.nojitsmoke.software --framebuffer-ui --platform-dialog-recovery-attempts 3 --backend TCI --threads multi --memory 2048 --file-ram --output build/logs/host-smoke --timeout 3600
+2026-10-07T01:45:53.9410957Z [36;1mpython3 tests/nojit/host_smoke.py --qemu third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64 --guest guests/nojit-host --apk build/NoJITSmoke-Software.apk --guard build/nojit-mmap-guard.so --package org.husk.nojitsmoke.software --framebuffer-ui --platform-dialog-recovery-attempts 3 --backend TCI --threads multi --memory 2048 --file-ram --output build/logs/host-smoke --timeout 3600[0m
+2026-10-07T01:45:53.9446677Z shell: /usr/bin/bash -e {0}
+2026-10-07T01:45:53.9446916Z ##[endgroup]
+2026-10-07T01:45:54.0343283Z [0.0s] [NoJIT] Starting Android under mmap/mprotect guard
+2026-10-07T02:46:06.8782954Z {
+2026-10-07T02:46:06.8783284Z   "platform": "Linux aarch64 host / Android ARM64 guest",
+2026-10-07T02:46:06.8784930Z   "backend": "TCI",
+2026-10-07T02:46:06.8785177Z   "boot_completed": false,
+2026-10-07T02:46:06.8785398Z   "apk_installed": false,
+2026-10-07T02:46:06.8785604Z   "apk_resumed": false,
+2026-10-07T02:46:06.8785808Z   "usb_touch_confirmed": false,
+2026-10-07T02:46:06.8786039Z   "guest_audio_confirmed": false,
+2026-10-07T02:46:06.8786270Z   "ios_device_tested": false,
+2026-10-07T02:46:06.8786525Z   "package_id": "org.husk.nojitsmoke.software",
+2026-10-07T02:46:06.8786938Z   "apk_sha256": "eaff44980682fd0d5b0e08a428001a799b0cc0e084d06d8964cae7f75eb4507c",
+2026-10-07T02:46:06.8787329Z   "ui_timeout_seconds": 300,
+2026-10-07T02:46:06.8787546Z   "cpu_threads": "multi",
+2026-10-07T02:46:06.8787744Z   "vcpus": 4,
+2026-10-07T02:46:06.8787915Z   "memory_mib": 2048,
+2026-10-07T02:46:06.8788120Z   "elapsed_seconds": 3612.8,
+2026-10-07T02:46:06.8788360Z   "qmp_status": {
+2026-10-07T02:46:06.8788560Z     "status": "running",
+2026-10-07T02:46:06.8788759Z     "running": true
+2026-10-07T02:46:06.8788932Z   },
+2026-10-07T02:46:06.8789337Z   "info cpus": "* CPU #0: thread_id=12048\r\n  CPU #1: thread_id=12049\r\n  CPU #2: thread_id=12050\r\n  CPU #3: thread_id=12051\r\n",
+2026-10-07T02:46:06.8796528Z   "info registers": "\r\nCPU#0\r\n PC=ffffffed8f195068 X00=ffffff800137bc00 X01=ffffffc080e21780\r\nX02=0000000000000028 X03=ffffffc080e217a0 X04=0000000000000000\r\nX05=0000000000000000 X06=0000000000aaaaaa X07=0000000000000000\r\nX08=0000000000000001 X09=ffffff800123fbd2 X10=0000000000000016\r\nX11=0000000000000005 X12=00000000000000b0 X13=0000000000000001\r\nX14=ffffffc0815d36c8 X15=0000000000000008 X16=ffffff800123fbe8\r\nX17=00000000ffffffff X18=ffffffed9107cb80 X19=0000000000000068\r\nX20=ffffffc080e21b20 X21=0000000000002d00 X22=0000000000000000\r\nX23=0000000000000020 X24=00000000000000b0 X25=ffffff800137bc00\r\nX26=ffffff800123faf6 X27=ffffff8001239126 X28=0000000000000000\r\nX29=ffffffc0815d3710 X30=0be3eced8f30c380  SP=ffffffc0815d36c0\r\nPSTATE=814020c5 N--- EL1h  BTYPE=0     FPCR=00000000 FPSR=00000000\r\nQ00=0000000000000000:fff0ffff00000000 Q01=0000001300000000:2e74736566696e61\r\nQ02=0000007ce22b62d0:0000007fcff5d910 Q03=8060180080601806:0000000000000000\r\nQ04=8060180000000000:8060180000000000 Q05=0000000000000000:0000000000000000\r\nQ06=0000000000000000:0000000000000000 Q07=8060180680601806:8060180680601806\r\nQ08=0000000000000000:ffffffff000003e8 Q09=0000000000000000:0000000000000000\r\nQ10=0000000000000000:0000000000000000 Q11=0000000000000000:0000000000000000\r\nQ12=0000000000000000:0000000000000000 Q13=0000000000000000:0000000000000000\r\nQ14=0000000000000000:0000000000000000 Q15=0000000000000000:0000000000000000\r\nQ16=c0300c03c0300c03:c0300c03c0300c03 Q17=a0080000a0080000:a800a800a8aa0000\r\nQ18=8020080000000000:8020080000000000 Q19=0000000000000000:0000000000000000\r\nQ20=0000000000000000:0000000000000000 Q21=0000000000000000:0000000000000000\r\nQ22=0000000000000000:0000000000000000 Q23=0000000000000000:0000000000000000\r\nQ24=0000000000000000:0000000000000000 Q25=0000000000000000:0000000000000000\r\nQ26=0000000000000000:0000000000000000 Q27=0000000000000000:0000000000000000\r\nQ28=0000000000000000:0000000000000000 Q29=0000000000000000:0000000000000000\r\nQ30=0000000000000000:0000000000000000 Q31=0000000000000000:0000000000000000\r\n",
+2026-10-07T02:46:06.8803537Z   "info network": "virtio-net-pci.0: index=0,type=nic,model=virtio-net-pci,macaddr=52:54:00:12:34:56\r\n \\ net0: index=0,type=user,net=10.0.2.0,restrict=off\r\n"
+2026-10-07T02:46:06.8804124Z }
+2026-10-07T02:46:06.8804307Z --- qemu.log (last 60 lines) ---
+2026-10-07T02:46:06.8804547Z [husk-audio] registering the driver
+2026-10-07T02:46:06.8804793Z [husk-audio] driver registered
+2026-10-07T02:46:06.8805045Z [NoJIT] TCI bytecode buffer RW, size=134217728
+2026-10-07T02:46:06.8805378Z audio: Could not create a backend for voice `virtio-sound.in'
+2026-10-07T02:46:06.8805730Z [husk-snd] tx_xfer #1 (the guest is queueing PCM)
+2026-10-07T02:46:06.8806335Z qemu-system-aarch64: terminating on signal 15 from pid 12043 (python3)
+2026-10-07T02:46:06.8806695Z --- serial.log (last 60 lines) ---
+2026-10-07T02:46:06.8818735Z [ 3540.048114][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'activity' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8820097Z [ 3540.326315][    T1] init: Control message: Could not find 'aidl/activity' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8821480Z [ 3540.509068][ T4943] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8823166Z [ 3541.324728][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'activity' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8824343Z [ 3541.604916][    T1] init: Control message: Could not find 'aidl/activity' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8825705Z [ 3541.791481][ T4945] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8827388Z [ 3542.603057][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'activity' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8828559Z [ 3542.872012][    T1] init: Control message: Could not find 'aidl/activity' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8830312Z [ 3543.097670][ T4946] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8832014Z [ 3543.910975][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'activity' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8833450Z [ 3544.188014][    T1] init: Control message: Could not find 'aidl/activity' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8834829Z [ 3544.363840][ T4947] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8836510Z [ 3545.184233][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'activity' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8837695Z [ 3545.459266][    T1] init: Control message: Could not find 'aidl/activity' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8839058Z [ 3545.634721][ T4948] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8841104Z [ 3546.458391][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'activity' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8842272Z [ 3546.727484][    T1] init: Control message: Could not find 'aidl/activity' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8843636Z [ 3546.901827][ T4949] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8844986Z [ 3547.741424][  T242] libbinder.BpBinder: onLastStrongRef automatically unlinking death recipients for descriptor: '(not cached)'
+2026-10-07T02:46:06.8846168Z [ 3547.924643][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'sensor_privacy' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8847375Z [ 3548.203946][    T1] init: Control message: Could not find 'aidl/sensor_privacy' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8848770Z [ 3548.392292][ T4951] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service sensor_privacy as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8849976Z [ 3549.018715][    T1] init: starting service 'idmap2d'...
+2026-10-07T02:46:06.8850914Z [ 3549.213280][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'sensor_privacy' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8851875Z [ 3549.540707][    T1] init: ... started service 'idmap2d' has pid 4953
+2026-10-07T02:46:06.8852386Z [ 3549.632246][    T1] init: Control message: Processed ctl.start for 'idmap2d' from pid: 4784 (system_server)
+2026-10-07T02:46:06.8853155Z [ 3549.792934][    T1] init: Control message: Could not find 'aidl/sensor_privacy' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8854735Z [ 3549.976990][ T4954] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service sensor_privacy as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8856473Z [ 3550.486398][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'sensor_privacy' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8857673Z [ 3550.771465][    T1] init: Control message: Could not find 'aidl/sensor_privacy' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8859066Z [ 3550.949772][ T4955] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service sensor_privacy as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8860932Z [ 3551.765175][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'sensor_privacy' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8862280Z [ 3552.059467][    T1] init: Control message: Could not find 'aidl/sensor_privacy' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8863676Z [ 3552.240527][ T4958] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service sensor_privacy as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8865394Z [ 3553.051409][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'sensor_privacy' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8866597Z [ 3553.331199][    T1] init: Control message: Could not find 'aidl/sensor_privacy' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8867999Z [ 3553.507368][ T4959] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service sensor_privacy as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8869805Z [ 3554.908125][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'sensor_privacy' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8871017Z [ 3555.186648][    T1] init: Control message: Could not find 'aidl/sensor_privacy' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8872499Z [ 3555.364688][ T4960] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service sensor_privacy as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8874220Z [ 3556.194228][  T242] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Since 'sensor_privacy' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T02:46:06.8875425Z [ 3556.508476][    T1] init: Control message: Could not find 'aidl/sensor_privacy' for ctl.interface_start from pid: 242 (/system/bin/servicemanager)
+2026-10-07T02:46:06.8876973Z [ 3556.695251][ T4962] servicemanager: Caller(pid=4658,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service sensor_privacy as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.
+2026-10-07T02:46:06.8878373Z [ 3556.999773][  T242] libbinder.BpBinder: onLastStrongRef automatically unlinking death recipients for descriptor: '(not cached)'
+2026-10-07T02:46:06.8879286Z [ 3557.205185][  T242] servicemanager: Caller(pid=4784,uid=1000,sid=u:r:system_server:s0) Found android.hardware.sensors.ISensors/default in device VINTF manifest.
+2026-10-07T02:46:06.8880378Z [ 3557.393041][  T242] servicemanager: Caller(pid=4784,uid=1000,sid=u:r:system_server:s0) Found android.hardware.health.IHealth/default in device VINTF manifest.
+2026-10-07T02:46:06.8881016Z [ 3557.631928][  T554] healthd: battery none chg=
+2026-10-07T02:46:06.8881429Z [ 3564.395987][    T1] init: Sending SIGKILL to service 'idmap2d' (pid 4953) process group...
+2026-10-07T02:46:06.8881970Z [ 3564.683413][    T1] libprocessgroup: Removed cgroup /sys/fs/cgroup/system/uid_1000/pid_4953
+2026-10-07T02:46:06.8882561Z [ 3564.830757][    T1] init: Control message: Processed ctl.stop for 'idmap2d' from pid: 4784 (system_server)
+2026-10-07T02:46:06.8883232Z [ 3564.980725][    T1] init: Service 'idmap2d' (pid 4953) received SIGKILL
+2026-10-07T02:46:06.8883701Z [ 3565.074388][    T1] init: Sending SIGKILL to service 'idmap2d' (pid 4953) process group...
+2026-10-07T02:46:06.8884378Z [ 3565.566465][    T1] libprocessgroup: Failed to write 1 to /sys/fs/cgroup/system/uid_1000/pid_4953/cgroup.kill: No such file or directory
+2026-10-07T02:46:06.8885178Z [ 3566.054521][    T1] libprocessgroup: Failed to open /sys/fs/cgroup/system/uid_1000/pid_4953/cgroup.procs: No such file or directory
+2026-10-07T02:46:06.8886061Z [ 3568.643264][  T242] servicemanager: Caller(pid=4784,uid=1000,sid=u:r:system_server:s0) Found android.hardware.power.IPower/default in device VINTF manifest.
+2026-10-07T02:46:06.8887236Z [ 3569.075940][  T242] servicemanager: Caller(pid=4784,uid=1000,sid=u:r:system_server:s0) Could not find android.hardware.vibrator.IVibratorManager/default in the VINTF manifest. No alternative instances declared in VINTF.
+2026-10-07T02:46:06.8888590Z [ 3569.316069][  T242] servicemanager: Caller(pid=4784,uid=1000,sid=u:r:system_server:s0) Could not find android.hardware.vibrator.IVibrator/default in the VINTF manifest. No alternative instances declared in VINTF.
+2026-10-07T02:46:06.8889959Z [ 3569.598986][  T242] servicemanager: Caller(pid=4784,uid=1000,sid=u:r:system_server:s0) Found android.frameworks.vibrator.IVibratorControlService/default in framework VINTF manifest.
+2026-10-07T02:46:06.8891142Z [ 3569.832649][  T242] servicemanager: Caller(pid=4784,uid=1000,sid=u:r:system_server:s0) Found android.frameworks.vibrator.IVibratorControlService/default in framework VINTF manifest.
+2026-10-07T02:46:06.8892333Z [ 3570.910877][  T242] servicemanager: Caller(pid=4784,uid=1000,sid=u:r:system_server:s0) Found android.frameworks.devicestate.IDeviceStateService/default in framework VINTF manifest.
+2026-10-07T02:46:06.9838992Z Traceback (most recent call last):
+2026-10-07T02:46:07.0001397Z   File "/home/runner/work/Husk/Husk/tests/nojit/host_smoke.py", line 265, in <module>
+2026-10-07T02:46:07.0001877Z     raise TimeoutError('Android did not complete boot')
+2026-10-07T02:46:07.0002187Z TimeoutError: Android did not complete boot
+2026-10-07T02:46:07.0014113Z ##[error]Process completed with exit code 1.
+2026-10-07T02:46:07.0092034Z 

@@ -12,7 +12,9 @@ struct LibraryTab: View {
     @ObservedObject private var host = AndroidHost.shared
     @ObservedObject private var runner = QemuRunner.shared
     @ObservedObject private var router = Router.shared
+    #if !HUSK_NO_JIT
     @ObservedObject private var jit = JITCoordinator.shared
+    #endif
 
     let onOpenGuest: () -> Void
     let onStartAndroid: () -> Void
@@ -30,7 +32,11 @@ struct LibraryTab: View {
                 VStack(spacing: 16) {
                     if !host.isReady { machineStrip }
                     if let busy = host.busy { busyStrip(busy) }
+                    #if HUSK_NO_JIT
+                    InterpreterNotice().padding(14).huskCard()
+                    #else
                     if jit.busy, !jit.showSetup { busyStrip(jit.status ?? "Turning on JIT…") }
+                    #endif
                     if !categories.isEmpty { filterPicker }
 
                     if !shown.isEmpty {
@@ -119,7 +125,7 @@ struct LibraryTab: View {
                     ProgressView(value: Double(runner.bootProgress), total: 100)
                 } else {
                     Text(started ? host.status
-                                 : JITBootstrap.isDebuggerAttached
+                                 : ExecutionMode.canStart
                                    ? "Your apps are here; start it to open them."
                                    : "Needs JIT. StikJIT is built in — the recommended way.")
                         .font(.caption)
@@ -128,7 +134,7 @@ struct LibraryTab: View {
                 }
             }
             Spacer(minLength: 6)
-            Button(started ? "Show" : JITBootstrap.isDebuggerAttached ? "Start" : "Enable JIT") {
+            Button(started ? "Show" : ExecutionMode.canStart ? "Start" : "Enable JIT") {
                 if started { onOpenGuest() } else { onStartAndroid() }
             }
             .buttonStyle(.borderedProminent)

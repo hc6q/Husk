@@ -67,6 +67,7 @@ angle_build () {
         WEBCORE_LIBRARY_DIR="/usr/local/lib" NORMAL_UMBRELLA_FRAMEWORKS_DIR="" \
         CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
         WK_AVAILABILITY_OVERLAY_FLAGS="" WK_AVAILABILITY_OVERLAY_SWIFT_FLAGS="" \
+        "OTHER_CPLUSPLUSFLAGS=\$(inherited) -Wno-error=thread-safety-attributes -Wno-error=thread-safety-analysis" \
         IPHONEOS_DEPLOYMENT_TARGET="16.4" \
         ${ldflags[@]+"${ldflags[@]}"} \
         > "$LOG" 2>&1 \

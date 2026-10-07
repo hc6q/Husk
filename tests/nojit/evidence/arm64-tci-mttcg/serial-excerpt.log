@@ -1,0 +1,17 @@
+# Selected diagnostic lines; complete serial in the Actions artifact.
+[  491.645100][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  492.150821][    T1] init: starting service 'artd'...
+[  492.566149][    T1] init: ... started service 'artd' has pid 3411
+[  492.655984][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  492.955429][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  493.373658][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3411, started 1037ms ago)
+[  493.507651][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  494.389584][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+[  494.696966][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3411, started 2360ms ago)
+[  494.716462][  T232] servicemanager: Notifying artd they do (previously: don't) have clients when service is guaranteed to be in use
+[  494.827908][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+[  495.098761][  T232] libbinder.BpBinder: onLastStrongRef automatically unlinking death recipients for descriptor: '(not cached)'
+[  653.479449][    T1] init: starting service 'idmap2d'...
+[  653.841687][    T1] init: ... started service 'idmap2d' has pid 3495
+[  653.963951][    T1] init: Control message: Processed ctl.start for 'idmap2d' from pid: 1662 (system_server)
+[  671.350192][  T232] servicemanager: Caller(pid=3479,uid=10137,sid=u:r:untrusted_app_27:s0:c137,c256,c512,c768) Found android.hardware.graphics.allocator.IAllocator/default in device VINTF manifest.

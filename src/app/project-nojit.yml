@@ -1,0 +1,116 @@
+name: Husk-NoJIT
+options:
+  bundleIdPrefix: com.husk
+  deploymentTarget:
+    iOS: '16.4'
+  createIntermediateGroups: true
+settings:
+  base:
+    HUSK_BUNDLE_IDENTIFIER: com.husk.nojit
+    HUSK_ENTITLEMENTS: Husk/Husk-NoJIT.entitlements
+    ARCHS: arm64
+    ONLY_ACTIVE_ARCH: true
+    ENABLE_BITCODE: false
+    SWIFT_VERSION: '5.0'
+    SWIFT_OPTIMIZATION_LEVEL: -O
+    SWIFT_ACTIVE_COMPILATION_CONDITIONS: $(inherited) HUSK_NO_JIT
+    GCC_PREPROCESSOR_DEFINITIONS:
+    - $(inherited)
+    - HUSK_NO_JIT=1
+targets:
+  Husk-NoJIT:
+    type: application
+    platform: iOS
+    sources:
+    - path: Husk
+      excludes:
+      - Resources/**
+      - JIT*.swift
+      - TranslationLayer.swift
+      - TL*.swift
+      - HuskGamepad.swift
+      - VirtualPad.swift
+      - husk-jit.js
+      - Info*.plist
+      - '*.entitlements'
+    - path: Husk/Resources
+      buildPhase: resources
+      excludes:
+      - JIT*.swift
+      - TranslationLayer.swift
+      - TL*.swift
+      - HuskGamepad.swift
+      - VirtualPad.swift
+      - husk-jit.js
+      - Info*.plist
+      - '*.entitlements'
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(HUSK_BUNDLE_IDENTIFIER)
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES: AppIconClearLight AppIconClearDark
+          AppIconTintedLight AppIconTintedDark
+        ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: true
+        CODE_SIGN_STYLE: Automatic
+        INFOPLIST_FILE: Husk/Info-NoJIT.plist
+        CODE_SIGN_ENTITLEMENTS: $(HUSK_ENTITLEMENTS)
+        SWIFT_OBJC_BRIDGING_HEADER: Husk/HuskBridge.h
+        LD_RUNPATH_SEARCH_PATHS:
+        - $(inherited)
+        - '@executable_path/Frameworks'
+        TARGETED_DEVICE_FAMILY: '1'
+        LIBRARY_SEARCH_PATHS:
+        - $(inherited)
+        - $(SRCROOT)/../../build/ios-arm64/nojit/lib
+        OTHER_LDFLAGS:
+        - $(inherited)
+        - -lz
+        - -framework
+        - AudioToolbox
+        - -framework
+        - CoreText
+        - -framework
+        - CoreGraphics
+        - -framework
+        - Security
+    dependencies:
+    - framework: ../../build/ios-arm64/nojit/lib/libqemu-aarch64-softmmu.dylib
+      embed: true
+      codeSign: true
+    - framework: ../../build/ios-arm64/sysroot/lib/libANGLE-shared.dylib
+      embed: true
+      codeSign: true
+      link: false
+    preBuildScripts:
+    - name: Stage guest image
+      script: "set -e\nGUEST=\"$SRCROOT/../../guests/phase0\"\nif [ ! -f \"$GUEST/vmlinuz-virt\"\
+        \ ]; then\n  echo \"error: guest missing. Run ./scripts/fetch_phase0_guest.sh\"\
+        \ >&2\n  exit 1\nfi\nmkdir -p \"$BUILT_PRODUCTS_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH\"\
+        \ncp \"$GUEST/vmlinuz-virt\" \"$GUEST/initramfs-virt\" \\\n   \"$BUILT_PRODUCTS_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/\"\
+        \n\n# QEMU loads option ROMs by name from its data directory (-L). The full\n\
+        # pc-bios tree is 24 MB and almost entirely firmware for architectures\n#\
+        \ we will never boot (sparc64, riscv, loongarch, x86, ppc), so ship only\n\
+        # the network boot ROMs -- 1.6 MB, and the only ones -M virt asks for.\nBIOS=\"\
+        $SRCROOT/../../third_party/build/qemu-10.0.12-utm/pc-bios\"\nDEST=\"$BUILT_PRODUCTS_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/pc-bios\"\
+        \nmkdir -p \"$DEST\"\ncp \"$BIOS\"/efi-*.rom \"$BIOS\"/pxe-*.rom \"$DEST/\"\
+        \ 2>/dev/null || true\n\n# UEFI firmware for the Phase 1 guest: Debian's cloud\
+        \ image boots through\n# GRUB under UEFI, so this is required. It is 64 MiB\
+        \ but almost all zeros,\n# so the IPA's own zip squeezes it to about a megabyte\
+        \ -- cheaper than\n# carrying a decompressor to unpack it at runtime.\nFW=\"\
+        $BUILT_PRODUCTS_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/edk2-aarch64-code.fd\"\
+        \nif [ ! -f \"$FW\" ]; then\n  bunzip2 -c \"$BIOS/edk2-aarch64-code.fd.bz2\"\
+        \ > \"$FW\"\nfi\n\n# These two qcow2 files are tiny sparse seeds (64 MiB and\
+        \ 16 GiB\n# virtual). The app copies them into Documents on first launch;\
+        \ the\n# pre-booted snapshot later replaces the userdata seed in place.\n\
+        QEMU_IMG=\"$(command -v qemu-img || true)\"\nif [ -z \"$QEMU_IMG\" ]; then\n\
+        \  echo \"error: qemu-img is required to generate the firmware and userdata\
+        \ seeds\" >&2\n  exit 1\nfi\nVARS_SEED=\"$BUILT_PRODUCTS_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/lineage-efi-vars-seed.fd\"\
+        \nVDB_SEED=\"$BUILT_PRODUCTS_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/lineage-vdb-seed.qcow2\"\
+        \nrm -f \"$VARS_SEED\" \"$VDB_SEED\"\n\"$QEMU_IMG\" create -f qcow2 \"$VARS_SEED\"\
+        \ 64M\n\"$QEMU_IMG\" create -f qcow2 \"$VDB_SEED\" 16G\n"
+      outputFiles:
+      - $(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/vmlinuz-virt
+      - $(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/initramfs-virt
+      - $(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/edk2-aarch64-code.fd
+      - $(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/lineage-efi-vars-seed.fd
+      - $(BUILT_PRODUCTS_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/lineage-vdb-seed.qcow2

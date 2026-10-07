@@ -37,9 +37,11 @@ struct OnboardingView: View {
     @State private var autoSave =
         UserDefaults.standard.object(forKey: "husk.autoSave") as? Bool ?? true
     @Environment(\.colorScheme) private var scheme
+#if !HUSK_NO_JIT
     @ObservedObject private var jit = JITCoordinator.shared
     @State private var settingUpJIT = false
 
+#endif
     private let pages = 4
 
     var body: some View {
@@ -50,11 +52,17 @@ struct OnboardingView: View {
                 TabView(selection: $page) {
                     welcome.tag(0)
                     choices.tag(1)
+                    #if HUSK_NO_JIT
+                    InterpreterNotice().padding(34).tag(2)
+                    #else
                     jitPage.tag(2)
+                    #endif
                     ready.tag(3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
+                #if !HUSK_NO_JIT
                 .sheet(isPresented: $settingUpJIT) { JITSetupFlow() }
+                #endif
 
                 // One control, always in the same place. A flow that moves its
                 // own button around is harder to get through than one that does
@@ -109,10 +117,10 @@ struct OnboardingView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
                     .shadow(color: Theme.accent.opacity(0.35), radius: 22, y: 10)
             }
-            Text("Husk").font(.system(size: 40, weight: .semibold, design: .rounded))
+            Text("\(ExecutionMode.appName)").font(.system(size: 40, weight: .semibold, design: .rounded))
             Text("Android apps, on your iPhone.")
                 .font(.title3).foregroundStyle(.secondary)
-            Text("Husk runs a real Android system and opens APKs inside it. "
+            Text("\(ExecutionMode.appName) runs a real Android system and opens APKs inside it. "
                + "A few questions first — all of them can be changed later in Settings.")
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -129,8 +137,9 @@ struct OnboardingView: View {
                     .padding(.top, 34).padding(.bottom, 6)
 
                 choice(icon: "bolt.fill", title: "Start Android on launch",
-                       detail: "Boots the guest as soon as Husk opens, once JIT is "
-                             + "available. Off means you start it yourself.",
+                       detail: ExecutionMode.noJIT
+                            ? "Boots Android when Husk opens. Startup is slower with interpretation."
+                            : "Boots the guest as soon as Husk opens, once JIT is available. Off means you start it yourself.",
                        isOn: $autoStart)
 
                 choice(icon: "rectangle.landscape.rotate", title: "Landscape screen",
@@ -173,6 +182,7 @@ struct OnboardingView: View {
         .huskCard()
     }
 
+#if !HUSK_NO_JIT
     /// What the JIT page says is already in place, if anything.
     private var jitState: String? {
         if JITBootstrap.debuggedFlag { return "JIT is on." }
@@ -210,6 +220,7 @@ struct OnboardingView: View {
         }
     }
 
+#endif
     private var ready: some View {
         VStack(spacing: 18) {
             Spacer()
@@ -217,9 +228,9 @@ struct OnboardingView: View {
                 .font(.system(size: 62))
                 .foregroundStyle(Theme.accent)
             Text("Ready").font(.largeTitle.weight(.semibold))
-            Text("If JIT is not on when Android starts, Husk turns it on with the "
-               + "method you chose, or walks you through setting one up. You can "
-               + "change it any time in Settings › JIT & sideload.")
+            Text(ExecutionMode.noJIT
+                 ? "Start Android from Library, then import a basic offline APK. No debugger or pairing is required."
+                 : "If JIT is not on when Android starts, Husk turns it on with the method you chose. Change it in Settings › JIT & sideload.")
                 .font(.callout).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 34)

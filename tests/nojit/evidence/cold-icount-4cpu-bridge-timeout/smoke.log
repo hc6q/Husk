@@ -1,0 +1,37 @@
+[0.0s] [NoJIT] Starting Android under mmap/mprotect guard
+[6197.1s] $ getprop sys.boot_completed
+
+exit=0
+[6210.6s] $ getprop sys.boot_completed
+
+exit=0
+[6225.3s] $ getprop sys.boot_completed
+
+exit=0
+[6243.8s] $ getprop sys.boot_completed
+
+exit=0
+[6301.4s] $ getprop sys.boot_completed
+
+exit=0
+[6323.5s] $ getprop sys.boot_completed
+
+exit=0
+[6349.6s] $ getprop sys.boot_completed
+
+exit=0
+[6378.9s] $ getprop sys.boot_completed
+
+exit=0
+[6425.7s] $ getprop sys.boot_completed
+
+exit=0
+[6441.2s] $ getprop sys.boot_completed
+
+exit=0
+[6462.4s] $ getprop sys.boot_completed
+
+exit=0
+[6481.2s] $ getprop sys.boot_completed
+
+exit=0

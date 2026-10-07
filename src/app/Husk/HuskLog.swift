@@ -266,7 +266,8 @@ enum HuskLog {
             HuskLog.flushNow()
         }
         log("boot", "crash handlers installed (SEGV/ABRT/ILL/FPE/SYS; "
-                  + "TRAP+BUS left to the JIT guard; SIGPIPE ignored)")
+                  + (ExecutionMode.noJIT ? "no JIT trap guard; " : "TRAP+BUS left to the JIT guard; ")
+                  + "SIGPIPE ignored)")
     }
 
     // MARK: - Emitting
@@ -326,7 +327,7 @@ enum HuskLog {
         let model = deviceModel
         let mem = ProcessInfo.processInfo.physicalMemory / (1024 * 1024)
 
-        log("boot", "================ Husk starting ================")
+        log("boot", "================ \(ExecutionMode.appName) starting ================")
         log("boot", "device      : \(model)")
         log("boot", "system      : \(d.systemName) \(d.systemVersion)")
         log("boot", "physical RAM: \(mem) MiB")

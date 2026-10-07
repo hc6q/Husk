@@ -21,7 +21,9 @@ struct ContentView: View {
     /// demand from the library.
     @State private var showGuestScreen = false
     @ObservedObject private var router = Router.shared
+    #if !HUSK_NO_JIT
     @ObservedObject private var jit = JITCoordinator.shared
+    #endif
     @State private var showOnboarding = Onboarding.needed
     /// True while the launch boot screen is up, rather than the library.
     @State private var booting = false
@@ -41,10 +43,12 @@ struct ContentView: View {
             // Android is then a matter of hiding what is over it, which is also
             // why it appears instantly rather than reloading.
             TabView(selection: $router.tab) {
+#if !HUSK_NO_JIT
                 TranslationLayerTab()
                     .tabItem { Label("Native", systemImage: "gamecontroller.fill") }
                     .tag(HuskTab.translation)
 
+#endif
                 LibraryTab(onOpenGuest: { showGuestScreen = true },
                            onStartAndroid: startFromLibrary,
                            started: started && runner.isRunning)
@@ -116,17 +120,19 @@ struct ContentView: View {
         .fullScreenCover(isPresented: $showOnboarding) {
             OnboardingView {
                 showOnboarding = false
-                if Onboarding.autoStart, JITBootstrap.isDebuggerAttached {
+                if Onboarding.autoStart, ExecutionMode.canStart {
                     booting = true
                     start()
                 }
             }
         }
         .sheet(isPresented: $showLogs) { LogView() }
+#if !HUSK_NO_JIT
         .sheet(isPresented: $jit.showSetup) { JITSetupFlow() }
         // The built-in helper attaches while Husk stays in the foreground, so
         // there is no relaunch to trigger the region claim below; this is it.
         .onChange(of: jit.attachGeneration) { _ in evaluate() }
+#endif
         // Asking rather than downloading. Two gigabytes over someone's cellular
         // connection is not a decision to make on their behalf.
         .alert(guest.update.title, isPresented: Binding(
@@ -138,6 +144,12 @@ struct ContentView: View {
             Text(guest.update.detail)
         }
         .onAppear { evaluate() }
+        .onReceive(NotificationCenter.default.publisher(for: .huskStartAndroid)) { _ in
+            if guest.state == .ready { startFromLibrary() }
+        }
+        .onChange(of: host.busy) { busy in
+            if busy == nil { host.resumeImportedAPKs() }
+        }
         // The two-parameter onChange is iOS 17; this single-parameter form is
         // deprecated there but still works, and is the only one that compiles
         // against the 16.4 deployment target.
@@ -158,6 +170,7 @@ struct ContentView: View {
         // network round trip, and nothing on this screen should wait for it.
         Task { await guest.checkForUpdates() }
 
+#if !HUSK_NO_JIT
         if !JITBootstrap.isDebuggerAttached {
             HuskLog.log("ui", "no debugger attached; waiting for StikDebug")
             return
@@ -169,6 +182,7 @@ struct ContentView: View {
         // After the first call this is a no-op, and on success it also detaches the debugger.
         JITBootstrap.prewarm()
 
+#endif
         // Start on launch, when that is what was asked for.
         //
         // This deliberately did nothing for a long time, and the reason was
@@ -204,16 +218,19 @@ struct ContentView: View {
     /// the action behind a button reads as a button that does nothing, so the
     /// JIT prompt is raised here instead.
     private func startFromLibrary() {
+#if !HUSK_NO_JIT
         guard JITBootstrap.isDebuggerAttached else {
             HuskLog.log("ui", "start asked for without JIT; enabling with \(jit.resolvedMethod.title)")
             jit.enable()
             return
         }
+#endif
         start()
     }
 
     private func start() {
         guard !started else { return }
+#if !HUSK_NO_JIT
         guard JITBootstrap.isDebuggerAttached else { return }
         HuskLog.log("ui", "CS_DEBUGGED set; starting QEMU")
         // Take the JIT region at the last moment before QEMU, as well as before
@@ -245,6 +262,9 @@ struct ContentView: View {
             HuskLog.log("jit", "no dual mapping, but MAP_JIT executes -- letting "
                              + "QEMU map its own buffer")
         }
+#endif
+        guard ExecutionMode.canStart else { return }
+        ExecutionMode.log("Starting Android")
         started = true
         QemuRunner.shared.start()
         // Start probing the bridge now, not when the library happens to be
@@ -252,9 +272,11 @@ struct ContentView: View {
         // navigation this was called when someone chose library mode -- so with
         // tabs, opening Library after starting in full screen left it waiting
         // forever on a guest that was plainly up. It is idempotent and cheap.
+        #if !HUSK_NO_JIT
         AndroidHost.shared.waitForReady()
-        bridge.startWatching()
         GuestBridge.shared.startHealthWatch()
+        #endif
+        bridge.startWatching()
         if QemuRunner.soundEnabled { HuskAudio.shared.start() }
     }
 }
@@ -361,7 +383,7 @@ struct GuestScreenView: View {
 
                         Menu {
                             Button { onBack() } label: {
-                                Label("Back to Husk", systemImage: "chevron.left")
+                                Label("Back to \(ExecutionMode.appName)", systemImage: "chevron.left")
                             }
                             // Android's own Home key, over the bridge. Three-button
                             // navigation is not drawn in this guest, so without it
@@ -522,18 +544,18 @@ struct SetupView: View {
                     Text("Something went wrong").font(.headline).foregroundStyle(.red)
                     Text(message).font(.caption).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center).padding(.horizontal, 34)
-                    Button("Try again") { JITBootstrap.prewarm(); guest.download() }.buttonStyle(.borderedProminent)
+                    Button("Try again") { ExecutionMode.prewarmIfNeeded(); guest.download() }.buttonStyle(.borderedProminent)
                 }
             case .missing:
                 VStack(spacing: 12) {
-                    Text("Husk needs its Android runtime — about 760 MB. Android itself is downloaded afterwards by the runtime.")
+                    Text("\(ExecutionMode.appName) needs its Android runtime — about 760 MB. Android itself is downloaded afterwards by the runtime.")
                         .font(.callout).foregroundStyle(.secondary)
                         .multilineTextAlignment(.center).padding(.horizontal, 36)
                     Button("Download Android runtime") {
                         // Claim the JIT region before the download, not after:
                         // it takes about a minute, and StikDebug will have let
                         // go by the end of it.
-                        JITBootstrap.prewarm()
+                        ExecutionMode.prewarmIfNeeded()
                         guest.download()
                     }
                         .buttonStyle(.borderedProminent)

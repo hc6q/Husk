@@ -8,7 +8,7 @@
 #
 # Usage: ./scripts/build_ios.sh [stage ...]      (no args = all stages)
 #        stages: libffi glib pixman libucontext libslirp qemu
-set -uo pipefail
+set -euo pipefail
 
 HUSK_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SRC="$HUSK_ROOT/third_party/build"
@@ -16,6 +16,18 @@ PREFIX="$HUSK_ROOT/build/ios-arm64/sysroot"
 LOGS="$HUSK_ROOT/build/logs"
 STAMPS="$HUSK_ROOT/build/stamps"
 mkdir -p "$PREFIX" "$LOGS" "$STAMPS"
+
+HUSK_NO_JIT="${HUSK_NO_JIT:-0}"
+case "$HUSK_NO_JIT" in 0|1) ;; *) echo "HUSK_NO_JIT must be 0 or 1" >&2; exit 1 ;; esac
+QEMU_BUILD=_husk_build
+QEMU_STAGE=qemu
+QEMU_OPTIONS=(--disable-tcg-interpreter --disable-tcg-threaded-interpreter)
+if [ "$HUSK_NO_JIT" = 1 ]; then
+    export HUSK_NO_JIT_CFLAGS=-DHUSK_NO_JIT=1
+    QEMU_BUILD=_husk_build_nojit
+    QEMU_STAGE=qemu-nojit
+    QEMU_OPTIONS=(--enable-tcg-interpreter --disable-tcg-threaded-interpreter)
+fi
 
 ARCH=arm64
 SDK=iphoneos
@@ -40,6 +52,7 @@ export CXXFLAGS="$CFLAGS"
 export CPPFLAGS="-arch $ARCH -isysroot $SDKROOT -I$PREFIX/include $CFLAGS_TARGET"
 export OBJCFLAGS="$CFLAGS"
 export LDFLAGS="-arch $ARCH -isysroot $SDKROOT -L$PREFIX/lib $CFLAGS_TARGET"
+export HUSK_QEMU_IOS_CROSS=1
 
 # Cross pkg-config: look ONLY in our sysroot so host Homebrew libraries can never
 # leak into an iOS link.
@@ -48,7 +61,11 @@ export PKG_CONFIG_LIBDIR="$PREFIX/lib/pkgconfig:$PREFIX/share/pkgconfig"
 unset PKG_CONFIG_PATH
 
 banner() { printf '\n\033[0;32m=== %s ===\033[0m\n' "$*"; }
-fail()   { printf '\033[0;31m[FAIL] %s (see %s)\033[0m\n' "$1" "$2"; exit 1; }
+fail()   {
+    printf '\033[0;31m[FAIL] %s (see %s)\033[0m\n' "$1" "$2"
+    tail -80 "$2" >&2
+    exit 1
+}
 
 done_stage() { [ -f "$STAMPS/$1" ]; }
 mark_stage() { touch "$STAMPS/$1"; }
@@ -157,17 +174,18 @@ stage_libslirp()    { apply_patch libslirp-v4.9.1 libslirp-v4.9.1.patch
 
 stage_qemu() {
     local dir="$SRC/qemu-10.0.12-utm"
-    local log="$LOGS/qemu.log"
-    done_stage qemu && { echo "[skip] qemu"; return 0; }
+    local log="$LOGS/$QEMU_STAGE.log"
+    done_stage "$QEMU_STAGE" && { echo "[skip] qemu"; return 0; }
     apply_patch qemu-10.0.12-utm qemu-10.0.12-utm.patch
-    banner "building qemu (this is the long one)"
-    rm -rf "$dir/_husk_build"; mkdir -p "$dir/_husk_build"
-    ( cd "$dir/_husk_build" \
+    "$HUSK_ROOT/scripts/integrate_husk.sh"
+    banner "building $QEMU_STAGE"
+    rm -rf "$dir/$QEMU_BUILD"; mkdir -p "$dir/$QEMU_BUILD"
+    ( cd "$dir/$QEMU_BUILD" \
       && ../configure \
             --prefix="$PREFIX" \
             --cross-prefix="" \
             --target-list=aarch64-softmmu \
-            --enable-shared-lib \
+            --enable-shared-lib "${QEMU_OPTIONS[@]}" \
             --with-coroutine=libucontext \
             --enable-slirp \
             --disable-cocoa --disable-sdl --disable-gtk --disable-coreaudio \
@@ -180,10 +198,13 @@ stage_qemu() {
             --disable-png --disable-vte --disable-zstd \
             --disable-nettle --disable-gcrypt --disable-auth-pam \
             --disable-install-blobs --disable-sparse --disable-debug-info \
-            --extra-cflags="$CFLAGS" --extra-ldflags="$LDFLAGS" \
+            --extra-cflags="$CFLAGS ${HUSK_NO_JIT_CFLAGS:-}" --extra-ldflags="$LDFLAGS" \
       && make -j"$NCPU" ) > "$log" 2>&1 || fail qemu "$log"
+    if [ "$HUSK_NO_JIT" = 1 ]; then
+        python3 "$HUSK_ROOT/scripts/verify_nojit.py" --build "$dir/$QEMU_BUILD"
+    fi
     husk_stage_dylib
-    mark_stage qemu
+    mark_stage "$QEMU_STAGE"
 }
 
 # Incremental QEMU rebuild: keeps the existing build dir but re-runs ninja under
@@ -195,9 +216,9 @@ stage_qemurebuild() {
     local dir="$SRC/qemu-10.0.12-utm"
     local log="$LOGS/qemu-rebuild.log"
     banner "rebuilding qemu (incremental)"
-    ( cd "$dir/_husk_build" && ninja libqemu-aarch64-softmmu.dylib ) > "$log" 2>&1 \
+    ( cd "$dir/$QEMU_BUILD" && ninja libqemu-aarch64-softmmu.dylib ) > "$log" 2>&1 \
         || fail qemu-rebuild "$log"
-    echo "[ok  ] $(ls -lh "$dir/_husk_build/libqemu-aarch64-softmmu.dylib" | awk '{print $5}')"
+    echo "[ok  ] $(ls -lh "$dir/$QEMU_BUILD/libqemu-aarch64-softmmu.dylib" | awk '{print $5}')"
     husk_stage_dylib
 }
 
@@ -205,11 +226,13 @@ stage_qemurebuild() {
 # QEMU's meson build directory, so regenerating or relocating that build does not
 # break the app target.
 husk_stage_dylib() {
-    local src="$SRC/qemu-10.0.12-utm/_husk_build/libqemu-aarch64-softmmu.dylib"
+    local src="$SRC/qemu-10.0.12-utm/$QEMU_BUILD/libqemu-aarch64-softmmu.dylib"
     [ -f "$src" ] || return 0
-    mkdir -p "$PREFIX/../lib"
-    cp "$src" "$PREFIX/../lib/"
-    echo "[stage] $(cd "$PREFIX/../lib" && pwd)/libqemu-aarch64-softmmu.dylib"
+    local dest="$PREFIX/../lib"
+    [ "$HUSK_NO_JIT" = 1 ] && dest="$PREFIX/../nojit/lib"
+    mkdir -p "$dest"
+    cp "$src" "$dest/"
+    echo "[stage] $(cd "$dest" && pwd)/libqemu-aarch64-softmmu.dylib"
 }
 
 STAGES=("$@")

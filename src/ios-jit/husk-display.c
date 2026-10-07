@@ -17,7 +17,13 @@
 
 #include "husk-display.h"
 
+#ifdef __APPLE__
 #include <os/log.h>
+#else
+/* Host validation uses stderr; iOS keeps its unified log integration. */
+#define OS_LOG_DEFAULT 0
+#define os_log(log, ...) ((void)0)
+#endif
 #include <sys/time.h>
 
 static double husk_dpy_now_ms(void)

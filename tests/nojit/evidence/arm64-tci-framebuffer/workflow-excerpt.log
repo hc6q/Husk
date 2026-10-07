@@ -1,0 +1,19 @@
+2026-10-07T01:08:13.7090966Z [18.5s] [NoJIT] Android boot completed
+2026-10-07T01:08:13.7091620Z [18.5s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+2026-10-07T01:08:13.8843719Z [18.6s] [NoJIT] Installing APK
+2026-10-07T01:09:50.1218918Z [114.9s] [NoJIT] Launching package
+2026-10-07T01:10:16.0493007Z topResumedActivity=ActivityRecord{243013681 u0 org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity t9}
+2026-10-07T01:10:16.0493775Z [140.8s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+2026-10-07T01:10:30.4397430Z [155.2s] [NoJIT] Framebuffer recovery: Close Bluetooth
+2026-10-07T01:10:59.0239443Z [183.8s] [NoJIT] Framebuffer recovery: Close Bluetooth
+2026-10-07T01:12:49.3464974Z [294.1s] [NoJIT] Framebuffer recovery: Close Bluetooth
+2026-10-07T01:13:17.7326210Z   "apk_installed": true,
+2026-10-07T01:13:17.7326417Z   "apk_resumed": true,
+2026-10-07T01:13:17.7326616Z   "usb_touch_confirmed": false,
+2026-10-07T01:13:17.7327953Z   "guest_audio_confirmed": false,
+2026-10-07T01:13:17.7328240Z   "ios_device_tested": false,
+2026-10-07T01:13:17.7330380Z   "boot_seconds": 18.5,
+2026-10-07T01:13:17.7334737Z   "last_framebuffer_error": "Platform dialog still covers the fixture",
+2026-10-07T01:13:17.7335317Z   "elapsed_seconds": 321.2,
+2026-10-07T01:13:17.7352753Z [NoJIT] TCI bytecode buffer RW, size=134217728
+2026-10-07T01:13:18.4178933Z RuntimeError: Platform dialog recovery budget exhausted

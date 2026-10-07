@@ -1,0 +1,72 @@
+2026-10-07T00:52:18.8586226Z [36.9s] [NoJIT] Android boot completed
+2026-10-07T00:52:18.9587389Z [37.0s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+2026-10-07T00:52:19.0280712Z [37.1s] [NoJIT] Installing APK
+2026-10-07T00:58:27.2929493Z [405.4s] [NoJIT] Launching package
+2026-10-07T01:01:03.1336975Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:01:29.1708223Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:01:47.5864871Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:02:09.6228638Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:02:24.8697511Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:02:45.1145827Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:03:04.8826341Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:03:20.7141716Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:03:35.4470951Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:03:53.2546259Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:04:09.9301541Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:04:26.2314998Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:04:38.2452789Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:04:48.2261969Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:04:59.9397242Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:05:14.2583874Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:05:25.0996129Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:05:37.6502557Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:05:51.7262911Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:06:04.8458309Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:06:17.8751023Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:06:30.1321120Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:06:44.1975837Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:07:00.4151318Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:07:25.5833534Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:07:42.5904506Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:08:01.0892474Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:08:18.8497458Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:08:41.2872428Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:09:04.1976888Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:09:23.6423146Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:09:44.6341369Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:10:04.0178828Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:10:18.4765626Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:10:34.0506544Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:10:45.9976478Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:11:01.7432239Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:11:14.7761548Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:11:27.3140046Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:11:37.3018343Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:11:51.8271447Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:12:05.0955380Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:12:18.7462527Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:12:30.7093312Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:12:46.7067781Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:13:00.3865772Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:13:18.0499032Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:13:37.3906585Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:13:52.1785865Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:14:07.1061121Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:14:25.3266353Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:14:39.2911208Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:14:55.5341665Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:15:08.3497102Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:15:22.5623422Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:15:35.6466468Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:15:50.0870112Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:16:19.1511550Z topResumedActivity=ActivityRecord{109246542 u0 org.lineageos.setupwizard/.WelcomeActivity t8}
+2026-10-07T01:16:25.9305442Z   "apk_installed": true,
+2026-10-07T01:16:25.9305648Z   "apk_resumed": false,
+2026-10-07T01:16:25.9305851Z   "usb_touch_confirmed": false,
+2026-10-07T01:16:25.9306077Z   "guest_audio_confirmed": false,
+2026-10-07T01:16:25.9306364Z   "ios_device_tested": false,
+2026-10-07T01:16:25.9309147Z   "boot_seconds": 36.9,
+2026-10-07T01:16:25.9309344Z   "elapsed_seconds": 1482.2,
+2026-10-07T01:16:25.9326386Z [NoJIT] TCTI bytecode buffer RW, size=134217728
+2026-10-07T01:16:26.9207768Z     assert report['apk_resumed'], 'APK was installed but did not resume'
+2026-10-07T01:16:26.9208612Z AssertionError: APK was installed but did not resume

@@ -382,9 +382,10 @@ final class GuestBridge {
         let fd = try controlFD(timeout: timeout)
         sequence += 1
         let token = "\(Self.marker)\(sequence):"
-        try writeAll(fd, Data("\(command) 2>&1; echo \(token)$?\n".utf8))
+        let begin = "__HUSK_BEGIN__\(sequence):"
+        try writeAll(fd, Data("echo \(begin); \(command) 2>&1; echo \(token)$?\n".utf8))
 
-        var out = ""
+        var reply = Data()
         var buf = [UInt8](repeating: 0, count: 16 * 1024)
         let deadline = Date().addingTimeInterval(timeout)
         while true {
@@ -404,16 +405,17 @@ final class GuestBridge {
                 dropControl(why)
                 throw BridgeError.io("guest closed the connection -- \(why)")
             }
-            out += String(decoding: buf[0..<n], as: UTF8.self)
-            if let r = out.range(of: token) {
-                let status = Int(out[r.upperBound...]
-                    .trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+            reply.append(contentsOf: buf[0..<n])
+            guard reply.count <= 16 * 1024 * 1024 else {
+                dropControl("shell reply exceeded 16 MiB")
+                throw BridgeError.io("shell reply is too large; use the binary pull path")
+            }
+            if let result = GuestShellFrame.extract(reply, begin: begin, end: token) {
                 isConnected = true
-                let body = String(out[out.startIndex..<r.lowerBound])
-                if status != 0 {
-                    HuskLog.log("bridge", "`\(command.prefix(60))` exit \(status)")
+                if result.status != 0 {
+                    HuskLog.log("bridge", "`\(command.prefix(60))` exit \(result.status)")
                 }
-                return (body, status)
+                return result
             }
             if Date() > deadline {
                 // The connection is KEPT. Whatever this command eventually
@@ -431,6 +433,11 @@ final class GuestBridge {
     func run(_ command: String, timeout: TimeInterval = 30) throws -> (out: String, status: Int) {
         controlLock.lock()
         defer { controlLock.unlock() }
+        #if HUSK_NO_JIT
+        // A slow interpreter is not permission to replay an install, launch,
+        // settings change or other side effect. The next caller can reconnect.
+        return try exchange(command, timeout: timeout)
+        #else
         do {
             return try exchange(command, timeout: timeout)
         } catch {
@@ -441,6 +448,7 @@ final class GuestBridge {
             // not a loop.
             return try exchange(command, timeout: timeout)
         }
+        #endif
     }
 
     /// Run a command and read everything it writes, as bytes.
@@ -519,7 +527,8 @@ final class GuestBridge {
         // caller compares `wc -c` against the file's real size before pm sees it.
         sequence += 1
         let token = "\(Self.marker)\(sequence):"
-        let command = "head -c \(size) > \(remote) 2>&1; echo \(token)$?\n"
+        let begin = "__HUSK_BEGIN__\(sequence):"
+        let command = "echo \(begin); head -c \(size) > \(remote) 2>&1; echo \(token)$?\n"
         try writeAll(fd, Data(command.utf8))
 
         var sent = 0
@@ -537,10 +546,10 @@ final class GuestBridge {
         // head has its N bytes and exits; the marker is the shell telling us it
         // is back to reading commands, which is also how we know the connection
         // is still usable for the pm install that follows.
-        var out = ""
+        var reply = Data()
         var buf = [UInt8](repeating: 0, count: 4096)
         let deadline = Date().addingTimeInterval(budget)
-        while !out.contains(token) {
+        while true {
             let n = buf.withUnsafeMutableBytes { read(fd, $0.baseAddress, $0.count) }
             if n < 0 && errno == EINTR { continue }
             if n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -555,7 +564,17 @@ final class GuestBridge {
                 dropControl(why)
                 throw BridgeError.io("\(why) after sending \(sent) bytes")
             }
-            out += String(decoding: buf[0..<n], as: UTF8.self)
+            reply.append(contentsOf: buf[0..<n])
+            guard reply.count <= 1024 * 1024 else {
+                dropControl("transfer acknowledgement exceeded 1 MiB")
+                throw BridgeError.io("transfer acknowledgement is too large")
+            }
+            if let result = GuestShellFrame.extract(reply, begin: begin, end: token) {
+                guard result.status == 0 else {
+                    throw BridgeError.io("guest transfer failed (exit \(result.status)): \(result.out)")
+                }
+                break
+            }
             if Date() > deadline {
                 dropControl("no acknowledgement after the transfer")
                 throw BridgeError.timeout("waiting for the guest to finish writing \(remote)")
@@ -669,7 +688,7 @@ final class GuestBridge {
                 // stays open. That is exactly what these two commands show, and
                 // both run fine as shell. The last sample before the silence is
                 // the one that matters.
-                if alive, ticks % 3 == 0, ticks < 30 {
+                if alive, !ExecutionMode.noJIT, ticks % 3 == 0, ticks < 30 {
                     for cmd in ["ip addr show", "ip rule show", "ip route show table all"] {
                         if let out = try? self.shell(cmd, timeout: 20) {
                             HuskLog.log("net", "[t+\(ticks * 5)s] \(cmd):\n"
@@ -688,7 +707,7 @@ final class GuestBridge {
                 //
                 // `-b crash` is a small dedicated ring, so this is cheap: a few
                 // lines every half minute, and only the ones not seen before.
-                if alive, ticks % 6 == 0, ticks > 0 {
+                if alive, !ExecutionMode.noJIT || QemuRunner.soundEnabled, ticks % 6 == 0, ticks > 0 {
                     // Android's audio stack, at warning level and above. One
                     // sound effect played and then silence, with the guest
                     // queueing three buffers in three minutes -- whatever made
@@ -896,6 +915,64 @@ final class AndroidHost: ObservableObject {
 
     private var polling = false
 
+    #if HUSK_NO_JIT
+    /// Own imported files before the document picker's security scope expires.
+    /// Preserve each split APK set as one transaction until Android is ready.
+    private var pendingInstalls: [[URL]] = []
+    private var pendingDirectory: URL {
+        Self.support.appendingPathComponent("husk-pending-apks", isDirectory: true)
+    }
+
+    private func queueInstall(_ apks: [URL]) {
+        let directory = pendingDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            var copies: [URL] = []
+            for (index, source) in apks.enumerated() {
+                let scoped = source.startAccessingSecurityScopedResource()
+                defer { if scoped { source.stopAccessingSecurityScopedResource() } }
+                let copy = directory.appendingPathComponent("\(index)-\(source.lastPathComponent)")
+                try FileManager.default.copyItem(at: source, to: copy)
+                copies.append(copy)
+            }
+            pendingInstalls.append(copies)
+            say("APK imported", "Starting Android; installation waits for boot completion.")
+            NotificationCenter.default.post(name: .huskStartAndroid, object: nil)
+        } catch {
+            try? FileManager.default.removeItem(at: directory)
+            say("Import failed", error.localizedDescription, good: false)
+        }
+    }
+
+    private func restorePendingImports() {
+        let fm = FileManager.default
+        let known = Set(pendingInstalls.compactMap { $0.first?.deletingLastPathComponent() })
+        guard let directories = try? fm.contentsOfDirectory(at: pendingDirectory,
+                includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) else { return }
+        for directory in directories.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            guard !known.contains(directory),
+                  (try? directory.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true,
+                  let files = try? fm.contentsOfDirectory(at: directory,
+                        includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) else { continue }
+            let apks = files.filter { $0.pathExtension.lowercased() == "apk" }
+                .sorted { $0.lastPathComponent < $1.lastPathComponent }
+            if !apks.isEmpty { pendingInstalls.append(apks) }
+        }
+        ExecutionMode.log("Recovered \(pendingInstalls.count) pending APK imports")
+    }
+
+    private func installNextPending() {
+        guard isReady, busy == nil, !pendingInstalls.isEmpty else { return }
+        install(pendingInstalls.removeFirst())
+    }
+    #endif
+
+    func resumeImportedAPKs() {
+        #if HUSK_NO_JIT
+        installNextPending()
+        #endif
+    }
+
     /// Set once the guest has answered with a package list of its own.
     ///
     /// Until it has, an empty answer is far more likely to be a bridge round
@@ -909,7 +986,11 @@ final class AndroidHost: ObservableObject {
         guard !polling, !isReady else { return }
         polling = true
         status = "Starting Android…"
+        #if HUSK_NO_JIT
+        restorePendingImports()
+        #endif
         Task.detached { [weak self] in
+            let waitingSince = Date()
             var attempt = 0
             while true {
                 attempt += 1
@@ -920,18 +1001,22 @@ final class AndroidHost: ObservableObject {
                     // because when this never succeeds the answer is always in
                     // what the guest said rather than in the fact that it failed.
                     if attempt == 1 || attempt % 10 == 0 {
-                        let who = (try? GuestBridge.shared.shell("id")) ?? "(no answer)"
+                        let who = (try? GuestBridge.shared.shell("id", timeout: ExecutionMode.noJIT ? 120 : 30)) ?? "(no answer)"
                         HuskLog.log("bridge", "guest shell: "
                                   + who.trimmingCharacters(in: .whitespacesAndNewlines))
                     }
-                    let booted = try GuestBridge.shared.shell("getprop sys.boot_completed")
+                    let booted = try GuestBridge.shared.shell("getprop sys.boot_completed", timeout: ExecutionMode.noJIT ? 120 : 30)
                         .trimmingCharacters(in: .whitespacesAndNewlines)
                     if booted == "1" {
+                        ExecutionMode.log("Android boot completed")
+                        ExecutionMode.auditMemory()
+                        #if !HUSK_NO_JIT
                         await MainActor.run {
                             self?.isReady = true
                             self?.status = "Android is ready"
                             self?.polling = false
                         }
+                        #endif
                         HuskLog.log("bridge", "guest is ready after \(attempt) attempts")
                         // Take the connection now and never let go. New
                         // connections worked for the first hundred seconds of
@@ -939,16 +1024,35 @@ final class AndroidHost: ObservableObject {
                         // guest first answers is the moment to claim one.
                         GuestBridge.shared.holdConnection()
                         await self?.quietAbsentHardware()
+                        #if HUSK_NO_JIT
+                        // Do not enable launches while initial guest settings
+                        // still compete for the held shell connection.
+                        await MainActor.run {
+                            self?.isReady = true
+                            self?.status = "Android is ready"
+                            self?.polling = false
+                        }
+                        // Imported APKs take priority over icon/renderer probes.
+                        let queued = await MainActor.run { () -> Bool in
+                            let queued = !(self?.pendingInstalls.isEmpty ?? true)
+                            self?.installNextPending()
+                            return queued
+                        }
+                        if !queued { await self?.refreshPackages(includeDetails: false) }
+                        GuestBridge.shared.startHealthWatch()
+                        #else
                         await self?.refreshPackages()
                         await MainActor.run { self?.dumpDiagnostics() }
+                        #endif
                         return
                     }
                     await MainActor.run { self?.status = "Android is booting…" }
                 } catch {
                     GuestBridge.shared.disconnect()
+                    let elapsed = Int(Date().timeIntervalSince(waitingSince))
                     await MainActor.run {
                         self?.status = attempt < 4 ? "Starting Android…"
-                                                   : "Waiting for Android (\(attempt * 3)s)…"
+                                                   : "Waiting for Android (\(elapsed)s)…"
                     }
                 }
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
@@ -957,9 +1061,14 @@ final class AndroidHost: ObservableObject {
     }
 
     /// Installed third-party packages -- the things a person actually put there.
-    nonisolated func refreshPackages() async {
+    nonisolated func refreshPackages(includeDetails: Bool = true) async {
         do {
-            let raw = try GuestBridge.shared.shell("pm list packages -3", timeout: 60)
+            let reply = try GuestBridge.shared.run("pm list packages -3",
+                timeout: ExecutionMode.noJIT ? 180 : 60)
+            guard reply.status == 0 else {
+                throw BridgeError.io("Android could not list packages: \(reply.out)")
+            }
+            let raw = reply.out
             let names = raw.split(separator: "\n")
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { $0.hasPrefix("package:") }
@@ -967,7 +1076,7 @@ final class AndroidHost: ObservableObject {
                 .filter { !$0.isEmpty }
             // Android's own labels and icons, in one round trip for every app
             // at once, before anything is put on screen.
-            let known = names.isEmpty ? [:] : await self.launcherCatalogue()
+            let known = !includeDetails || names.isEmpty ? [:] : await self.launcherCatalogue()
             var labels: [String: String] = [:]
             for (package, entry) in known {
                 if let label = entry.label { labels[package] = label }
@@ -985,27 +1094,30 @@ final class AndroidHost: ObservableObject {
                 }
                 self.guestListedPackages = true
                 let known = Dictionary(uniqueKeysWithValues:
-                    self.packages.map { ($0.name, $0.label) })
+                    self.packages.map { ($0.name, $0) })
                 self.packages = names.map { name in
                     let cached = Self.iconDirectory.appendingPathComponent("\(name).png")
                     // Whatever has already been resolved stays: a refresh is
                     // for finding new apps, not for undoing what was learned
                     // about the ones already here.
                     let resolved = known[name].flatMap {
-                        $0 == Self.pretty(name) ? nil : $0
+                        $0.label == Self.pretty(name) ? nil : $0.label
                     }
-                    return Package(name: name,
-                                   label: labels[name] ?? resolved ?? Self.pretty(name),
-                                   iconPath: FileManager.default.fileExists(atPath: cached.path)
-                                             ? cached.path : nil)
+                    var entry = known[name] ?? Package(name: name, label: Self.pretty(name))
+                    entry.label = labels[name] ?? resolved ?? Self.pretty(name)
+                    entry.iconPath = FileManager.default.fileExists(atPath: cached.path)
+                        ? cached.path : nil
+                    return entry
                 }
                     .sorted { $0.label.localizedCaseInsensitiveCompare($1.label)
                               == .orderedAscending }
                 self.saveCatalogue(self.packages)
             }
             HuskLog.log("bridge", "\(names.count) user package(s) installed")
-            await refreshMetadata(for: names)
-            for name in names { await fetchAppInfo(for: name) }
+            if includeDetails {
+                await refreshMetadata(for: names)
+                for name in names { await fetchAppInfo(for: name) }
+            }
         } catch {
             HuskLog.log("bridge", "could not list packages: \(error.localizedDescription)")
         }
@@ -1162,13 +1274,16 @@ final class AndroidHost: ObservableObject {
         } }
         guard !safe.isEmpty else { return }
 
-        let script = "for p in " + safe.joined(separator: " ") + "; do "
-                   + "echo \"#P $p\"; "
-                   + "dumpsys package \"$p\" 2>/dev/null | grep -E "
-                   + "\"versionName=|primaryCpuAbi=|categoryHint=|appCategory=\" | head -8; "
-                   + "echo \"#K\"; "
-                   + "pm path \"$p\" 2>/dev/null | sed 's/^package://' | "
-                   + "while read a; do stat -c %s \"$a\" 2>/dev/null; done; done"
+        let scriptParts: [String] = [
+            "for p in " + safe.joined(separator: " ") + "; do ",
+            "echo \"#P $p\"; ",
+            "dumpsys package \"$p\" 2>/dev/null | grep -E ",
+            "\"versionName=|primaryCpuAbi=|categoryHint=|appCategory=\" | head -8; ",
+            "echo \"#K\"; ",
+            "pm path \"$p\" 2>/dev/null | sed 's/^package://' | ",
+            "while read a; do stat -c %s \"$a\" 2>/dev/null; done; done",
+        ]
+        let script = scriptParts.joined()
 
         guard let text = try? GuestBridge.shared.shell(script, timeout: 180) else {
             HuskLog.log("bridge", "could not read app details")
@@ -1179,7 +1294,7 @@ final class AndroidHost: ObservableObject {
         var current: String?
         var inSizes = false
         for raw in text.split(separator: "\n", omittingEmptySubsequences: false) {
-            let line = raw.trimmingCharacters(in: .whitespaces)
+            let line = raw.trimmingCharacters(in: CharacterSet.whitespaces)
             if line.hasPrefix("#P ") {
                 current = String(line.dropFirst(3))
                 inSizes = false
@@ -1529,6 +1644,7 @@ final class AndroidHost: ObservableObject {
     /// it from there. This is the path for an APK that arrived through the
     /// Files tab, or that a browser in the guest downloaded itself.
     func installFromGuest(_ path: String, name: String) {
+        ExecutionMode.log("Installing APK: \(name)")
         busy = "Installing \(name)…"
         Task.detached { [weak self] in
             let out = (try? GuestBridge.shared.shell(
@@ -1593,6 +1709,14 @@ final class AndroidHost: ObservableObject {
     /// work, because each is incomplete by itself.
     func install(_ apks: [URL]) {
         guard let first = apks.first else { return }
+        #if HUSK_NO_JIT
+        let ownedQueueRoot = pendingDirectory.standardizedFileURL
+        if !isReady || busy != nil {
+            queueInstall(apks)
+            return
+        }
+        #endif
+        ExecutionMode.log("Installing APK: \(first.lastPathComponent)")
         let name = apks.count == 1 ? first.lastPathComponent
                                    : "\(apks.count) APKs (\(first.lastPathComponent))"
         busy = "Installing \(name)…"
@@ -1665,15 +1789,24 @@ final class AndroidHost: ObservableObject {
                 // dex2oat compiles the whole APK on an emulated CPU, and it
                 // scales with the code in it. Ten minutes fits a small game and
                 // not a large one.
-                let installBudget: TimeInterval = expected > 50 << 20 ? 2400 : 600
+                let installBudget: TimeInterval = ExecutionMode.noJIT ? 3600 : (expected > 50 << 20 ? 2400 : 600)
                 // install-multiple for a split set, which has to be handed over
                 // as one transaction: the base APK alone carries no native code.
                 let command = apks.count == 1
                     ? "pm install -r -t \(remote)"
                     : "pm install-multiple -r -t \(remotes.joined(separator: " "))"
-                let out = try GuestBridge.shared.shell(command, timeout: installBudget)
+                let reply = try GuestBridge.shared.run(command, timeout: installBudget)
+                let out = reply.out
                 for r in remotes { _ = try? GuestBridge.shared.shell("rm -f \(r)") }
-                let ok = out.contains("Success")
+                let ok = reply.status == 0 && out.split(separator: "\n").contains {
+                    $0.trimmingCharacters(in: .whitespacesAndNewlines) == "Success"
+                }
+                #if HUSK_NO_JIT
+                let queuedDirectory = first.deletingLastPathComponent()
+                if ok, queuedDirectory.deletingLastPathComponent().standardizedFileURL == ownedQueueRoot {
+                    try? FileManager.default.removeItem(at: queuedDirectory)
+                }
+                #endif
                 HuskLog.log("bridge", "install \(name): "
                           + out.trimmingCharacters(in: .whitespacesAndNewlines))
                 if !ok, out.contains("native libraries") {
@@ -1682,7 +1815,10 @@ final class AndroidHost: ObservableObject {
                               + "(select every .apk together) or the build has no "
                               + "arm64-v8a library and this guest is 64-bit only")
                 }
-                await self?.refreshPackages()
+                // Under interpretation, optional icon/resource reads must not
+                // hold installation and its snapshot save open for minutes.
+                // Settings' explicit refresh still requests full details.
+                await self?.refreshPackages(includeDetails: !ExecutionMode.noJIT)
 
                 // Persist it, or it is gone on the next launch.
                 //
@@ -1798,7 +1934,11 @@ final class AndroidHost: ObservableObject {
     /// Done from the bridge rather than the guest image because the bridge is
     /// already a shell and `settings` is a shell command -- the same call from
     /// init fails, which is why husk-provision.rc has never worked.
-    func quietAbsentHardware() async {
+    // GuestBridge.run is synchronous socket I/O. This method must leave the
+    // main actor while Android executes settings/pm/am; otherwise UIKit cannot
+    // deliver the document picker's Open action until every command finishes.
+    // It reads no AndroidHost UI state; readiness is published by the caller.
+    nonisolated func quietAbsentHardware() async {
         let off = [
             ("bluetooth", "settings put global bluetooth_on 0"),
             ("ble scan",  "settings put global ble_scan_always_enabled 0"),
@@ -1810,6 +1950,37 @@ final class AndroidHost: ObservableObject {
                 : "could not disable \(what): "
                   + (r?.out.trimmingCharacters(in: .whitespacesAndNewlines) ?? "no answer"))
         }
+
+        #if HUSK_NO_JIT
+        // The shipped image has an Android Bluetooth stack but this QEMU
+        // machine has no controller. Turning the setting off does not stop an
+        // already-started package, so it can keep crashing and leave its
+        // system-owned error dialog above every imported app. Disable only
+        // that unavailable guest package, stop its current process, then use
+        // Android's supported close-system-dialogs broadcast. BaseErrorDialog
+        // handles that action itself; no guessed screen coordinate is needed.
+        let disabled = try? GuestBridge.shared.run(
+            "pm disable-user --user 0 com.android.bluetooth; "
+          + "pm list packages -d com.android.bluetooth | grep -Fx package:com.android.bluetooth",
+            timeout: 300)
+        guard disabled?.status == 0 else {
+            HuskLog.log("bridge", "could not disable absent Android Bluetooth package: "
+                      + (disabled?.out.trimmingCharacters(in: .whitespacesAndNewlines)
+                         ?? "no answer"))
+            return
+        }
+        HuskLog.log("bridge", "absent Android Bluetooth package disabled")
+        let stopped = try? GuestBridge.shared.run(
+            "am force-stop --user 0 com.android.bluetooth", timeout: 120)
+        HuskLog.log("bridge", stopped?.status == 0
+            ? "stopped the old Android Bluetooth process"
+            : "could not stop the old Android Bluetooth process")
+        let closed = try? GuestBridge.shared.run(
+            "am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS", timeout: 120)
+        HuskLog.log("bridge", closed?.status == 0
+            ? "asked Android to close stale system error dialogs"
+            : "Android did not confirm closing stale system error dialogs")
+        #endif
     }
 
     /// Everything Android has recorded about its own crashes.
@@ -1900,13 +2071,58 @@ final class AndroidHost: ObservableObject {
     }
 
     func launch(_ pkg: String, then: @escaping () -> Void) {
+        ExecutionMode.log("Launching package: \(pkg)")
+        #if HUSK_NO_JIT
+        guard isReady, busy == nil else { return }
+        busy = "Opening…"
+        Task.detached { [weak self] in
+            do {
+                // Resolve with the existing package service; launching monkey
+                // starts another ART process and can time out under TCI.
+                let resolution = try GuestBridge.shared.shell(
+                    "cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER \(Self.quote(pkg))", timeout: 300)
+                let components = resolution.split(whereSeparator: \.isNewline)
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                guard let component = components.last(where: { $0.hasPrefix("\(pkg)/") }) else {
+                    throw BridgeError.io("Android could not resolve a launcher activity.")
+                }
+                let output = try GuestBridge.shared.shell(
+                    "am start -n \(Self.quote(component))", timeout: 900)
+                guard output.contains("Starting: Intent"), !output.contains("Error:") else {
+                    throw BridgeError.io(output.isEmpty ? "Android did not confirm the launch." : output)
+                }
+                var resumed = false
+                for _ in 0..<60 {
+                    let activity = try GuestBridge.shared.shell(
+                        "dumpsys activity activities | grep -E 'mResumedActivity|topResumedActivity' || true", timeout: 120)
+                    if activity.contains("\(pkg)/") { resumed = true; break }
+                    try await Task.sleep(nanoseconds: 3_000_000_000)
+                }
+                guard resumed else { throw BridgeError.io("The app did not reach a resumed activity.") }
+                ExecutionMode.log("Package launch confirmed: \(pkg)")
+                ExecutionMode.auditMemory()
+                await MainActor.run {
+                    self?.markLaunched(pkg)
+                    self?.busy = nil
+                    then()
+                }
+            } catch {
+                ExecutionMode.log("Package launch failed: \(error.localizedDescription)")
+                await MainActor.run {
+                    self?.busy = nil
+                    self?.say("Launch failed", error.localizedDescription, good: false)
+                }
+            }
+        }
+        #else
         markLaunched(pkg)
         busy = "Opening…"
         Task.detached { [weak self] in
             let out = (try? GuestBridge.shared.shell(
-                "monkey -p \(pkg) -c android.intent.category.LAUNCHER 1", timeout: 60)) ?? ""
+                "monkey -p \(pkg) -c android.intent.category.LAUNCHER 1", timeout: ExecutionMode.noJIT ? 300 : 60)) ?? ""
             HuskLog.log("bridge", "launch \(pkg): \(out.split(separator: "\n").last ?? "")")
             await MainActor.run { self?.busy = nil; then() }
         }
+        #endif
     }
 }

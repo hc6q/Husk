@@ -1,0 +1,61 @@
+[0.0s] [NoJIT] Starting Android under mmap/mprotect guard
+[16.5s] [NoJIT] Snapshot load job completed; checking Android readiness
+[18.3s] $ getprop sys.boot_completed
+1
+exit=0
+[18.5s] [NoJIT] Android boot completed
+[18.5s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+[18.5s] [NoJIT] Installing APK
+[19.4s] $ head -c 8553 > /data/local/tmp/NoJITSmoke.apk
+
+exit=0
+[20.2s] $ wc -c < /data/local/tmp/NoJITSmoke.apk
+8553
+exit=0
+[149.3s] $ pm install -r -t /data/local/tmp/NoJITSmoke.apk
+Success
+exit=0
+[156.1s] $ settings put global device_provisioned 1; settings put secure user_setup_complete 1
+
+exit=0
+[159.4s] $ input keyevent 82
+
+exit=0
+[159.4s] [NoJIT] Launching package
+[160.8s] $ cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER org.husk.nojitsmoke.software
+priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity
+exit=0
+[165.6s] $ am start -n org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity
+Starting: Intent { cmp=org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity }
+exit=0
+[171.3s] $ dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+
+exit=0
+[186.2s] $ dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+topResumedActivity=ActivityRecord{149367696 u0 org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity t9}
+exit=0
+[186.2s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+[190.0s] $ rm -f /data/local/tmp/window.xml
+
+exit=0
+[272.8s] $ uiautomator dump /data/local/tmp/window.xml
+UI hierchary dumped to: /data/local/tmp/window.xml
+exit=0
+[274.2s] $ cat /data/local/tmp/window.xml 2>/dev/null || true
+<?xml version='1.0' encoding='UTF-8' standalone='yes' ?><hierarchy rotation="0"><node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[9,315][351,513]" drawing-order="0" hint=""><node index="0" text="" resource-id="" class="android.widget.FrameLayout" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,331][335,497]" drawing-order="1" hint=""><node index="0" text="" resource-id="android:id/content" class="android.widget.FrameLayout" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,331][335,497]" drawing-order="1" hint=""><node index="0" text="" resource-id="android:id/parentPanel" class="android.widget.LinearLayout" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,331][335,497]" drawing-order="1" hint=""><node index="0" text="" resource-id="android:id/topPanel" class="android.widget.LinearLayout" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,331][335,378]" drawing-order="1" hint=""><node index="0" text="" resource-id="android:id/title_template" class="android.widget.LinearLayout" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,331][335,378]" drawing-order="1" hint=""><node index="0" text="Bluetooth keeps stopping" resource-id="android:id/alertTitle" class="android.widget.TextView" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[49,349][311,378]" drawing-order="2" hint="" /></node></node><node index="1" text="" resource-id="android:id/customPanel" class="android.widget.FrameLayout" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,378][335,497]" drawing-order="3" hint=""><node index="0" text="" resource-id="android:id/custom" class="android.widget.FrameLayout" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,378][335,497]" drawing-order="1" hint=""><node index="0" text="" resource-id="" class="android.widget.LinearLayout" package="android" content-desc="" checkable="false" checked="false" clickable="false" enabled="true" focusable="false" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,378][335,497]" drawing-order="1" hint=""><node index="0" text="App info" resource-id="android:id/aerr_app_info" class="android.widget.Button" package="android" content-desc="" checkable="false" checked="false" clickable="true" enabled="true" focusable="true" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,393][335,441]" drawing-order="2" hint="" /><node index="1" text="Close app" resource-id="android:id/aerr_close" class="android.widget.Button" package="android" content-desc="" checkable="false" checked="false" clickable="true" enabled="true" focusable="true" focused="false" scrollable="false" long-clickable="false" password="false" selected="false" bounds="[25,441][335,489]" drawing-order="3" hint="" /></node></node></node></node></node></node></node></hierarchy>
+exit=0
+[288.1s] $ svc bluetooth disable
+ShellCommand: Exec disable
+disable: Success
+exit=0
+[303.3s] $ settings get global bluetooth_on
+0
+exit=0
+[303.3s] [NoJIT] Captured platform dialog; Close Bluetooth recovery 1
+[319.8s] $ rm -f /data/local/tmp/window.xml
+
+exit=0
+[368.5s] $ uiautomator dump /data/local/tmp/window.xml
+Killed
+exit=137

@@ -1,0 +1,155 @@
+2026-10-07T01:43:41.2405321Z ##[group]Run python3 tests/nojit/host_smoke.py --qemu third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64 --guest guests/nojit-host --apk build/NoJITSmoke.apk --guard build/nojit-mmap-guard.so --backend TCTI --memory 4096 --snapshot husk-ready --file-ram --output build/logs/host-smoke --timeout 3600
+2026-10-07T01:43:41.2407473Z [36;1mpython3 tests/nojit/host_smoke.py --qemu third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64 --guest guests/nojit-host --apk build/NoJITSmoke.apk --guard build/nojit-mmap-guard.so --backend TCTI --memory 4096 --snapshot husk-ready --file-ram --output build/logs/host-smoke --timeout 3600[0m
+2026-10-07T01:43:41.2442708Z shell: /usr/bin/bash -e {0}
+2026-10-07T01:43:41.2442940Z ##[endgroup]
+2026-10-07T01:43:41.3066618Z [0.0s] [NoJIT] Starting Android under mmap/mprotect guard
+2026-10-07T01:43:57.9351756Z [16.6s] [NoJIT] Snapshot load job completed; checking Android readiness
+2026-10-07T01:44:15.5536419Z [34.2s] $ getprop sys.boot_completed
+2026-10-07T01:44:15.5543823Z 1
+2026-10-07T01:44:15.5554598Z exit=0
+2026-10-07T01:44:15.5554973Z [34.2s] [NoJIT] Android boot completed
+2026-10-07T01:44:15.5555428Z [34.2s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+2026-10-07T01:44:15.9358092Z [34.6s] [NoJIT] Installing APK
+2026-10-07T01:44:25.2532043Z [43.9s] $ head -c 8553 > /data/local/tmp/NoJITSmoke.apk
+2026-10-07T01:44:25.2532453Z 
+2026-10-07T01:44:25.2532929Z exit=0
+2026-10-07T01:44:34.5517994Z [53.2s] $ wc -c < /data/local/tmp/NoJITSmoke.apk
+2026-10-07T01:44:34.5518319Z 8553
+2026-10-07T01:44:34.5518477Z exit=0
+2026-10-07T01:48:28.1852849Z [286.9s] $ pm install -r -t /data/local/tmp/NoJITSmoke.apk
+2026-10-07T01:48:28.1853189Z Success
+2026-10-07T01:49:26.5259070Z exit=0
+2026-10-07T01:49:26.5259503Z [345.2s] $ settings put global device_provisioned 1; settings put secure user_setup_complete 1
+2026-10-07T01:49:26.5259886Z 
+2026-10-07T01:49:26.5259950Z exit=0
+2026-10-07T01:49:45.0222163Z [363.7s] $ input keyevent 82
+2026-10-07T01:49:45.0222392Z 
+2026-10-07T01:49:45.0222463Z exit=0
+2026-10-07T01:49:45.0223682Z [363.7s] [NoJIT] Launching package
+2026-10-07T01:50:18.3676918Z [397.1s] $ cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER org.husk.nojitsmoke
+2026-10-07T01:50:18.3677661Z priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+2026-10-07T01:50:18.3678044Z org.husk.nojitsmoke/.MainActivity
+2026-10-07T01:50:18.3678263Z exit=0
+2026-10-07T01:50:55.9615053Z [434.7s] $ am start -n org.husk.nojitsmoke/.MainActivity
+2026-10-07T01:50:55.9617839Z Starting: Intent { cmp=org.husk.nojitsmoke/.MainActivity }
+2026-10-07T01:50:55.9618168Z exit=0
+2026-10-07T01:51:20.1162204Z [458.8s] $ dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+2026-10-07T01:51:20.1163029Z 
+2026-10-07T01:51:20.1163101Z exit=0
+2026-10-07T01:51:46.5238329Z [485.2s] $ dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+2026-10-07T01:51:46.5238721Z 
+2026-10-07T01:51:46.5238787Z exit=0
+2026-10-07T01:52:14.9030086Z [513.6s] $ dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+2026-10-07T01:52:14.9030648Z 
+2026-10-07T01:52:14.9030920Z exit=0
+2026-10-07T01:52:37.2056808Z [535.9s] $ dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+2026-10-07T01:52:37.2057436Z topResumedActivity=ActivityRecord{174678807 u0 org.husk.nojitsmoke/.MainActivity t9}
+2026-10-07T01:52:37.2057834Z exit=0
+2026-10-07T01:52:37.2062258Z [535.9s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+2026-10-07T01:57:57.6463979Z [856.3s] $ uiautomator dump /data/local/tmp/window.xml
+2026-10-07T01:57:57.6464675Z ERROR: null root node returned by UiTestAutomationBridge.
+2026-10-07T01:57:57.6464987Z exit=0
+2026-10-07T01:58:07.9313977Z [866.6s] $ cat /data/local/tmp/window.xml
+2026-10-07T01:58:07.9314706Z cat: /data/local/tmp/window.xml: No such file or directory
+2026-10-07T01:58:07.9315601Z exit=1
+2026-10-07T01:58:10.3594292Z {
+2026-10-07T01:58:10.3594648Z   "platform": "Linux aarch64 host / Android ARM64 guest",
+2026-10-07T01:58:10.3594950Z   "backend": "TCTI",
+2026-10-07T01:58:10.3595204Z   "boot_completed": true,
+2026-10-07T01:58:10.3595417Z   "apk_installed": true,
+2026-10-07T01:58:10.3595618Z   "apk_resumed": true,
+2026-10-07T01:58:10.3595814Z   "usb_touch_confirmed": false,
+2026-10-07T01:58:10.3596044Z   "guest_audio_confirmed": false,
+2026-10-07T01:58:10.3596273Z   "ios_device_tested": false,
+2026-10-07T01:58:10.3596506Z   "package_id": "org.husk.nojitsmoke",
+2026-10-07T01:58:10.3596886Z   "apk_sha256": "aa949a490cf57f933c65dcb1a7ecb5616acb501d036080373def0e686925e6cd",
+2026-10-07T01:58:10.3597270Z   "ui_timeout_seconds": 300,
+2026-10-07T01:58:10.3597488Z   "cpu_threads": "single",
+2026-10-07T01:58:10.3597687Z   "vcpus": 4,
+2026-10-07T01:58:10.3597884Z   "memory_mib": 4096,
+2026-10-07T01:58:10.3598125Z   "snapshot_requested": "husk-ready",
+2026-10-07T01:58:10.3598382Z   "boot_seconds": 34.2,
+2026-10-07T01:58:10.3598584Z   "elapsed_seconds": 866.6,
+2026-10-07T01:58:10.3598788Z   "qmp_status": {
+2026-10-07T01:58:10.3598965Z     "status": "running",
+2026-10-07T01:58:10.3599159Z     "running": true
+2026-10-07T01:58:10.3599333Z   },
+2026-10-07T01:58:10.3599722Z   "info cpus": "* CPU #0: thread_id=9910\r\n  CPU #1: thread_id=9910\r\n  CPU #2: thread_id=9910\r\n  CPU #3: thread_id=9910\r\n",
+2026-10-07T01:58:10.3606676Z   "info registers": "\r\nCPU#0\r\n PC=ffffffdece030c80 X00=0000007a5ec30710 X01=0000007b2a591804\r\nX02=0000007b2a591804 X03=0000000000000010 X04=0000000000000000\r\nX05=0000000000000002 X06=0000007b19a54be0 X07=0000000000000008\r\nX08=daaa414d1b8bd4c7 X09=daaa414d1b8bd4c7 X10=0000000000000000\r\nX11=000000790ec289f8 X12=0000000000000001 X13=0000007820272c19\r\nX14=0000000000000000 X15=0000000000000002 X16=0000000000000001\r\nX17=0000007b2a4ee69c X18=0000007733724000 X19=000000790ec289e8\r\nX20=00000079eec81d10 X21=f506e0b32e3ddf29 X22=0000000000000002\r\nX23=0000000000000000 X24=0000007820277640 X25=000000000000184e\r\nX26=0000000000000002 X27=0000000000000001 X28=000000790ec287b0\r\nX29=0000007820272c60 X30=000000773d72b044  SP=ffffffc08777c000\r\nPSTATE=004023c5 ---- EL1h  BTYPE=0     FPCR=00000000 FPSR=00000011\r\nQ00=0000000000000000:000000003f800000 Q01=0000000000000000:000000003f800000\r\nQ02=000000773c53ca7a:000000773d94f6e8 Q03=0000000400000000:0000000000000002\r\nQ04=0000000500000001:000000080000000a Q05=0000000000000004:0000000000000004\r\nQ06=0000000000000000:ffff000000000000 Q07=0000000000000000:00000000ffffffff\r\nQ08=0000000000000000:0000000a00000000 Q09=0000000000000000:0000000800000000\r\nQ10=0000000000000000:0000000200000002 Q11=0000000000000000:0000000000000000\r\nQ12=0000000000000000:0000000000000000 Q13=0000000000000000:0000000000000000\r\nQ14=0000000000000000:0000000000000000 Q15=0000000000000000:0000000000000000\r\nQ16=00000000ffffffff:ffffffffffffffff Q17=0000000100000000:0000000100000000\r\nQ18=000000797ece00d6:000000797ecdffc6 Q19=0000000100000000:0000000100000000\r\nQ20=0000000000000000:00000000000000ff Q21=0000000000000000:0000000000000000\r\nQ22=0000000800000008:0000000800000008 Q23=ffffffffffffffff:3830282018100800\r\nQ24=ffffffffffffffff:ffffffffffff0000 Q25=ffffffffffffffff:ffffffffffffffff\r\nQ26=0000000000000000:0000000000000000 Q27=ffffffffffffffff:ffffffffffffffff\r\nQ28=0000000000000000:0000000000000000 Q29=0000000000000000:0000000000000000\r\nQ30=ffffffffffffffff:ffffffffffffffff Q31=ffffffffffffffff:ffffffffffffffff\r\n",
+2026-10-07T01:58:10.3614251Z   "info network": "virtio-net-pci.0: index=0,type=nic,model=virtio-net-pci,macaddr=52:54:00:12:34:56\r\n \\ net0: index=0,type=user,net=10.0.2.0,restrict=off\r\n"
+2026-10-07T01:58:10.3614847Z }
+2026-10-07T01:58:10.3615036Z --- qemu.log (last 60 lines) ---
+2026-10-07T01:58:10.3615273Z [husk-audio] registering the driver
+2026-10-07T01:58:10.3615523Z [husk-audio] driver registered
+2026-10-07T01:58:10.3615771Z [NoJIT] TCTI bytecode buffer RW, size=134217728
+2026-10-07T01:58:10.3616314Z qemu-system-aarch64: terminating on signal 15 from pid 9905 (python3)
+2026-10-07T01:58:10.3616725Z --- serial.log (last 60 lines) ---
+2026-10-07T01:58:10.3617581Z [  557.598015][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T01:58:10.3618703Z [  558.833197][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3413, started 18610ms ago)
+2026-10-07T01:58:10.3619471Z [  558.981925][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+2026-10-07T01:58:10.3620605Z [  559.592768][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T01:58:10.3621821Z [  560.428621][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3413, started 20220ms ago)
+2026-10-07T01:58:10.3622584Z [  560.561901][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+2026-10-07T01:58:10.3623715Z [  561.443977][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T01:58:10.3624956Z [  561.912869][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3413, started 21705ms ago)
+2026-10-07T01:58:10.3625722Z [  562.050766][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+2026-10-07T01:58:10.3626865Z [  562.895811][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T01:58:10.3627975Z [  563.362905][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3413, started 23146ms ago)
+2026-10-07T01:58:10.3628736Z [  563.485236][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+2026-10-07T01:58:10.3629866Z [  564.329496][  T232] servicemanager: Caller(pid=1662,uid=1000,sid=u:r:system_server:s0) Since 'artd' could not be found trying to start it as a lazy AIDL service. (if it's not configured to be a lazy service, it may be stuck starting or still starting).
+2026-10-07T01:58:10.3630973Z [  565.264884][    T1] init: service 'artd' requested start, but it is already running (flags: 134, pid: 3413, started 25057ms ago)
+2026-10-07T01:58:10.3631948Z [  565.403133][    T1] init: Control message: Processed ctl.interface_start for 'aidl/artd' from pid: 232 (/system/bin/servicemanager)
+2026-10-07T01:58:10.3632753Z [  565.575781][  T232] libbinder.BpBinder: onLastStrongRef automatically unlinking death recipients for descriptor: '(not cached)'
+2026-10-07T01:58:10.3633568Z [  565.723934][  T232] servicemanager: Notifying artd they do (previously: don't) have clients when service is guaranteed to be in use
+2026-10-07T01:58:10.3634277Z [  868.633296][    T1] init: starting service 'idmap2d'...
+2026-10-07T01:58:10.3634647Z [  870.294997][    T1] init: ... started service 'idmap2d' has pid 3493
+2026-10-07T01:58:10.3635160Z [  870.950632][    T1] init: Control message: Processed ctl.start for 'idmap2d' from pid: 1662 (system_server)
+2026-10-07T01:58:10.3635738Z [  910.283807][    T1] init: Sending SIGKILL to service 'idmap2d' (pid 3493) process group...
+2026-10-07T01:58:10.3636275Z [  910.901874][    T1] libprocessgroup: Removed cgroup /sys/fs/cgroup/system/uid_1000/pid_3493
+2026-10-07T01:58:10.3637004Z [  911.096112][    T1] init: Control message: Processed ctl.stop for 'idmap2d' from pid: 1662 (system_server)
+2026-10-07T01:58:10.3637531Z [  911.276974][    T1] init: Service 'idmap2d' (pid 3493) received SIGKILL
+2026-10-07T01:58:10.3637987Z [  911.355451][    T1] init: Sending SIGKILL to service 'idmap2d' (pid 3493) process group...
+2026-10-07T01:58:10.3638664Z [  911.495441][    T1] libprocessgroup: Failed to write 1 to /sys/fs/cgroup/system/uid_1000/pid_3493/cgroup.kill: No such file or directory
+2026-10-07T01:58:10.3639475Z [  911.657149][    T1] libprocessgroup: Failed to open /sys/fs/cgroup/system/uid_1000/pid_3493/cgroup.procs: No such file or directory
+2026-10-07T01:58:10.3640037Z [  911.948491][    T1] init: starting service 'idmap2d'...
+2026-10-07T01:58:10.3640427Z [  913.693669][  T245] binder: release 3495:3498 transaction 197761 out, still active
+2026-10-07T01:58:10.3640866Z [  914.169889][    T1] init: ... started service 'idmap2d' has pid 3500
+2026-10-07T01:58:10.3641378Z [  914.272529][    T1] init: Control message: Processed ctl.start for 'idmap2d' from pid: 1662 (system_server)
+2026-10-07T01:58:10.3641869Z [  924.764532][ T2744] binder: 2744:1662 reply target not found
+2026-10-07T01:58:10.3642363Z [  925.037786][ T2744] binder: 1662:2744 transaction reply to 0:0 failed 198815/29189/0, code 0 size 4-0 line 3365
+2026-10-07T01:58:10.3642926Z [  925.676217][ T2744] binder: send failed reply for transaction 197761, target dead
+2026-10-07T01:58:10.3643427Z [  935.032025][    T1] init: Sending SIGKILL to service 'idmap2d' (pid 3500) process group...
+2026-10-07T01:58:10.3643962Z [  936.520307][    T1] libprocessgroup: Removed cgroup /sys/fs/cgroup/system/uid_1000/pid_3500
+2026-10-07T01:58:10.3644810Z [  936.745051][    T1] init: Control message: Processed ctl.stop for 'idmap2d' from pid: 1662 (system_server)
+2026-10-07T01:58:10.3645335Z [  936.977025][    T1] init: Service 'idmap2d' (pid 3500) received SIGKILL
+2026-10-07T01:58:10.3645805Z [  937.079974][    T1] init: Sending SIGKILL to service 'idmap2d' (pid 3500) process group...
+2026-10-07T01:58:10.3646474Z [  937.252030][    T1] libprocessgroup: Failed to write 1 to /sys/fs/cgroup/system/uid_1000/pid_3500/cgroup.kill: No such file or directory
+2026-10-07T01:58:10.3647277Z [  937.449018][    T1] libprocessgroup: Failed to open /sys/fs/cgroup/system/uid_1000/pid_3500/cgroup.procs: No such file or directory
+2026-10-07T01:58:10.3648451Z [  964.585809][  T242] type=1400 audit(1789288766.037:151): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+2026-10-07T01:58:10.3649996Z [  987.599456][  T242] type=1400 audit(1789288789.045:152): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+2026-10-07T01:58:10.3651374Z [ 1006.968746][  T232] servicemanager: Notifying artd they don't (previously: do) have clients when we now have no record of a client
+2026-10-07T01:58:10.3652059Z [ 1007.563651][  T232] servicemanager: Caller(pid=3413,uid=1082,sid=u:r:artd:s0) Unregistering artd
+2026-10-07T01:58:10.3652762Z [ 1007.699003][  T232] libbinder.BpBinder: onLastStrongRef automatically unlinking death recipients for descriptor: '(not cached)'
+2026-10-07T01:58:10.3653539Z [ 1014.864074][    T1] init: Service 'artd' (pid 3413) exited with status 0 oneshot service took 474.623993 seconds in background
+2026-10-07T01:58:10.3654300Z [ 1015.044082][    T1] init: Sending SIGKILL to service 'artd' (pid 3413) process group...
+2026-10-07T01:58:10.3654835Z [ 1015.229743][    T1] libprocessgroup: Removed cgroup /sys/fs/cgroup/system/uid_1082/pid_3413
+2026-10-07T01:58:10.3655470Z [ 1044.066045][    T1] init: Untracked process (pid: 3541 name: (crash_dump64) ppid: 1 pgrp: 3534 state: Z) received SIGALRM
+2026-10-07T01:58:10.3656466Z [ 1044.641132][    T1] init: Untracked process (pid: 3541 name: (crash_dump64) ppid: 1 pgrp: 3534 state: Z) did not have an associated service entry and will not be reaped
+2026-10-07T01:58:10.3657351Z [ 1047.208896][    T1] init: Untracked process (pid: 3551 name: (husk.nojitsmoke) ppid: 1 pgrp: 3551 state: Z) exited with status 0
+2026-10-07T01:58:10.3658237Z [ 1047.364837][    T1] init: Untracked process (pid: 3551 name: (husk.nojitsmoke) ppid: 1 pgrp: 3551 state: Z) did not have an associated service entry and will not be reaped
+2026-10-07T01:58:10.3659520Z [ 1072.313902][  T242] type=1400 audit(1789288873.677:153): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+2026-10-07T01:58:10.3660915Z [ 1074.131998][  T232] servicemanager: Caller(pid=3499,uid=10137,sid=u:r:untrusted_app_27:s0:c137,c256,c512,c768) Found android.hardware.graphics.allocator.IAllocator/default in device VINTF manifest.
+2026-10-07T01:58:10.3662166Z [ 1075.530161][  T232] servicemanager: Caller(pid=3499,uid=10137,sid=u:r:untrusted_app_27:s0:c137,c256,c512,c768) Found android.hardware.graphics.allocator.IAllocator/default in device VINTF manifest.
+2026-10-07T01:58:10.3663284Z [ 1075.872200][  T232] servicemanager: Caller(pid=3499,uid=10137,sid=u:r:untrusted_app_27:s0:c137,c256,c512,c768) Found mapper/minigbm_upstream in device VINTF manifest.
+2026-10-07T01:58:10.3664679Z [ 1096.836254][  T242] type=1400 audit(1789288898.313:154): avc:  denied  { read } for  comm="AnrMainProcessD" name="transactions" dev="binder" ino=1048589 scontext=u:r:system_server:s0 tcontext=u:object_r:binderfs_logs_transactions:s0 tclass=file permissive=0
+2026-10-07T01:58:10.3665814Z [ 1223.503957][    T1] init: Untracked process (pid: 3598 name: (crash_dump64) ppid: 1 pgrp: 3588 state: Z) received SIGALRM
+2026-10-07T01:58:10.3666678Z [ 1223.863703][    T1] init: Untracked process (pid: 3598 name: (crash_dump64) ppid: 1 pgrp: 3588 state: Z) did not have an associated service entry and will not be reaped
+2026-10-07T01:58:11.1299043Z Traceback (most recent call last):
+2026-10-07T01:58:11.1300013Z   File "/home/runner/work/Husk/Husk/tests/nojit/host_smoke.py", line 293, in <module>
+2026-10-07T01:58:11.1300507Z     report['ui_xml'] = exchange('cat /data/local/tmp/window.xml')
+2026-10-07T01:58:11.1300847Z                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2026-10-07T01:58:11.1301255Z   File "/home/runner/work/Husk/Husk/tests/nojit/host_smoke.py", line 170, in exchange
+2026-10-07T01:58:11.1301698Z     raise RuntimeError(f'guest command failed: {command}')
+2026-10-07T01:58:11.1302079Z RuntimeError: guest command failed: cat /data/local/tmp/window.xml
+2026-10-07T01:58:11.1488932Z ##[error]Process completed with exit code 1.
+2026-10-07T01:58:11.1687998Z 

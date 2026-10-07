@@ -39,10 +39,12 @@ struct HuskApp: App {
 
         // Then the trap guard: without it, any brk we issue when StikDebug is
         // absent kills the process outright rather than returning an error.
-        JITBootstrap.installTrapGuard()
+        ExecutionMode.prepare()
 
         // Game controllers, for the games the native runtime runs.
+        #if !HUSK_NO_JIT
         Task { @MainActor in HuskGamepads.shared.start() }
+        #endif
     }
 
     var body: some Scene {

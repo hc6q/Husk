@@ -11,6 +11,9 @@ struct SettingsTab: View {
                     NavigationLink { AboutSettings() } label: { appCard }
                 }
 
+                #if HUSK_NO_JIT
+                Section("Execution") { InterpreterNotice() }
+                #else
                 Section {
                     row(JITSettings(), "bolt.fill", .yellow, "JIT & Sideload", "StikJIT is built in — the recommended way")
                 } header: {
@@ -18,6 +21,8 @@ struct SettingsTab: View {
                 } footer: {
                     Text("Android and Translation Layer games need JIT. StikJIT, built into Husk, turns it on without a computer.")
                 }
+
+                #endif
 
                 Section("General") {
                     row(DiscoverView(), "sparkle.magnifyingglass", .mint, "Discover", "Find apps in F-Droid and other repositories")
@@ -41,7 +46,7 @@ struct SettingsTab: View {
         HStack(spacing: 14) {
             HuskMark(size: 56)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Husk").font(.title3.weight(.semibold))
+                Text("\(ExecutionMode.appName)").font(.title3.weight(.semibold))
                 Text("Version \(Bundle.main.version) · \(Bundle.main.commit)")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -121,7 +126,7 @@ struct LibrarySettings: View {
                 .disabled(working || !host.isReady)
             } footer: {
                 Text("Names and icons come from Android's own launcher, which keeps "
-                   + "the version it draws. Re-fetching throws away Husk's copies and "
+                   + "the version it draws. Re-fetching throws away \(ExecutionMode.appName)'s copies and "
                    + "asks again.")
             }
         }
@@ -135,7 +140,7 @@ struct LibrarySettings: View {
 struct PerformanceSettings: View {
     @ObservedObject private var runner = QemuRunner.shared
     @State private var gpuMode =
-        UserDefaults.standard.object(forKey: "husk.gpuMode") as? Bool ?? true
+        UserDefaults.standard.object(forKey: "husk.gpuMode") as? Bool ?? !ExecutionMode.noJIT
     @State private var sound = UserDefaults.standard.bool(forKey: "husk.sound")
     @State private var soundDevice =
         UserDefaults.standard.object(forKey: "husk.soundDevice") as? Bool ?? true
@@ -155,11 +160,15 @@ struct PerformanceSettings: View {
             } header: {
                 Text("Renderer")
             } footer: {
+                #if HUSK_NO_JIT
+                Text("The shipped snapshot uses CPU renderer. GPU uses ANGLE/Metal but requires a cold boot. Renderer changes apply after restarting Rottweiler.")
+                #else
                 Text(gpuMode
                      ? "Android draws on the real GPU through Metal — about four times "
                      + "the frame rate. This is the default."
                      : "Every pixel is drawn by the emulated CPU. Much slower, and only "
                      + "worth choosing if the GPU misbehaves.")
+                #endif
             }
 
             Section {
@@ -393,6 +402,7 @@ struct NetworkSettings: View {
 
 // MARK: - JIT and sideloading
 
+#if !HUSK_NO_JIT
 struct JITSettings: View {
     @ObservedObject private var runner = QemuRunner.shared
     @ObservedObject private var jit = JITCoordinator.shared
@@ -522,6 +532,7 @@ struct JITSettings: View {
     }
 }
 
+#endif
 // MARK: - Saved machine
 
 struct SavedMachineSettings: View {
@@ -549,7 +560,7 @@ struct SavedMachineSettings: View {
                 }
                 .disabled(runner.isSavingState)
             } footer: {
-                Text("Husk restores a saved machine instead of booting it, which takes "
+                Text("\(ExecutionMode.appName) restores a saved machine instead of booting it, which takes "
                    + "seconds rather than minutes. The picture freezes while it writes. "
                    + "With this off, nothing saves by itself — including after an "
                    + "install.")
@@ -713,14 +724,16 @@ struct AppearanceSettings: View {
 struct AboutSettings: View {
     @ObservedObject private var runner = QemuRunner.shared
     @State private var showLogs = false
+    #if !HUSK_NO_JIT
     @AppStorage(TranslationLayer.devInfoKey) private var devInfo = false
+    #endif
 
     var body: some View {
         List {
             Section {
                 VStack(spacing: 8) {
                     HuskMark(size: 84)
-                    Text("Husk").font(.title2.weight(.semibold))
+                    Text("\(ExecutionMode.appName)").font(.title2.weight(.semibold))
                     Text("Version \(Bundle.main.version)")
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
@@ -739,6 +752,7 @@ struct AboutSettings: View {
             }
 
             Section {
+#if !HUSK_NO_JIT
                 Toggle(isOn: $devInfo) {
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Developer Info")
@@ -747,12 +761,13 @@ struct AboutSettings: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
+#endif
                 Button { showLogs = true } label: {
                     Label("Open Console", systemImage: "terminal")
                 }
             } footer: {
-                Text("Husk runs unmodified Android APKs in a real Android system on your iPhone. "
-                   + "The console shows Husk's live log, the guest's serial output and QEMU's own "
+                Text("\(ExecutionMode.appName) runs unmodified Android APKs in a real Android system on your iPhone. "
+                   + "The console shows \(ExecutionMode.appName)'s live log, the guest's serial output and QEMU's own "
                    + "output — the three files any problem here is diagnosed from.")
             }
         }

@@ -1,0 +1,32 @@
+[0.0s] [NoJIT] Starting Android under mmap/mprotect guard
+[16.3s] [NoJIT] Snapshot load job completed; checking Android readiness
+[34.4s] $ getprop sys.boot_completed
+1
+exit=0
+[34.4s] [NoJIT] Android boot completed
+[34.4s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+[34.8s] [NoJIT] Installing APK
+[42.0s] $ head -c 8553 > /data/local/tmp/NoJITSmoke.apk
+
+exit=0
+[48.5s] $ wc -c < /data/local/tmp/NoJITSmoke.apk
+8553
+exit=0
+[339.3s] $ pm install -r -t /data/local/tmp/NoJITSmoke.apk
+Success
+exit=0
+[412.3s] $ settings put global device_provisioned 1; settings put secure user_setup_complete 1
+
+exit=0
+[488.1s] $ input keyevent 82
+
+exit=0
+[488.1s] [NoJIT] Launching package
+[494.8s] $ cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER org.husk.nojitsmoke
+priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+org.husk.nojitsmoke/.MainActivity
+exit=0
+[554.0s] $ am start -n org.husk.nojitsmoke/.MainActivity
+Starting: Intent { cmp=org.husk.nojitsmoke/.MainActivity }
+cmd: Failure calling service activity: Broken pipe (32)
+exit=224

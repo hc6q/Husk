@@ -5,7 +5,9 @@
 set -euo pipefail
 
 HUSK_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OUT="${1:-$HUSK_ROOT/build/Husk.ipa}"
+IPA_NAME=Husk.ipa
+if [ "${HUSK_NO_JIT:-0}" = 1 ]; then IPA_NAME=Rottweiler.ipa; fi
+OUT="${1:-$HUSK_ROOT/build/$IPA_NAME}"
 cd "$HUSK_ROOT"
 
 step() { printf '\n\033[1;34m##### %s\033[0m\n' "$*"; }
@@ -43,8 +45,10 @@ step "integrate Husk sources into QEMU, then rebuild it"
 step "guest kernel + firmware"
 ./scripts/fetch_phase0_guest.sh
 
-step "on-device pairing (Rust)"
-./scripts/build_rppairing_ios.sh
+if [ "${HUSK_NO_JIT:-0}" != 1 ]; then
+    step "on-device pairing (Rust)"
+    ./scripts/build_rppairing_ios.sh
+fi
 
 step "app + IPA"
 mkdir -p "$(dirname "$OUT")"

@@ -1,0 +1,23 @@
+# Selected diagnostic lines; complete serial in the Actions artifact.
+[2J[01;01H[=3h[2J[01;01H[0m[35m[40m[0m[37m[40mBdsDxe: loading Boot0002 "UEFI Misc Device 2" from PciRoot(0x0)/Pci(0x2,0x0)
+BdsDxe: starting Boot0002 "UEFI Misc Device 2" from PciRoot(0x0)/Pci(0x2,0x0)
+[0m[30m[40m[2J[01;01H[0m[37m[40mEFI stub: Booting Linux Kernel...
+EFI stub: Loaded initrd from LINUX_EFI_INITRD_MEDIA_GUID device path
+EFI stub: Generating empty DTB
+EFI stub: Exiting boot services...
+[    0.000000][    T0] Booting Linux on physical CPU 0x0000000000 [0x000f0510]
+[    0.000000][    T0] Linux version 6.12.81-4k-g4f6bf47200d9 (root@bcc5089870a4) (Android (14054515, +pgo, +bolt, +lto, +mlgo, based on r563880c) clang version 21.0.0 (https://android.googlesource.com/toolchain/llvm-project 5e96669f06077099aa41290cdb4c5e6fa0f59349), LLD 21.0.0 (/mnt/disks/build-disk/src/googleplex-android/llvm-r563880-release/out/llvm-project/llvm 5e96669f06077099aa41290cdb4c5e6fa0f59349)) #1 SMP PREEMPT Sat Aug 22 20:05:02 UTC 2026
+[    0.000000][    T0] KASLR enabled
+[    0.000000][    T0] KVM is not available. Ignoring kvm-arm.mode
+[    0.000000][    T0] efi: EFI v2.7 by EDK II
+[    0.000000][    T0] efi: SMBIOS 3.0=0xbf810000 MEMATTR=0xbe80d018 ACPI 2.0=0xbc150018 INITRD=0xbc483718 RNG=0xbc15e398 MEMRESERVE=0xbc483418 
+[    0.000000][    T0] random: crng init done
+[    0.000000][    T0] ACPI: Early table checksum verification disabled
+[    0.000000][    T0] ACPI: RSDP 0x00000000BC150018 000024 (v02 BOCHS )
+[    0.000000][    T0] ACPI: XSDT 0x00000000BC15FE98 00006C (v01 BOCHS  BXPC     00000001      01000013)
+[    0.684580][    T1] gunyah: Failed to find interrupt parent of resource manager
+[    0.693037][    T1] hw perfevents: enabled with armv8_pmuv3_0 PMU driver, 7 (0,8000003f) counters available
+[    0.699295][    T9] watchdog: NMI not fully supported
+[    0.703419][    T9] watchdog: Hard watchdog permanently disabled
+[    0.707949][    T1] usbcore: registered new interface driver snd-usb-audio
+[    0.712766][    T1] GACT probability on
