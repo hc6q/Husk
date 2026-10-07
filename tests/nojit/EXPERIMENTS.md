@@ -126,3 +126,13 @@ Cada captura e decisão é preservada. A verificação ainda exige XML atual do
 package e mudança real de “Touches: 0” para “Touches: 1” via USB HID. A
 recuperação não modifica timers, não encerra processos Android e não basta
 para aprovar o teste. O IPA publicado continua TCI/thread=single.
+
+
+A execução 37552404244 instalou o fixture software em 93,3 segundos e retomou
+a Activity em 142,3 segundos, mas a captura mostrou “Bluetooth keeps stopping”.
+A recuperação recusou clicar num diálogo diferente de System UI. Não houve
+prova de interface ou touch. O próximo ensaio reconhece também esse diálogo
+Bluetooth, solicita `svc bluetooth disable` no guest e exige bluetooth_on=0
+antes de clicar no seu Close app via USB. O Bluetooth do iPhone não é alterado.
+Capturas, decisão e estado do guest ficam no relatório. Isso não aprova a
+interface: XML atual e contador respondendo ainda são obrigatórios.

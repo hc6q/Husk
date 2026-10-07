@@ -1,8 +1,9 @@
-"""Bounded, observable System UI ANR recovery for host experiments only.
+"""Bounded, observable platform dialog recovery for host experiments only.
 
-Recognize the actual captured dialog before clicking its Wait button through
+Recognize the actual captured dialog before clicking its button through
 USB HID. This never constitutes APK/input acceptance; the visible counter must
-still change afterwards. No Android timeout, process, or boot flag is changed.
+still change afterwards. Only the explicitly identified Bluetooth crash dialog may close its guest app.
+No Android timeout or boot flag is changed.
 """
 import csv
 import io
@@ -14,10 +15,15 @@ def wait_button(tsv):
              if row.get('level') == '5' and row.get('text', '').strip()]
     text = ' '.join(row['text'] for row in words).casefold()
     normalized = re.sub(r'[^a-z ]', '', text)
-    if not re.search(r'system u[il] isn.?t responding', normalized):
-        raise ValueError('Captured screen does not confirm the System UI ANR dialog')
-    buttons = [row for row in words if row['text'].casefold() == 'wait'
+    bluetooth = 'bluetooth keeps stopping' in normalized
+    if not bluetooth and not re.search(r'system u[il] isn.?t responding', normalized):
+        raise ValueError('Captured screen does not confirm a supported platform dialog')
+    label = 'close' if bluetooth else 'wait'
+    buttons = [row for row in words if row['text'].casefold() == label
                and float(row['conf']) >= 50]
+    if bluetooth:
+        assert any(row['text'].casefold() == 'app' and float(row['conf']) >= 50
+                   for row in words), 'Bluetooth dialog has no Close app button'
     if len(buttons) != 1:
         raise ValueError('Captured dialog has no unique confident Wait button')
     button = buttons[0]
@@ -25,4 +31,4 @@ def wait_button(tsv):
     y = int(button['top']) + int(button['height']) / 2
     if not (0 <= x < 360 and 0 <= y < 800):
         raise ValueError('Wait button is outside the fixed guest framebuffer')
-    return x, y
+    return ('Close Bluetooth' if bluetooth else 'USB Wait'), x, y

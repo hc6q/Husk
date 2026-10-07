@@ -28,8 +28,8 @@ p.add_argument('--guest', type=Path, required=True)
 p.add_argument('--apk', type=Path, required=True)
 p.add_argument('--package', default='org.husk.nojitsmoke')
 p.add_argument('--ui-timeout', type=int, default=300)
-p.add_argument('--anr-recovery-attempts', type=int, choices=range(4), default=0,
-               help='Experimental bounded USB Wait clicks on captured System UI ANR dialogs')
+p.add_argument('--platform-dialog-recovery-attempts', type=int, choices=range(4), default=0,
+               help='Experimental bounded USB clicks on captured System UI/Bluetooth dialogs')
 p.add_argument('--guard', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--timeout', type=int, default=7200)
@@ -293,7 +293,7 @@ try:
     assert report['apk_resumed'], 'APK was installed but did not resume'
     audit_maps('apk')
     report['anr_recovery'] = []
-    for attempt in range(a.anr_recovery_attempts+1):
+    for attempt in range(a.platform_dialog_recovery_attempts+1):
         # Remove any old dump so a failed UI dump cannot accept stale content.
         exchange('rm -f /data/local/tmp/window.xml')
         dump = exchange('uiautomator dump /data/local/tmp/window.xml',timeout=a.ui_timeout)
@@ -308,7 +308,7 @@ try:
         if ready:
             report['ui_xml'] = xml
             break
-        if attempt == a.anr_recovery_attempts:
+        if attempt == a.platform_dialog_recovery_attempts:
             raise RuntimeError('No current fixture UI; APK resumed is insufficient')
         with socket.create_connection(('127.0.0.1',15598),timeout=180) as control, control.makefile('rwb',buffering=0) as stream:
             stream.readline()
@@ -325,10 +325,15 @@ try:
             recover('screendump', {'filename':str(screen)})
             ocr = subprocess.check_output(['tesseract',str(screen),'stdout','tsv'],text=True)
             (a.output/f'anr-before-{attempt}.tsv').write_text(ocr)
-            x, y = wait_button(ocr)  # Fail closed if another screen is visible.
-            report['anr_recovery'].append({'attempt':attempt+1,'action':'USB Wait',
+            action, x, y = wait_button(ocr)  # Fail closed for an unrelated dialog.
+            if action == 'Close Bluetooth':
+                exchange('svc bluetooth disable')
+                bluetooth_state = exchange('settings get global bluetooth_on').strip()
+                assert bluetooth_state == '0', 'Guest Bluetooth disable was not confirmed'
+                report['guest_bluetooth_disabled'] = True
+            report['anr_recovery'].append({'attempt':attempt+1,'action':action,
                                           'x':x,'y':y,'screen':screen.name})
-            log(f'[NoJIT] Captured System UI ANR; USB Wait recovery {attempt+1}')
+            log(f'[NoJIT] Captured platform dialog; {action} recovery {attempt+1}')
             recover('input-send-event', {'events': [
                 {'type':'abs','data':{'axis':'x','value':int(x*32767/360)}},
                 {'type':'abs','data':{'axis':'y','value':int(y*32767/800)}},
