@@ -2,7 +2,7 @@ name: Rottweiler LineageOS low-performance boot (ARM64 TCI)
 on:
   push:
     branches: ['feat/rottweiler-diagnostic']
-    paths: ['.github/workflows/nojit-mttcg.yml', 'tests/nojit/host_smoke.py', 'tests/nojit/anr_recovery.py', 'tests/nojit/framebuffer_ui.py', 'tests/nojit/low_performance_guest.py']
+    paths: ['.github/workflows/nojit-mttcg.yml', 'tests/nojit/host_smoke.py', 'tests/nojit/anr_recovery.py', 'tests/nojit/framebuffer_ui.py', 'tests/nojit/low_performance_guest.py', 'tests/nojit/boot_readiness.py', 'tests/nojit/test_boot_readiness.py']
   workflow_dispatch:
 permissions:
   contents: read
@@ -21,6 +21,7 @@ jobs:
           log-accepted-android-sdk-licenses: false
       - name: Build offline APK
         run: |
+          python3 tests/nojit/test_boot_readiness.py
           sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
           HUSK_SMOKE_SOFTWARE_UI=1 ./tests/nojit/build_fixture_apk.sh
       - uses: actions/upload-artifact@v4

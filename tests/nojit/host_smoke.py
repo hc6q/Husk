@@ -6,6 +6,7 @@ same vda image/firmware as Husk and disposable writable vars/userdata disks.
 The mmap guard must be loaded into QEMU throughout this test.
 """
 import argparse
+from boot_readiness import wait_for_boot
 from anr_recovery import wait_button
 import framebuffer_ui
 import hashlib
@@ -174,7 +175,7 @@ def exchange(command, timeout=300, payload=None):
     while time.monotonic() < until:
         chunk = bridge.recv(65536)
         if not chunk:
-            raise RuntimeError('guest bridge disconnected')
+            raise ConnectionError('guest bridge disconnected')
         output += chunk
         if (begin+'\n').encode() in output and token.encode() in output:
             body, status = output.rsplit(token.encode(), 1)
@@ -242,39 +243,62 @@ try:
                 assert match, 'QEMU did not confirm the snapshot clock alignment'
                 report['snapshot_clock_ns'] = int(match.group(1))
             log('[NoJIT] Snapshot load job completed; checking Android readiness')
-    deadline = started+a.timeout
-    while time.monotonic() < deadline:
-        if proc.poll() is not None:
-            raise RuntimeError(f'QEMU exited {proc.returncode}: inspect qemu.log')
-        if bridge is None:
-            try:
-                candidate = socket.create_connection(('127.0.0.1',15599),timeout=3)
-                candidate.settimeout(5)
-                # Keep a connection only after the guest listener replies.
-                candidate.sendall(b'echo HUSK_BRIDGE_READY\n')
-                if b'HUSK_BRIDGE_READY' in candidate.recv(4096):
-                    bridge = candidate
-                else:
-                    candidate.close()
-            except (OSError, TimeoutError):
-                if 'candidate' in locals():
-                    candidate.close()
+    def drop_boot_connection():
+        global bridge
         if bridge is not None:
-            if exchange('getprop sys.boot_completed',timeout=60).strip() == '1':
-                if a.low_performance_guest:
-                    props = exchange('getprop ro.boot.low_perf; getprop ro.hw_timeout_multiplier',timeout=120).splitlines()
-                    assert props == ['1', '50'], f'Low-performance properties not confirmed: {props!r}'
-                    report['guest_low_performance_confirmed'] = True
-                    report['guest_hw_timeout_multiplier'] = 50
-                report['boot_completed'] = True
-                report['boot_seconds'] = round(time.monotonic()-started,1)
-                log('[NoJIT] Android boot completed')
-                assert f'[NoJIT] {a.backend} bytecode buffer RW' in (a.output/'qemu.log').read_text(), 'Expected interpreter backend not confirmed by allocator'
-                audit_maps('boot')
-                break
-        time.sleep(5)
-    else:
-        raise TimeoutError('Android did not complete boot')
+            bridge.close()
+            bridge = None
+
+    def connect_for_boot(timeout):
+        global bridge
+        if bridge is not None:
+            return
+        candidate = socket.create_connection(('127.0.0.1',15599),timeout=timeout)
+        try:
+            candidate.settimeout(timeout)
+            token = b'__HUSK_BRIDGE_READY__\n'
+            candidate.sendall(b'echo __HUSK_BRIDGE_READY__\n')
+            response = b''
+            until = time.monotonic()+timeout
+            while token not in response and time.monotonic() < until:
+                chunk = candidate.recv(4096)
+                if not chunk:
+                    raise ConnectionError('guest listener not ready')
+                response += chunk
+                if len(response) > 65536:
+                    raise RuntimeError('Invalid boot handshake response')
+            if token not in response:
+                raise TimeoutError('boot handshake incomplete')
+            bridge = candidate
+        except BaseException:
+            candidate.close()
+            raise
+
+    crash_sequence = 0
+    def collect_boot_crash(timeout):
+        global crash_sequence
+        crash_sequence += 1
+        content = exchange('logcat -b crash -d -t 160',timeout=timeout)
+        (a.output/f'guest-crash-boot-{crash_sequence:03}.txt').write_text(content)
+
+    def observe_boot(values):
+        if a.low_performance_guest and values[1:] == ['1', '50']:
+            report['guest_low_performance_observed_before_boot'] = True
+        report['last_boot_read_properties'] = values
+
+    report['boot_read_reconnects'] = wait_for_boot(connect_for_boot, exchange,
+        drop_boot_connection, lambda: proc.poll() is None, started+a.timeout,
+        low_performance=a.low_performance_guest,
+        collect_crash=collect_boot_crash if a.collect_guest_diagnostics else None,
+        observe=observe_boot, log=log)
+    if a.low_performance_guest:
+        report['guest_low_performance_confirmed'] = True
+        report['guest_hw_timeout_multiplier'] = 50
+    report['boot_completed'] = True
+    report['boot_seconds'] = round(time.monotonic()-started,1)
+    log('[NoJIT] Android boot completed')
+    assert f'[NoJIT] {a.backend} bytecode buffer RW' in (a.output/'qemu.log').read_text(), 'Expected interpreter backend not confirmed by allocator'
+    audit_maps('boot')
     if a.quiet_guest_radio:
         log('[NoJIT] Disable absent guest radio before installation')
         exchange('settings put global bluetooth_on 0; settings put global ble_scan_always_enabled 0',timeout=180)
