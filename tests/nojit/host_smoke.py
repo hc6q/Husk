@@ -34,6 +34,8 @@ p.add_argument('--quiet-guest-radio', action='store_true', help='Apply the app r
 p.add_argument('--collect-guest-diagnostics', action='store_true')
 p.add_argument('--disable-guest-bluetooth-package', action='store_true',
                help='Experimental: disable only the Android Bluetooth package in this disposable guest')
+p.add_argument('--low-performance-guest', action='store_true',
+               help='Experimental: boot the prepared vda-low-perf.qcow2 overlay; reboot cached snapshot properties')
 p.add_argument('--platform-dialog-recovery-attempts', type=int, choices=range(4), default=0,
                help='Experimental bounded USB clicks on captured System UI/Bluetooth dialogs')
 p.add_argument('--guard', type=Path, required=True)
@@ -79,6 +81,9 @@ def log(message):
 
 qemu = a.qemu.resolve()
 guest = a.guest.resolve()
+system_disk = guest / ('vda-low-perf.qcow2' if a.low_performance_guest else 'vda.qcow2')
+if not system_disk.is_file():
+    p.error(f'System disk missing: {system_disk}')
 machine = 'virt,highmem=on,memory-backend=huskram' if a.file_ram else 'virt,highmem=on'
 args = [str(qemu), '-M', machine, '-cpu',
         'max,pauth-impdef=on,sve=off,sme=off', '-smp', str(a.cpus), '-m', str(a.memory),
@@ -86,7 +91,7 @@ args = [str(qemu), '-M', machine, '-cpu',
         '-device', 'virtio-balloon-pci,id=huskballoon',
         '-drive', f'if=pflash,unit=0,format=raw,readonly=on,file={guest}/firmware.fd',
         '-drive', f'if=pflash,unit=1,format=qcow2,file={guest}/vars.qcow2',
-        '-drive', f'file={guest}/vda.qcow2,if=none,id=vda,format=qcow2,discard=unmap',
+        '-drive', f'file={system_disk},if=none,id=vda,format=qcow2,discard=unmap',
         '-drive', f'file={guest}/userdata.qcow2,if=none,id=vdb,node-name=huskvmstate,format=qcow2,discard=unmap',
         '-device', 'virtio-blk-pci,drive=vda,bootindex=0',
         '-device', 'virtio-blk-pci,drive=vdb,bootindex=1',
@@ -222,6 +227,13 @@ try:
                 time.sleep(1)
             else:
                 raise TimeoutError('snapshot restore did not finish')
+            if a.low_performance_guest:
+                # The original snapshot has cached immutable properties and
+                # pre-existing dialogs. Boot its disks afresh; never claim
+                # its old sys.boot_completed flag as this new boot's result.
+                qmp_command('system_reset')
+                report['reboot_after_snapshot'] = True
+                log('[NoJIT] Reboot restored machine to apply existing low-performance boot option')
             qmp_command('cont')
             report['snapshot_requested'] = a.snapshot
             if a.snapshot_clock_aligned:
@@ -249,6 +261,11 @@ try:
                     candidate.close()
         if bridge is not None:
             if exchange('getprop sys.boot_completed',timeout=60).strip() == '1':
+                if a.low_performance_guest:
+                    props = exchange('getprop ro.boot.low_perf; getprop ro.hw_timeout_multiplier',timeout=120).splitlines()
+                    assert props == ['1', '50'], f'Low-performance properties not confirmed: {props!r}'
+                    report['guest_low_performance_confirmed'] = True
+                    report['guest_hw_timeout_multiplier'] = 50
                 report['boot_completed'] = True
                 report['boot_seconds'] = round(time.monotonic()-started,1)
                 log('[NoJIT] Android boot completed')
