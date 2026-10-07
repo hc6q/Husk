@@ -1,0 +1,4 @@
+[husk-audio] registering the driver
+[husk-audio] driver registered
+[NoJIT] TCI bytecode buffer RW, size=134217728
+qemu-system-aarch64: terminating on signal 15 from pid 11980 (python3)

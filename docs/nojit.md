@@ -118,6 +118,18 @@ A branch de teste separada passa a reconhecer esse diálogo específico, desativ
 Bluetooth somente no guest e verificar seu estado antes de fechar o diálogo.
 Isso não altera o Bluetooth do iPhone nem aprova o teste por si só.
 
+O [ensaio de recuperação Bluetooth](https://github.com/hc6q/Husk/actions/runs/37553534159)
+confirmou `bluetooth_on=0` no guest e fechou seu diálogo por USB. A captura
+final mostra a legenda do fixture e `Touches: 0`, mas o diálogo System UI ANR
+voltou e uiautomator terminou com exit 137 (`Killed`). Não há evidência suficiente
+para atribuir esse sinal a OOM. Resultado reprovado em 368,5 segundos.
+[Dados originais](https://github.com/hc6q/Husk/actions/runs/37553534159/artifacts/11454247975)
+e [relatório versionado](../tests/nojit/evidence/arm64-tci-mttcg-bluetooth/report.json).
+Um ensaio separado verifica a mudança real do contador em capturas do framebuffer
+por OCR e USB HID, sem depender do processo uiautomator. Ainda exige o package
+retomado, guarda de memória, mapas, frames atuais sem diálogo e contador zero
+seguido de contador um após o clique. Uma captura com o contador zero não passa.
+
 Três cold boots com relógio por instrução também não chegaram ao boot:
 
 | Ensaio | Configuração | Resultado |
@@ -134,7 +146,8 @@ O [ensaio TCTI](https://github.com/hc6q/Husk/actions/runs/37537140549)
 conseguiu compilar os gadgets estáticos divididos em 766 unidades C, mas
 falhou na ligação por símbolos `_helper_*` de Mach-O usados em Linux ELF.
 A [branch TCTI](https://github.com/hc6q/Husk/tree/feat/nojit-tcti)
-isola o ajuste de prefixo e os guards desse backend. O app Swift atual não
+isola o ajuste de prefixo e os guards desse backend. A correção compilou e passou pela auditoria ARM64 na execução
+37552278899; o teste Android ainda está em andamento. O app Swift atual não
 aceita TCTI; não há substituição silenciosa do TCI nem JIT como fallback.
 
 ## QEMU e seleção do interpretador
