@@ -594,3 +594,39 @@ Four controlled CLI tests cover disable/stop, an already-disabled snapshot with
 a live process, a false-success PackageManager reply and a process that remains
 running. These tests do not certify iPhone UI or the disappearance of its dialog.
 The original JIT target does not execute this startup block.
+
+
+### ActivityManager / SystemUI investigation (7 October 2026)
+
+Version 0.8.2 build 25 physically confirmed the Bluetooth package disabled and
+its primary process stopped after restoring the snapshot. A later control run
+with rendering optimization switched off still reached the Android watchdog
+diagnostic sequence and a zygote restart. Old Bluetooth crash-buffer entries
+precede the successful block; printing them later does not demonstrate that the
+package restarted. Personal device logs are not published.
+
+The independent ARM64 TCI baseline in
+[run 37641950749](https://github.com/hc6q/Rottweiler/actions/runs/37641950749)
+installed and resumed the software fixture, but its framebuffer stayed covered
+by the SystemUI ANR dialog. USB counter acceptance failed. Current logcat records:
+
+- ActivityManager handler blocked for 67 seconds.
+- Launcher TouchInteractionService service execution exceeded 65 seconds.
+- PointerEventDispatcher input delivery exceeded 54 seconds.
+- ANR CPU accounting reached 99% total; SurfaceFlinger was the largest process
+  consumer (116% across guest CPUs), followed by system_server (89%).
+- CPU PSI some avg10 was 86.94%; memory PSI some/full averages were zero.
+- SurfaceFlinger / drmhwc also reported NOT_VALIDATED / composition not presented.
+
+This is evidence of severe guest CPU scheduling/composition pressure and delayed
+framework service dispatch, not proof of a specific deadlock or compositor bug.
+Guest percentages cannot be used as iPhone host CPU measurements. Physical
+sysrq samples alone do not identify the Java monitor owner. No OOM or host
+jetsam event is established by these logs.
+
+[Run 37678737174](https://github.com/hc6q/Rottweiler/actions/runs/37678737174)
+adds read-only DropBox system_server_watchdog / system_app_anr and activity
+lastanr collection under the existing shell UID. It preserves the original
+snapshot, exact standard TCI backend, memory guard and visible USB 0→1 acceptance.
+Its results are pending; collection permission/timeouts may limit stack evidence.
+No new runtime tuning or IPA release is justified solely by this diagnostic.
