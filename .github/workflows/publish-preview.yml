@@ -26,6 +26,9 @@ jobs:
           run=json.loads(subprocess.check_output(['gh','api',f"repos/{os.environ['GH_REPO']}/actions/runs/{config['run_id']}"]))
           assert run['conclusion']=='success' and run['head_sha']==config['source_sha']
           assert run['head_repository']['full_name']==os.environ['GH_REPO']
+          comparison=json.loads(subprocess.check_output(['gh','api',f"repos/{os.environ['GH_REPO']}/compare/{config['source_sha']}...{os.environ['GITHUB_SHA']}"]))
+          allowed={'.github/workflows/nojit.yml','.github/workflows/publish-preview.yml','config/publish-preview.json'}
+          assert all(f['filename'] in allowed for f in comparison['files']), 'Application source changed since the audited build'
           with open(os.environ['GITHUB_OUTPUT'],'a') as out:
               out.write(f"run={config['run_id']}\nsha={config['source_sha']}\n")
           PY
@@ -62,4 +65,4 @@ jobs:
           sha256sum release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk > release-assets/SHA256SUMS.txt
           cp docs/releases/preview.md release-notes.md
           printf '\nSource commit: `%s`\n' "$SOURCE_SHA" >> release-notes.md
-          gh release create "v${version}-preview" release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk release-assets/SHA256SUMS.txt --repo "$GH_REPO" --target "$SOURCE_SHA" --title "Rottweiler ${version} — Experimental preview" --prerelease --notes-file release-notes.md
+          gh release create "v${version}-preview" release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk release-assets/SHA256SUMS.txt --repo "$GH_REPO" --target "$GITHUB_SHA" --title "Rottweiler ${version} — Experimental preview" --prerelease --notes-file release-notes.md
