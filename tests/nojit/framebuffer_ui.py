@@ -95,7 +95,12 @@ def verify(args, report, exchange, log):
                     time.sleep(10)
                     continue
                 if clicks >= args.platform_dialog_recovery_attempts:
-                    raise RuntimeError('Platform dialog recovery budget exhausted')
+                    # Bound clicks, not observation. A slow interpreter can
+                    # drain the UI queue after the last permitted recovery.
+                    # Keep requiring a fresh frame and the exact counter.
+                    report['platform_dialog_recovery_exhausted'] = True
+                    time.sleep(10)
+                    continue
                 if action == 'Close Bluetooth':
                     exchange('svc bluetooth disable')
                     assert exchange('settings get global bluetooth_on').strip() == '0'

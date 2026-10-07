@@ -414,6 +414,7 @@ finally:
         for name, command in (
                 ('guest-logcat.txt', 'tail -c 2097152 /data/local/tmp/rottweiler-diagnostic.log'),
                 ('guest-crash-after.txt', 'logcat -b crash -d -t 300'),
+                ('guest-environment.txt', 'id; getprop ro.debuggable; getprop ro.hw_timeout_multiplier; getprop ro.boot.hw_timeout_multiplier; command -v su || true'),
                 ('guest-input.txt', 'dumpsys input'),
                 ('guest-bluetooth.txt', 'dumpsys bluetooth_manager')):
             try:
