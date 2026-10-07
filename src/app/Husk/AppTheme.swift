@@ -9,7 +9,8 @@ import UIKit
 /// states and links are tinted with. It is applied once at the root with `.tint(...)`, which SwiftUI
 /// hands down to every control, so no screen has to know about it.
 ///
-/// Husk's own indigo, the colour of its icon, is the default; it is a preset like any other.
+/// Rottweiler uses its own muted red accent; the original Husk target keeps indigo.
+/// The preset ID and settings key remain stable to preserve existing user choices.
 final class AppTheme: ObservableObject {
     static let shared = AppTheme()
 
@@ -20,9 +21,11 @@ final class AppTheme: ObservableObject {
     }
 
     static let husk = Color(red: 0.353, green: 0.322, blue: 0.945)
+    static let rottweiler = Color(red: 0.72, green: 0.25, blue: 0.24)
+    static var brand: Color { ExecutionMode.noJIT ? rottweiler : husk }
 
     static let presets: [Preset] = [
-        Preset(id: "husk", name: "Husk", color: husk),
+        Preset(id: "husk", name: ExecutionMode.appName, color: brand),
         Preset(id: "blue", name: "Blue", color: .blue),
         Preset(id: "purple", name: "Purple", color: .purple),
         Preset(id: "pink", name: "Pink", color: .pink),
@@ -44,11 +47,11 @@ final class AppTheme: ObservableObject {
         if let hex = UserDefaults.standard.string(forKey: Self.key), let color = Color(themeHex: hex) {
             accentColor = color
         } else {
-            accentColor = Self.husk
+            accentColor = Self.brand
         }
     }
 
-    func reset() { accentColor = Self.husk }
+    func reset() { accentColor = Self.brand }
 
     private func persist() {
         UserDefaults.standard.set(accentColor.themeHex, forKey: Self.key)
