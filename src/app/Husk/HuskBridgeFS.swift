@@ -1010,11 +1010,13 @@ final class AndroidHost: ObservableObject {
                     if booted == "1" {
                         ExecutionMode.log("Android boot completed")
                         ExecutionMode.auditMemory()
+                        #if !HUSK_NO_JIT
                         await MainActor.run {
                             self?.isReady = true
                             self?.status = "Android is ready"
                             self?.polling = false
                         }
+                        #endif
                         HuskLog.log("bridge", "guest is ready after \(attempt) attempts")
                         // Take the connection now and never let go. New
                         // connections worked for the first hundred seconds of
@@ -1023,6 +1025,13 @@ final class AndroidHost: ObservableObject {
                         GuestBridge.shared.holdConnection()
                         await self?.quietAbsentHardware()
                         #if HUSK_NO_JIT
+                        // Do not enable launches while initial guest settings
+                        // still compete for the held shell connection.
+                        await MainActor.run {
+                            self?.isReady = true
+                            self?.status = "Android is ready"
+                            self?.polling = false
+                        }
                         // Imported APKs take priority over icon/renderer probes.
                         let queued = await MainActor.run { () -> Bool in
                             let queued = !(self?.pendingInstalls.isEmpty ?? true)
@@ -1701,6 +1710,7 @@ final class AndroidHost: ObservableObject {
     func install(_ apks: [URL]) {
         guard let first = apks.first else { return }
         #if HUSK_NO_JIT
+        let ownedQueueRoot = pendingDirectory.standardizedFileURL
         if !isReady || busy != nil {
             queueInstall(apks)
             return
@@ -1785,12 +1795,15 @@ final class AndroidHost: ObservableObject {
                 let command = apks.count == 1
                     ? "pm install -r -t \(remote)"
                     : "pm install-multiple -r -t \(remotes.joined(separator: " "))"
-                let out = try GuestBridge.shared.shell(command, timeout: installBudget)
+                let reply = try GuestBridge.shared.run(command, timeout: installBudget)
+                let out = reply.out
                 for r in remotes { _ = try? GuestBridge.shared.shell("rm -f \(r)") }
-                let ok = out.contains("Success")
+                let ok = reply.status == 0 && out.split(separator: "\n").contains {
+                    $0.trimmingCharacters(in: .whitespacesAndNewlines) == "Success"
+                }
                 #if HUSK_NO_JIT
                 let queuedDirectory = first.deletingLastPathComponent()
-                if ok, queuedDirectory.deletingLastPathComponent().lastPathComponent == "husk-pending-apks" {
+                if ok, queuedDirectory.deletingLastPathComponent().standardizedFileURL == ownedQueueRoot {
                     try? FileManager.default.removeItem(at: queuedDirectory)
                 }
                 #endif
