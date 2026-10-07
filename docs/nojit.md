@@ -294,6 +294,30 @@ suposição. AOSP oferece esse multiplicador para emuladores muito lentos:
 Isso é uma hipótese de diagnóstico; aumentar timeout não substitui prova de
 framebuffer, contador USB e APK utilizável. Não foi aplicado ao IPA.
 
+### Opção existente para hardware lento — experimento separado
+
+A leitura do `vendor` da imagem v12 confirmou
+`/vendor/etc/init/hw/init.low_performance.rc`: `androidboot.low_perf=1` define
+`ro.hw_timeout_multiplier=50`, low-RAM e desativa o assistente inicial no
+early-init. O GRUB já oferece essa opção. O script experimental
+`tests/nojit/low_performance_guest.py` verifica SHA-256 da base, CRC do GPT e
+o arquivo `grubenv` realmente alocado em FAT32, cria um overlay QCOW2 e altera
+somente o valor existente `android_low_perf=0` para `1`. A comparação local
+completa da partição persist confirmou **exatamente um byte diferente**; a
+base original permanece intacta. Não habilita ADB/root nem altera SELinux.
+
+O [ensaio b67f262](https://github.com/hc6q/Husk/actions/runs/37571498826)
+reinicia a máquina após restaurar o snapshot, porque suas propriedades
+read-only já estavam em cache. Só aceita boot após confirmar
+`sys.boot_completed=1`, `ro.boot.low_perf=1` e
+`ro.hw_timeout_multiplier=50`. Framebuffer atual e contador USB 0→1
+continuam obrigatórios. Resultado pendente; opção ainda ausente do IPA.
+O pacote Bluetooth não é desativado nessa tentativa.
+
+Um [teste local anterior](../tests/nojit/evidence/local-tci-radio/README.md)
+confirmou boot, instalação e Activity retomada, mas continuou bloqueado
+por diálogos. Nenhum desses resultados certifica APK utilizável no iPhone.
+
 ## QEMU e seleção do interpretador
 
 O projeto fixa **UTM QEMU 10.0.12-utm** em `scripts/sources.sh`. A opção foi
