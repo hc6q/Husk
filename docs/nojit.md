@@ -85,6 +85,47 @@ O snapshot foi criado num host com páginas de 16 KiB. No Linux de 4 KiB,
 `Size too large: /rom@etc/acpi/rsdp: 0x4000 > 0x1000`.
 Esse ajuste pertence ao teste Linux; o build iOS já usa páginas de 16 KiB.
 
+### Ensaios adicionais ARM64 e relógio
+
+O [TCI ARM64 com thread única](https://github.com/hc6q/Husk/actions/runs/37532363958)
+compilou e confirmou boot em 34,4 segundos e instalação em 339,3 segundos.
+O lançamento terminou em 554,0 segundos com `Broken pipe (32)` no serviço
+Activity. A captura final ficou preta.
+[Dados originais](https://github.com/hc6q/Husk/actions/runs/37532363958/artifacts/11445408264)
+e [relatório versionado](../tests/nojit/evidence/arm64-tci/report.json).
+
+O [TCI ARM64 com MTTCG](https://github.com/hc6q/Husk/actions/runs/37536962635)
+confirmou quatro threads de CPU distintas, snapshot pronto em 18,2 segundos,
+instalação em 138,4 segundos, lançamento em 181,9 segundos e Activity retomada
+em 208,1 segundos. São tempos acumulados desde o início da tentativa.
+A guarda continuou carregada, com mapas após boot e lançamento sem W+X
+ou regiões anônimas executáveis. O teste terminou reprovado em 301,5 segundos:
+`uiautomator` retornou raiz nula e a captura mostra “System UI isn't responding”.
+[Dados originais](https://github.com/hc6q/Husk/actions/runs/37536962635/artifacts/11448045284)
+e [relatório versionado](../tests/nojit/evidence/arm64-tci-mttcg/report.json).
+MTTCG não é um backend JIT: o fork permite múltiplas threads com TCI para ARM.
+Esse ensaio ainda não comprovou o contador de toque; o IPA mantém thread única.
+Os tempos não constituem comparação de desempenho no iPhone ou JIT/No-JIT.
+
+Três cold boots com relógio por instrução também não chegaram ao boot:
+
+| Ensaio | Configuração | Resultado |
+|---|---|---|
+| [37517875800](https://github.com/hc6q/Husk/actions/runs/37517875800) | 4 vCPUs, 4096 MiB | Prazo esgotado em 7208,9 s |
+| [37518564939](https://github.com/hc6q/Husk/actions/runs/37518564939) | 4 vCPUs, 4096 MiB | Comando getprop sem resposta, abortado em 6546,2 s |
+| [37518565168](https://github.com/hc6q/Husk/actions/runs/37518565168) | 1 vCPU, 2048 MiB | Prazo esgotado em 7208,8 s |
+
+Relatórios e trechos de diagnóstico estão em `tests/nojit/evidence/cold-icount-*`.
+Os artifacts originais mantêm o serial completo. Nenhuma instalação ou abertura
+de APK ocorreu nesses três testes; não foram incorporados ao IPA.
+
+O [ensaio TCTI](https://github.com/hc6q/Husk/actions/runs/37537140549)
+conseguiu compilar os gadgets estáticos divididos em 766 unidades C, mas
+falhou na ligação por símbolos `_helper_*` de Mach-O usados em Linux ELF.
+A [branch TCTI](https://github.com/hc6q/Husk/tree/feat/nojit-tcti)
+isola o ajuste de prefixo e os guards desse backend. O app Swift atual não
+aceita TCTI; não há substituição silenciosa do TCI nem JIT como fallback.
+
 ## QEMU e seleção do interpretador
 
 O projeto fixa **UTM QEMU 10.0.12-utm** em `scripts/sources.sh`. A opção foi
@@ -163,7 +204,9 @@ não substituem RAM física e não comprovam sideload neste dispositivo.
    `Execution mode: Interpreter (No JIT)` e o aviso de desempenho menor.
 4. Baixe a mesma imagem Android pelo fluxo existente. O download inicial exige
    internet e vários GB livres; o APK de teste funciona offline depois disso.
-   O No-JIT prefere cold boot por padrão para não impor o snapshot de 4 GB.
+   O No-JIT preserva a preferência original por snapshot. Para reproduzir
+   o ensaio software, habilite snapshot, escolha GPU software e desabilite
+   Sound; o snapshot fixa 4 GB de RAM. Cold boot continua disponível.
 5. Importe `NoJITSmoke.apk` na Library. Imports anteriores ao boot são copiados
    para Application Support e enfileirados durante a sessão; com a imagem
    pronta, o import solicita a inicialização do Android. Também é possível

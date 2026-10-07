@@ -1,0 +1,6 @@
+[husk-audio] registering the driver
+[husk-audio] driver registered
+[NoJIT] TCI bytecode buffer RW, size=134217728
+audio: Could not create a backend for voice `virtio-sound.in'
+[husk-snd] tx_xfer #1 (the guest is queueing PCM)
+qemu-system-aarch64: terminating on signal 15 from pid 12251 (python3)
