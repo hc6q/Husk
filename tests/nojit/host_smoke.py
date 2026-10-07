@@ -6,6 +6,7 @@ same vda image/firmware as Husk and disposable writable vars/userdata disks.
 The mmap guard must be loaded into QEMU throughout this test.
 """
 import argparse
+from anr_recovery import wait_button
 import hashlib
 import json
 import os
@@ -27,6 +28,8 @@ p.add_argument('--guest', type=Path, required=True)
 p.add_argument('--apk', type=Path, required=True)
 p.add_argument('--package', default='org.husk.nojitsmoke')
 p.add_argument('--ui-timeout', type=int, default=300)
+p.add_argument('--anr-recovery-attempts', type=int, choices=range(4), default=0,
+               help='Experimental bounded USB Wait clicks on captured System UI ANR dialogs')
 p.add_argument('--guard', type=Path, required=True)
 p.add_argument('--output', type=Path, required=True)
 p.add_argument('--timeout', type=int, default=7200)
@@ -289,8 +292,52 @@ try:
         time.sleep(5)
     assert report['apk_resumed'], 'APK was installed but did not resume'
     audit_maps('apk')
-    exchange('uiautomator dump /data/local/tmp/window.xml',timeout=a.ui_timeout)
-    report['ui_xml'] = exchange('cat /data/local/tmp/window.xml')
+    report['anr_recovery'] = []
+    for attempt in range(a.anr_recovery_attempts+1):
+        # Remove any old dump so a failed UI dump cannot accept stale content.
+        exchange('rm -f /data/local/tmp/window.xml')
+        dump = exchange('uiautomator dump /data/local/tmp/window.xml',timeout=a.ui_timeout)
+        xml = exchange('cat /data/local/tmp/window.xml 2>/dev/null || true')
+        (a.output/f'ui-attempt-{attempt}.txt').write_text(dump+'\n'+xml)
+        try:
+            nodes = ET.fromstring(xml).iter('node')
+            ready = any(n.get('text','').casefold() == 'count touch' and
+                        n.get('package') == a.package for n in nodes)
+        except ET.ParseError:
+            ready = False
+        if ready:
+            report['ui_xml'] = xml
+            break
+        if attempt == a.anr_recovery_attempts:
+            raise RuntimeError('No current fixture UI; APK resumed is insufficient')
+        with socket.create_connection(('127.0.0.1',15598),timeout=180) as control, control.makefile('rwb',buffering=0) as stream:
+            stream.readline()
+            def recover(name, arguments=None):
+                stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
+                while True:
+                    response = json.loads(stream.readline())
+                    if 'error' in response:
+                        raise RuntimeError(response)
+                    if 'return' in response:
+                        return response['return']
+            recover('qmp_capabilities')
+            screen = a.output.resolve()/f'anr-before-{attempt}.ppm'
+            recover('screendump', {'filename':str(screen)})
+            ocr = subprocess.check_output(['tesseract',str(screen),'stdout','tsv'],text=True)
+            (a.output/f'anr-before-{attempt}.tsv').write_text(ocr)
+            x, y = wait_button(ocr)  # Fail closed if another screen is visible.
+            report['anr_recovery'].append({'attempt':attempt+1,'action':'USB Wait',
+                                          'x':x,'y':y,'screen':screen.name})
+            log(f'[NoJIT] Captured System UI ANR; USB Wait recovery {attempt+1}')
+            recover('input-send-event', {'events': [
+                {'type':'abs','data':{'axis':'x','value':int(x*32767/360)}},
+                {'type':'abs','data':{'axis':'y','value':int(y*32767/800)}},
+                {'type':'btn','data':{'button':'left','down':True}}]})
+            time.sleep(0.2)
+            recover('input-send-event', {'events':[
+                {'type':'btn','data':{'button':'left','down':False}}]})
+            time.sleep(15)
+            recover('screendump', {'filename':str(a.output.resolve()/f'anr-after-{attempt}.ppm')})
     with socket.create_connection(('127.0.0.1',15598),timeout=180) as qmp, qmp.makefile('rwb',buffering=0) as f:
         f.readline()
         def request(name, arguments=None):

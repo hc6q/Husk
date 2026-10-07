@@ -110,3 +110,19 @@ registradores voláteis. O patch do ensaio declara x16/x17, x18 apenas fora de
 Apple, x24/LR e SIMD para preservar a ABI e impedir operandos de memória em
 registradores destruídos. Isso altera o código estático compilado; não cria
 código executável em runtime. A correção ainda precisa passar pela execução.
+
+
+## TCI com MTTCG e recuperação observável
+
+O ensaio ARM64 37536962635 confirmou quatro threads de CPU distintas, TCI,
+boot do snapshot em 18,2 segundos, instalação e Activity retomada. Os mapas
+do host após boot/launch não continham W+X nem regiões anônimas executáveis,
+com a guarda carregada. A interface apresentou “System UI isn't responding”
+e uiautomator retornou raiz nula. O resultado continua reprovado.
+
+O próximo ensaio usa o fixture Java software e permite até três cliques USB
+no botão Wait, somente após reconhecer esse diálogo numa captura via OCR.
+Cada captura e decisão é preservada. A verificação ainda exige XML atual do
+package e mudança real de “Touches: 0” para “Touches: 1” via USB HID. A
+recuperação não modifica timers, não encerra processos Android e não basta
+para aprovar o teste. O IPA publicado continua TCI/thread=single.
