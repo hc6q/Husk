@@ -1946,6 +1946,37 @@ final class AndroidHost: ObservableObject {
                 : "could not disable \(what): "
                   + (r?.out.trimmingCharacters(in: .whitespacesAndNewlines) ?? "no answer"))
         }
+
+        #if HUSK_NO_JIT
+        // The shipped image has an Android Bluetooth stack but this QEMU
+        // machine has no controller. Turning the setting off does not stop an
+        // already-started package, so it can keep crashing and leave its
+        // system-owned error dialog above every imported app. Disable only
+        // that unavailable guest package, stop its current process, then use
+        // Android's supported close-system-dialogs broadcast. BaseErrorDialog
+        // handles that action itself; no guessed screen coordinate is needed.
+        let disabled = try? GuestBridge.shared.run(
+            "pm disable-user --user 0 com.android.bluetooth; "
+          + "pm list packages -d com.android.bluetooth | grep -Fx package:com.android.bluetooth",
+            timeout: 300)
+        guard disabled?.status == 0 else {
+            HuskLog.log("bridge", "could not disable absent Android Bluetooth package: "
+                      + (disabled?.out.trimmingCharacters(in: .whitespacesAndNewlines)
+                         ?? "no answer"))
+            return
+        }
+        HuskLog.log("bridge", "absent Android Bluetooth package disabled")
+        let stopped = try? GuestBridge.shared.run(
+            "am force-stop --user 0 com.android.bluetooth", timeout: 120)
+        HuskLog.log("bridge", stopped?.status == 0
+            ? "stopped the old Android Bluetooth process"
+            : "could not stop the old Android Bluetooth process")
+        let closed = try? GuestBridge.shared.run(
+            "am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS", timeout: 120)
+        HuskLog.log("bridge", closed?.status == 0
+            ? "asked Android to close stale system error dialogs"
+            : "Android did not confirm closing stale system error dialogs")
+        #endif
     }
 
     /// Everything Android has recorded about its own crashes.
