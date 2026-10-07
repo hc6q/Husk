@@ -307,7 +307,7 @@ final class QemuRunner: ObservableObject {
     nonisolated static var gpuModeEnabled: Bool {
         // Absent means GPU: bool(forKey:) answers false for a key nobody
         // has set, which quietly made the slow renderer the default.
-        UserDefaults.standard.object(forKey: "husk.gpuMode") as? Bool ?? true
+        UserDefaults.standard.object(forKey: "husk.gpuMode") as? Bool ?? !ExecutionMode.noJIT
     }
 
     /// Which display device the saved machine was built around.
@@ -1534,6 +1534,11 @@ final class QemuRunner: ObservableObject {
         }
         DispatchQueue.main.async {
             QemuRunner.shared.displayKind = glUp ? .gl : .software
+            #if HUSK_NO_JIT
+            // The guest networking state is now restored. Do not open a
+            // socket while load_snapshot is replacing it.
+            AndroidHost.shared.waitForReady()
+            #endif
             HuskGLView.shared.describePlacement(why: "the display is decided")
         }
 

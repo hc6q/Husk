@@ -382,9 +382,10 @@ final class GuestBridge {
         let fd = try controlFD(timeout: timeout)
         sequence += 1
         let token = "\(Self.marker)\(sequence):"
-        try writeAll(fd, Data("\(command) 2>&1; echo \(token)$?\n".utf8))
+        let begin = "__HUSK_BEGIN__\(sequence):"
+        try writeAll(fd, Data("echo \(begin); \(command) 2>&1; echo \(token)$?\n".utf8))
 
-        var out = ""
+        var reply = Data()
         var buf = [UInt8](repeating: 0, count: 16 * 1024)
         let deadline = Date().addingTimeInterval(timeout)
         while true {
@@ -404,16 +405,17 @@ final class GuestBridge {
                 dropControl(why)
                 throw BridgeError.io("guest closed the connection -- \(why)")
             }
-            out += String(decoding: buf[0..<n], as: UTF8.self)
-            if let r = out.range(of: token) {
-                let status = Int(out[r.upperBound...]
-                    .trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+            reply.append(contentsOf: buf[0..<n])
+            guard reply.count <= 16 * 1024 * 1024 else {
+                dropControl("shell reply exceeded 16 MiB")
+                throw BridgeError.io("shell reply is too large; use the binary pull path")
+            }
+            if let result = GuestShellFrame.extract(reply, begin: begin, end: token) {
                 isConnected = true
-                let body = String(out[out.startIndex..<r.lowerBound])
-                if status != 0 {
-                    HuskLog.log("bridge", "`\(command.prefix(60))` exit \(status)")
+                if result.status != 0 {
+                    HuskLog.log("bridge", "`\(command.prefix(60))` exit \(result.status)")
                 }
-                return (body, status)
+                return result
             }
             if Date() > deadline {
                 // The connection is KEPT. Whatever this command eventually
@@ -431,6 +433,11 @@ final class GuestBridge {
     func run(_ command: String, timeout: TimeInterval = 30) throws -> (out: String, status: Int) {
         controlLock.lock()
         defer { controlLock.unlock() }
+        #if HUSK_NO_JIT
+        // A slow interpreter is not permission to replay an install, launch,
+        // settings change or other side effect. The next caller can reconnect.
+        return try exchange(command, timeout: timeout)
+        #else
         do {
             return try exchange(command, timeout: timeout)
         } catch {
@@ -441,6 +448,7 @@ final class GuestBridge {
             // not a loop.
             return try exchange(command, timeout: timeout)
         }
+        #endif
     }
 
     /// Run a command and read everything it writes, as bytes.
@@ -519,7 +527,8 @@ final class GuestBridge {
         // caller compares `wc -c` against the file's real size before pm sees it.
         sequence += 1
         let token = "\(Self.marker)\(sequence):"
-        let command = "head -c \(size) > \(remote) 2>&1; echo \(token)$?\n"
+        let begin = "__HUSK_BEGIN__\(sequence):"
+        let command = "echo \(begin); head -c \(size) > \(remote) 2>&1; echo \(token)$?\n"
         try writeAll(fd, Data(command.utf8))
 
         var sent = 0
@@ -537,10 +546,10 @@ final class GuestBridge {
         // head has its N bytes and exits; the marker is the shell telling us it
         // is back to reading commands, which is also how we know the connection
         // is still usable for the pm install that follows.
-        var out = ""
+        var reply = Data()
         var buf = [UInt8](repeating: 0, count: 4096)
         let deadline = Date().addingTimeInterval(budget)
-        while !out.contains(token) {
+        while true {
             let n = buf.withUnsafeMutableBytes { read(fd, $0.baseAddress, $0.count) }
             if n < 0 && errno == EINTR { continue }
             if n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -555,7 +564,17 @@ final class GuestBridge {
                 dropControl(why)
                 throw BridgeError.io("\(why) after sending \(sent) bytes")
             }
-            out += String(decoding: buf[0..<n], as: UTF8.self)
+            reply.append(contentsOf: buf[0..<n])
+            guard reply.count <= 1024 * 1024 else {
+                dropControl("transfer acknowledgement exceeded 1 MiB")
+                throw BridgeError.io("transfer acknowledgement is too large")
+            }
+            if let result = GuestShellFrame.extract(reply, begin: begin, end: token) {
+                guard result.status == 0 else {
+                    throw BridgeError.io("guest transfer failed (exit \(result.status)): \(result.out)")
+                }
+                break
+            }
             if Date() > deadline {
                 dropControl("no acknowledgement after the transfer")
                 throw BridgeError.timeout("waiting for the guest to finish writing \(remote)")
@@ -961,11 +980,11 @@ final class AndroidHost: ObservableObject {
                     // because when this never succeeds the answer is always in
                     // what the guest said rather than in the fact that it failed.
                     if attempt == 1 || attempt % 10 == 0 {
-                        let who = (try? GuestBridge.shared.shell("id")) ?? "(no answer)"
+                        let who = (try? GuestBridge.shared.shell("id", timeout: ExecutionMode.noJIT ? 120 : 30)) ?? "(no answer)"
                         HuskLog.log("bridge", "guest shell: "
                                   + who.trimmingCharacters(in: .whitespacesAndNewlines))
                     }
-                    let booted = try GuestBridge.shared.shell("getprop sys.boot_completed")
+                    let booted = try GuestBridge.shared.shell("getprop sys.boot_completed", timeout: ExecutionMode.noJIT ? 120 : 30)
                         .trimmingCharacters(in: .whitespacesAndNewlines)
                     if booted == "1" {
                         ExecutionMode.log("Android boot completed")
@@ -981,6 +1000,9 @@ final class AndroidHost: ObservableObject {
                         // the last session and not afterwards, so the moment the
                         // guest first answers is the moment to claim one.
                         GuestBridge.shared.holdConnection()
+                        #if HUSK_NO_JIT
+                        GuestBridge.shared.startHealthWatch()
+                        #endif
                         await self?.quietAbsentHardware()
                         await self?.refreshPackages()
                         await MainActor.run { self?.dumpDiagnostics() }

@@ -47,6 +47,10 @@ jobs:
             build/stamps/libslirp-v4.9.1
       - name: Check target isolation
         run: python3 tests/nojit/test_build_contract.py
+      - name: Test fragmented guest shell replies
+        run: |
+          swiftc src/app/Husk/GuestShellFrame.swift tests/nojit/shell_frame_test.swift -o build/shell-frame-tests
+          build/shell-frame-tests
       - name: Build interpreter IPA
         run: ./scripts/ci_build.sh "$PWD/build/Rottweiler.ipa"
       - name: Save completed dependencies

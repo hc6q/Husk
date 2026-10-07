@@ -140,7 +140,7 @@ struct LibrarySettings: View {
 struct PerformanceSettings: View {
     @ObservedObject private var runner = QemuRunner.shared
     @State private var gpuMode =
-        UserDefaults.standard.object(forKey: "husk.gpuMode") as? Bool ?? true
+        UserDefaults.standard.object(forKey: "husk.gpuMode") as? Bool ?? !ExecutionMode.noJIT
     @State private var sound = UserDefaults.standard.bool(forKey: "husk.sound")
     @State private var soundDevice =
         UserDefaults.standard.object(forKey: "husk.soundDevice") as? Bool ?? true
@@ -160,11 +160,15 @@ struct PerformanceSettings: View {
             } header: {
                 Text("Renderer")
             } footer: {
+                #if HUSK_NO_JIT
+                Text("The shipped snapshot uses CPU renderer. GPU uses ANGLE/Metal but requires a cold boot. Renderer changes apply after restarting Rottweiler.")
+                #else
                 Text(gpuMode
                      ? "Android draws on the real GPU through Metal — about four times "
                      + "the frame rate. This is the default."
                      : "Every pixel is drawn by the emulated CPU. Much slower, and only "
                      + "worth choosing if the GPU misbehaves.")
+                #endif
             }
 
             Section {

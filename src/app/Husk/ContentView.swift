@@ -272,9 +272,11 @@ struct ContentView: View {
         // navigation this was called when someone chose library mode -- so with
         // tabs, opening Library after starting in full screen left it waiting
         // forever on a guest that was plainly up. It is idempotent and cheap.
+        #if !HUSK_NO_JIT
         AndroidHost.shared.waitForReady()
-        bridge.startWatching()
         GuestBridge.shared.startHealthWatch()
+        #endif
+        bridge.startWatching()
         if QemuRunner.soundEnabled { HuskAudio.shared.start() }
     }
 }

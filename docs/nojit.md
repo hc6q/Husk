@@ -1,3 +1,7 @@
+# Rottweiler branding
+
+Rottweiler is the user-facing name of this Husk No-JIT fork. Current builds publish `Rottweiler.ipa`; historical evidence below retains the original artifact names and hashes. The bundle identifier `com.husk.nojit` and storage keys remain unchanged for upgrades. Husk upstream credits and the original JIT target are preserved.
+
 # Husk No-JIT
 
 Esta variante conserva o Android em QEMU, a imagem LineageOS v12, os discos
