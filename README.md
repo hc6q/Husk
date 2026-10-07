@@ -1,13 +1,6 @@
 <h1 align="center">Rottweiler</h1>
 
 <p align="center">
-  <a href="https://github.com/trending?since=daily">
-    <img src="docs/assets/github-trending.svg" alt="GitHub Trending: today's five popular repositories and star gains" width="100%">
-  </a>
-</p>
-<p align="center"><sub><a href="https://github.com/trending?since=daily">Explore all trending repositories</a> · Updated daily using GitHub Actions</sub></p>
-
-<p align="center">
   <strong>An experimental way to run Android APKs on iOS without enabling JIT.</strong><br>
   Built on <a href="https://github.com/Leviidev/Husk">Husk</a> and the QEMU TCG interpreter (TCI).
 </p>
