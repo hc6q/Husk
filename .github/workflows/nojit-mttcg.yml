@@ -1,4 +1,4 @@
-name: Rottweiler ActivityManager watchdog investigation (ARM64 TCI)
+name: Rottweiler TCI throughput control (ARM64 MTTCG)
 on:
   push:
     branches: ['feat/rottweiler-diagnostic']
@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        profile: [baseline]
+        threads: [multi]
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
     steps:
@@ -80,12 +80,12 @@ jobs:
           "$QEMU_IMG" snapshot -l guests/nojit-host/userdata.qcow2
       - name: Boot install open touch test with executable-memory guard
         run: |
-          python3 tests/nojit/host_smoke.py --qemu third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64 --guest guests/nojit-host --apk build/NoJITSmoke-Software.apk --guard build/nojit-mmap-guard.so --package org.husk.nojitsmoke.software ${{ matrix.profile == 'optimized' && '--optimized-guest' || '' }} --disable-guest-bluetooth-package --collect-guest-diagnostics --framebuffer-ui --platform-dialog-recovery-attempts 3 --backend TCI --threads single --memory 4096 --snapshot husk-ready --file-ram --output build/logs/host-smoke --timeout 3600
+          python3 tests/nojit/host_smoke.py --qemu third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64 --guest guests/nojit-host --apk build/NoJITSmoke-Software.apk --guard build/nojit-mmap-guard.so --package org.husk.nojitsmoke.software --disable-guest-bluetooth-package --collect-guest-diagnostics --framebuffer-ui --platform-dialog-recovery-attempts 3 --backend TCI --threads ${{ matrix.threads }} --memory 4096 --snapshot husk-ready --file-ram --output build/logs/host-smoke --timeout 3600
       - name: Preserve runtime evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Rottweiler-Android-${{ matrix.profile }}-evidence
+          name: Rottweiler-Android-${{ matrix.threads }}-evidence
           path: |
             build/logs/
             build/NoJITSmoke-Software.apk
