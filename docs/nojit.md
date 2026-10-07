@@ -550,3 +550,27 @@ remain pending until real reports support them.
 
 The independent No-JIT version is tracked in `config/nojit-version.json`:
 version 0.8.0, build 23. Future releases must increment both and use matching tags.
+
+### Runtime debugging follow-up (7 October 2026)
+
+The baseline and optimized ARM64 TCI jobs in run 37632878618 both restored the
+original snapshot, read boot completion and installed the offline software APK.
+The optimized job verified the rendering profile (104.1 seconds). Neither job
+passed resumed-activity, visible UI or USB counter acceptance; no speedup is
+claimed. Logs in both jobs record SystemUI killed with `user request after error`
+and a subsequent SystemUI process-start timeout.
+
+The global CLOSE_SYSTEM_DIALOGS recovery has been removed. Android ANR dialogs
+handle this action by force-closing their process, so dismissing all dialogs can
+kill unrelated SystemUI. Bluetooth recovery remains scoped to its package.
+Profile apply/restore now continues if Bluetooth disabling fails. A diagnostic
+repeat captures full activity, window and surface state to investigate stale
+focus. This is a supported-risk correction, not proof that touch now works.
+
+The new physical log records pointer down/up events and boot completion at
+145.8 seconds. It ends shortly after Bluetooth disabling begins, without a
+confirmation or timeout; this does not establish whether that command succeeded.
+The visible touch overlay confirms an input path, not successful button dispatch.
+
+Next candidate version: 0.8.1, build 24. Released 0.8.0 remains available until
+the new candidate build completes and its package is audited.

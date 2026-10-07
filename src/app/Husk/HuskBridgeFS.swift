@@ -1944,31 +1944,28 @@ final class AndroidHost: ObservableObject {
         // machine has no controller. Turning the setting off does not stop an
         // already-started package, so it can keep crashing and leave its
         // system-owned error dialog above every imported app. Disable only
-        // that unavailable guest package, stop its current process, then use
-        // Android's supported close-system-dialogs broadcast. BaseErrorDialog
-        // handles that action itself; no guessed screen coordinate is needed.
+        // that unavailable guest package and stop its current process.
+        // Never broadcast CLOSE_SYSTEM_DIALOGS: ANR dialogs interpret closing
+        // as force-close, which can kill an unrelated SystemUI process.
         HuskLog.log("NoJIT", "Disabling absent Bluetooth package before optional guest tuning")
         let disabled = try? GuestBridge.shared.run(
             "pm disable-user --user 0 com.android.bluetooth; "
           + "pm list packages -d com.android.bluetooth | grep -Fx package:com.android.bluetooth",
             timeout: 300)
-        guard disabled?.status == 0 else {
+        if disabled?.status != 0 {
             HuskLog.log("bridge", "could not disable absent Android Bluetooth package: "
                       + (disabled?.out.trimmingCharacters(in: .whitespacesAndNewlines)
                          ?? "no answer"))
-            return
-        }
+        } else {
         HuskLog.log("bridge", "absent Android Bluetooth package disabled")
         let stopped = try? GuestBridge.shared.run(
             "am force-stop --user 0 com.android.bluetooth", timeout: 120)
         HuskLog.log("bridge", stopped?.status == 0
             ? "stopped the old Android Bluetooth process"
             : "could not stop the old Android Bluetooth process")
-        let closed = try? GuestBridge.shared.run(
-            "am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS", timeout: 120)
-        HuskLog.log("bridge", closed?.status == 0
-            ? "asked Android to close stale system error dialogs"
-            : "Android did not confirm closing stale system error dialogs")
+        }
+        // Restoring the user's rendering settings must remain available even
+        // when the optional Bluetooth command fails. Each mutation runs once.
         let optimized = UserDefaults.standard.object(forKey: "rottweiler.optimizedGuest") as? Bool ?? true
         guard let url = Bundle.main.url(forResource: "nojit-performance", withExtension: "sh"),
               let script = try? String(contentsOf: url, encoding: .utf8) else {
