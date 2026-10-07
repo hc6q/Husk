@@ -19,10 +19,14 @@ final class AppTheme: ObservableObject {
         let color: Color
     }
 
+    #if HUSK_NO_JIT
+    static let husk = Color(red: 1, green: 0.62, blue: 0.18)
+    #else
     static let husk = Color(red: 0.353, green: 0.322, blue: 0.945)
+    #endif
 
     static let presets: [Preset] = [
-        Preset(id: "husk", name: "Husk", color: husk),
+        Preset(id: "husk", name: ExecutionMode.appName, color: husk),
         Preset(id: "blue", name: "Blue", color: .blue),
         Preset(id: "purple", name: "Purple", color: .purple),
         Preset(id: "pink", name: "Pink", color: .pink),

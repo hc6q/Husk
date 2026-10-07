@@ -14,10 +14,26 @@ import UIKit
 /// `GuestControl`), which is drawn flat and always dark: it floats over a picture of another phone.
 enum Theme {
     /// The page behind grouped content.
+    #if HUSK_NO_JIT
+    static let bgUI = UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.045, green: 0.05, blue: 0.06, alpha: 1)
+            : UIColor(red: 0.97, green: 0.955, blue: 0.93, alpha: 1)
+    }
+    #else
     static let bgUI = UIColor.systemGroupedBackground
+    #endif
     static let bg = Color(uiColor: bgUI)
     /// Cards, rows, anything holding content.
+    #if HUSK_NO_JIT
+    static let surface = Color(uiColor: UIColor { trait in
+        trait.userInterfaceStyle == .dark
+            ? UIColor(red: 0.10, green: 0.105, blue: 0.12, alpha: 1)
+            : .white
+    })
+    #else
     static let surface = Color(uiColor: .secondarySystemGroupedBackground)
+    #endif
     /// One step further up: wells, chips, the things that sit on a card.
     static let surfaceHigh = Color(uiColor: .tertiarySystemFill)
     /// The edge that separates a surface from the page.

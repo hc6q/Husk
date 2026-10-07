@@ -84,7 +84,7 @@ struct OnboardingView: View {
                             onDone()
                         }
                     } label: {
-                        Text(page < pages - 1 ? "Continue" : "Start using Husk")
+                        Text(page < pages - 1 ? "Continue" : "Start using \(ExecutionMode.appName)")
                     }
                     .buttonStyle(PrimaryButtonStyle())
                     .padding(.horizontal, 28)
@@ -132,13 +132,13 @@ struct OnboardingView: View {
     private var choices: some View {
         ScrollView {
             VStack(spacing: 14) {
-                Text("How should Husk behave?")
+                Text("Make \(ExecutionMode.appName) yours")
                     .font(.title2.weight(.semibold))
                     .padding(.top, 34).padding(.bottom, 6)
 
                 choice(icon: "bolt.fill", title: "Start Android on launch",
                        detail: ExecutionMode.noJIT
-                            ? "Boots Android when Husk opens. Startup is slower with interpretation."
+                            ? "Boots Android when Rottweiler opens. Startup is slower with interpretation."
                             : "Boots the guest as soon as Husk opens, once JIT is available. Off means you start it yourself.",
                        isOn: $autoStart)
 

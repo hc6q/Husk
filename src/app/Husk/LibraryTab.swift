@@ -30,6 +30,25 @@ struct LibraryTab: View {
         NavigationStack(path: $router.library) {
             ScrollView {
                 VStack(spacing: 16) {
+                    #if HUSK_NO_JIT
+                    HStack(spacing: 16) {
+                        HuskMark(size: 68)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("ROTTWEILER")
+                                .font(.system(.title2, design: .rounded).weight(.heavy))
+                                .tracking(1.2)
+                            Text("Your Android workspace")
+                                .font(.subheadline).foregroundStyle(.secondary)
+                            Label(host.isReady ? "Android ready" : "Interpreter · No JIT",
+                                  systemImage: host.isReady ? "checkmark.circle.fill" : "cpu")
+                                .font(.caption.weight(.semibold)).foregroundStyle(Theme.accent)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(20)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 22))
+                    .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(Theme.accent.opacity(0.25)))
+                    #endif
                     if !host.isReady { machineStrip }
                     if let busy = host.busy { busyStrip(busy) }
                     #if HUSK_NO_JIT
@@ -75,7 +94,7 @@ struct LibraryTab: View {
                 .padding(.bottom, 24)
             }
             .background(Theme.backdrop)
-            .navigationTitle("Library")
+            .navigationTitle(ExecutionMode.noJIT ? "My apps" : "Library")
             .searchable(text: $query, prompt: "Search apps")
             .autocorrectionDisabled()
             .textInputAutocapitalization(.never)

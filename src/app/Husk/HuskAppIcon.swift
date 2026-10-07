@@ -53,6 +53,9 @@ enum HuskAppIcon: String, CaseIterable, Identifiable {
     /// `dark` matters only for Automatic, which has no fixed look of its own:
     /// it is whatever the system is currently showing.
     func preview(dark: Bool = false) -> UIImage? {
+        #if HUSK_NO_JIT
+        return UIImage(named: "rottweiler-icon")
+        #else
         switch self {
         case .automatic:   return UIImage(named: dark ? "icon-dark" : "icon-default")
         case .clearLight:  return UIImage(named: "icon-clearlight")
@@ -60,6 +63,7 @@ enum HuskAppIcon: String, CaseIterable, Identifiable {
         case .tintedLight: return UIImage(named: "icon-tintedlight")
         case .tintedDark:  return UIImage(named: "icon-tinteddark")
         }
+        #endif
     }
 
     static var current: HuskAppIcon {

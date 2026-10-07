@@ -667,7 +667,7 @@ struct AppearanceSettings: View {
 
             Section {
                 LazyVGrid(columns: iconColumns, spacing: 14) {
-                    ForEach(HuskAppIcon.allCases) { icon in
+                    ForEach(ExecutionMode.noJIT ? [HuskAppIcon.automatic] : HuskAppIcon.allCases) { icon in
                         Button {
                             appIcon = icon
                             HuskAppIcon.apply(icon)
@@ -741,6 +741,17 @@ struct AboutSettings: View {
                 .padding(.vertical, 10)
                 .listRowBackground(Color.clear)
             }
+
+            #if HUSK_NO_JIT
+            Section("Credits & Open Source") {
+                Text("Rottweiler is a No-JIT fork maintained by hc6q, built on Husk by Leviidev and its contributors.")
+                    .font(.subheadline)
+                Link("Original Husk · Leviidev", destination: URL(string: "https://github.com/Leviidev/Husk")!)
+                Link("Rottweiler · source code", destination: URL(string: "https://github.com/hc6q/Rottweiler")!)
+                Text("Husk · QEMU / UTM · Android / LineageOS · ANGLE. Upstream authorship and component licences are preserved. Husk derivative: GPL-2.0-or-later.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            #endif
 
             Section {
                 LabeledContent("Build", value: Bundle.main.commit)

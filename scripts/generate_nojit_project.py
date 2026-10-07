@@ -27,6 +27,8 @@ for source in target["sources"]:
     ])
 settings = target["settings"]["base"]
 settings["INFOPLIST_FILE"] = "Husk/Info-NoJIT.plist"
+settings["ASSETCATALOG_COMPILER_APPICON_NAME"] = "RottweilerAppIcon"
+settings["ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES"] = ""
 settings["LIBRARY_SEARCH_PATHS"] = ["$(inherited)", "$(SRCROOT)/../../build/ios-arm64/nojit/lib"]
 settings["OTHER_LDFLAGS"] = [flag for flag in settings["OTHER_LDFLAGS"]
                             if flag != "-lhusk_rppairing"]
