@@ -1,0 +1,15 @@
+2026-10-07T01:22:24.2189354Z [18.7s] [NoJIT] Android boot completed
+2026-10-07T01:22:24.2192240Z [18.7s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+2026-10-07T01:22:28.1881126Z Package com.android.bluetooth new state: disabled-user
+2026-10-07T01:22:30.8002988Z [25.3s] [NoJIT] Installing APK
+2026-10-07T01:25:37.1411292Z [211.7s] [NoJIT] Launching package
+2026-10-07T01:25:59.0118131Z cmd: Failure calling service activity: Broken pipe (32)
+2026-10-07T01:26:00.5600891Z   "apk_installed": true,
+2026-10-07T01:26:00.5601128Z   "apk_resumed": false,
+2026-10-07T01:26:00.5601333Z   "usb_touch_confirmed": false,
+2026-10-07T01:26:00.5601558Z   "guest_audio_confirmed": false,
+2026-10-07T01:26:00.5602025Z   "ios_device_tested": false,
+2026-10-07T01:26:00.5604094Z   "boot_seconds": 18.7,
+2026-10-07T01:26:00.5604564Z   "elapsed_seconds": 233.5,
+2026-10-07T01:26:00.5623466Z [NoJIT] TCI bytecode buffer RW, size=134217728
+2026-10-07T01:26:01.2770746Z RuntimeError: guest command failed: am start -n org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity

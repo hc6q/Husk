@@ -147,8 +147,39 @@ conseguiu compilar os gadgets estáticos divididos em 766 unidades C, mas
 falhou na ligação por símbolos `_helper_*` de Mach-O usados em Linux ELF.
 A [branch TCTI](https://github.com/hc6q/Husk/tree/feat/nojit-tcti)
 isola o ajuste de prefixo e os guards desse backend. A correção compilou e passou pela auditoria ARM64 na execução
-37552278899; o teste Android ainda está em andamento. O app Swift atual não
+37552278899. O teste restaurou Android em 36,9 segundos, instalou o APK em
+278,8 segundos e retornou de am start em 458,6 segundos, mas o fixture não
+retomou. O topResumedActivity permaneceu no Setup Wizard do LineageOS, e a
+captura final apresentou geometria distorcida. Resultado reprovado em
+1482,2 segundos; causa da distorção não confirmada. A tentativa seguinte na
+branch experimental desativa somente as capacidades vetoriais TCG do TCTI
+para testar o fallback gvec escalar/helpers do QEMU, sem remover NEON do guest. O app Swift atual não
 aceita TCTI; não há substituição silenciosa do TCI nem JIT como fallback.
+
+### Recuperação visual e pacote Bluetooth
+
+O [ensaio de framebuffer](https://github.com/hc6q/Husk/actions/runs/37554966943)
+restaurou Android em 18,5 segundos, instalou em 102,0 segundos e confirmou
+Activity retomada em 140,8 segundos. O diálogo Bluetooth reapareceu após três
+cliques USB, apesar de bluetooth_on=0. O teste terminou reprovado em 321,2
+segundos: nenhum frame com contador um foi confirmado.
+[Artifact completo](https://github.com/hc6q/Husk/actions/runs/37554966943/artifacts/11453864662).
+
+O [ensaio com pacote Bluetooth desativado](https://github.com/hc6q/Husk/actions/runs/37556175454)
+confirmou pm disable-user para com.android.bluetooth no guest descartável.
+O lançamento do fixture falhou com Broken pipe (32) no serviço Activity;
+resultado reprovado em 233,5 segundos. Isso não foi incorporado ao app nem à
+imagem distribuída. Desativar um pacote do sistema não demonstrou resolver
+as falhas da imagem.
+[Artifact completo](https://github.com/hc6q/Husk/actions/runs/37556175454/artifacts/11455636229).
+
+O [primeiro TCTI executável](https://github.com/hc6q/Husk/actions/runs/37552278899)
+confirmou buffer de bytecode RW e mapas de boot sem W+X ou regiões anônimas
+executáveis, sob guarda contínua. Instalação funcionou, mas abertura utilizável,
+toque e áudio não foram aprovados.
+[Artifact completo](https://github.com/hc6q/Husk/actions/runs/37552278899/artifacts/11454562490).
+Trechos exatos dos logs dos três workflows estão em tests/nojit/evidence;
+os artifacts mantêm relatórios completos, mapas, serial e capturas.
 
 ## QEMU e seleção do interpretador
 
