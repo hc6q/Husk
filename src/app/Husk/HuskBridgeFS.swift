@@ -992,6 +992,9 @@ final class AndroidHost: ObservableObject {
         Task.detached { [weak self] in
             let waitingSince = Date()
             var attempt = 0
+            #if HUSK_NO_JIT
+            var bluetoothAttempted = false
+            #endif
             while true {
                 attempt += 1
                 do {
@@ -1004,6 +1007,12 @@ final class AndroidHost: ObservableObject {
                         let who = (try? GuestBridge.shared.shell("id", timeout: ExecutionMode.noJIT ? 120 : 30)) ?? "(no answer)"
                         HuskLog.log("bridge", "guest shell: "
                                   + who.trimmingCharacters(in: .whitespacesAndNewlines))
+                        #if HUSK_NO_JIT
+                        if !bluetoothAttempted && who.contains("uid=") {
+                            bluetoothAttempted = true
+                            await self?.blockAbsentBluetooth()
+                        }
+                        #endif
                     }
                     let booted = try GuestBridge.shared.shell("getprop sys.boot_completed", timeout: ExecutionMode.noJIT ? 120 : 30)
                         .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1023,6 +1032,12 @@ final class AndroidHost: ObservableObject {
                         // the last session and not afterwards, so the moment the
                         // guest first answers is the moment to claim one.
                         GuestBridge.shared.holdConnection()
+                        #if HUSK_NO_JIT
+                        if !bluetoothAttempted {
+                            bluetoothAttempted = true
+                            await self?.blockAbsentBluetooth()
+                        }
+                        #endif
                         await self?.quietAbsentHardware()
                         #if HUSK_NO_JIT
                         // Do not enable launches while initial guest settings
@@ -1938,34 +1953,32 @@ final class AndroidHost: ObservableObject {
     // main actor while Android executes settings/pm/am; otherwise UIKit cannot
     // deliver the document picker's Open action until every command finishes.
     // It reads no AndroidHost UI state; readiness is published by the caller.
+    #if HUSK_NO_JIT
+    /// Run as soon as the guest shell answers, before waiting for boot completion.
+    /// The disabled-user state prevents Android from resolving or starting this
+    /// package. Reapply after snapshot restore because it rewinds userdata.
+    nonisolated func blockAbsentBluetooth() async {
+        HuskLog.log("NoJIT", "Blocking Bluetooth package startup")
+        guard let url = Bundle.main.url(forResource: "nojit-disable-bluetooth", withExtension: "sh"),
+              let script = try? String(contentsOf: url, encoding: .utf8) else {
+            HuskLog.log("NoJIT", "Bluetooth blocking script unavailable")
+            return
+        }
+        let command = "sh -c '" + script.replacingOccurrences(of: "'", with: "'\"'\"'") + "'"
+        let started = Date()
+        do {
+            let result = try GuestBridge.shared.run(command, timeout: 420)
+            for line in result.out.split(separator: "\n") { HuskLog.log("NoJIT", String(line)) }
+            HuskLog.log("NoJIT", "Bluetooth startup block exit \(result.status), elapsed \(Int(Date().timeIntervalSince(started)))s")
+        } catch {
+            HuskLog.log("NoJIT", "Bluetooth startup block not confirmed: \(error)")
+        }
+        // A timeout does not prove failure; never replay a timed-out mutation.
+    }
+    #endif
+
     nonisolated func quietAbsentHardware() async {
         #if HUSK_NO_JIT
-        // The shipped image has an Android Bluetooth stack but this QEMU
-        // machine has no controller. Turning the setting off does not stop an
-        // already-started package, so it can keep crashing and leave its
-        // system-owned error dialog above every imported app. Disable only
-        // that unavailable guest package and stop its current process.
-        // Never broadcast CLOSE_SYSTEM_DIALOGS: ANR dialogs interpret closing
-        // as force-close, which can kill an unrelated SystemUI process.
-        HuskLog.log("NoJIT", "Disabling absent Bluetooth package before optional guest tuning")
-        let disabled = try? GuestBridge.shared.run(
-            "pm disable-user --user 0 com.android.bluetooth; "
-          + "pm list packages -d com.android.bluetooth | grep -Fx package:com.android.bluetooth",
-            timeout: 300)
-        if disabled?.status != 0 {
-            HuskLog.log("bridge", "could not disable absent Android Bluetooth package: "
-                      + (disabled?.out.trimmingCharacters(in: .whitespacesAndNewlines)
-                         ?? "no answer"))
-        } else {
-        HuskLog.log("bridge", "absent Android Bluetooth package disabled")
-        let stopped = try? GuestBridge.shared.run(
-            "am force-stop --user 0 com.android.bluetooth", timeout: 120)
-        HuskLog.log("bridge", stopped?.status == 0
-            ? "stopped the old Android Bluetooth process"
-            : "could not stop the old Android Bluetooth process")
-        }
-        // Restoring the user's rendering settings must remain available even
-        // when the optional Bluetooth command fails. Each mutation runs once.
         let optimized = UserDefaults.standard.object(forKey: "rottweiler.optimizedGuest") as? Bool ?? true
         guard let url = Bundle.main.url(forResource: "nojit-performance", withExtension: "sh"),
               let script = try? String(contentsOf: url, encoding: .utf8) else {

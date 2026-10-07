@@ -50,6 +50,7 @@ jobs:
         run: |
           python3 tests/nojit/test_build_contract.py
           python3 tests/nojit/test_guest_performance.py
+          python3 tests/nojit/test_bluetooth_block.py
       - name: Test fragmented guest shell replies
         run: |
           swiftc src/app/Husk/GuestShellFrame.swift tests/nojit/shell_frame_test.swift -o build/shell-frame-tests

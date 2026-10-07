@@ -574,3 +574,23 @@ The visible touch overlay confirms an input path, not successful button dispatch
 
 Next candidate version: 0.8.1, build 24. Released 0.8.0 remains available until
 the new candidate build completes and its package is audited.
+
+### Early Bluetooth startup block (0.8.2 candidate, build 25)
+
+As soon as the guest shell answers, the No-JIT app runs the bundled
+`nojit-disable-bluetooth.sh` before querying boot completion. PackageManager's
+`disable-user --user 0` state blocks the Bluetooth application from starting for
+the primary Android user. The script verifies disabled state, force-stops the
+existing application process, checks `pidof com.android.bluetooth` is empty and
+syncs userdata. Already-disabled packages still get the process-stop check.
+
+An official snapshot can contain an already-started Bluetooth process and rewind
+userdata: the block must be reapplied after each restore. This userspace change
+does not remove vendor Bluetooth HAL services or rewrite init/system partitions.
+It cannot precede every Android init service on the first cold boot. No global
+error-dialog broadcast is sent. Mutations are not replayed after a timeout.
+
+Four controlled CLI tests cover disable/stop, an already-disabled snapshot with
+a live process, a false-success PackageManager reply and a process that remains
+running. These tests do not certify iPhone UI or the disappearance of its dialog.
+The original JIT target does not execute this startup block.

@@ -5,9 +5,9 @@ This is an experimental test build, not a validated daily-use release.
 
 ## Changes
 - Reversible Android performance profile: 75% linear render size, animations and touch overlays disabled, original settings saved for restoration.
-- Bluetooth package disable now runs before optional settings tuning; stage and elapsed-time logs expose stalled operations.
+- Bluetooth startup blocking now runs on the first responding guest shell, before waiting for boot completion. It verifies disabled-user state and checks that the primary Bluetooth process has stopped; snapshot restoration reapplies the block.
 - Settings → Performance allows restoring the previous Android rendering settings on the next guest start.
-- Independent No-JIT app version 0.8.0, build 23. The original JIT app version is unchanged.
+- Independent No-JIT app version 0.8.2, build 25. The original JIT app version is unchanged.
 - Runtime performance and successful iPhone APK interaction remain unverified; this is a test profile, not a measured speedup.
 
 ## Installation
