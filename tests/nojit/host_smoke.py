@@ -233,7 +233,7 @@ try:
         if bridge is None:
             try:
                 candidate = socket.create_connection(('127.0.0.1',15599),timeout=3)
-                candidate.settimeout(5)
+                candidate.settimeout(30)
                 # Keep a connection only after the guest listener replies.
                 candidate.sendall(b'echo HUSK_BRIDGE_READY\n')
                 if b'HUSK_BRIDGE_READY' in candidate.recv(4096):
@@ -244,7 +244,16 @@ try:
                 if 'candidate' in locals():
                     candidate.close()
         if bridge is not None:
-            if exchange('getprop sys.boot_completed',timeout=60).strip() == '1':
+            try:
+                ready = exchange('getprop sys.boot_completed',timeout=60).strip() == '1'
+            except (OSError, TimeoutError, RuntimeError) as error:
+                log(f'[NoJIT] Boot bridge not ready; bounded retry: {error}')
+                report['boot_bridge_retries'] = report.get('boot_bridge_retries',0)+1
+                bridge.close()
+                bridge = None
+                time.sleep(10)
+                continue
+            if ready:
                 report['boot_completed'] = True
                 report['boot_seconds'] = round(time.monotonic()-started,1)
                 log('[NoJIT] Android boot completed')
