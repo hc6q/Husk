@@ -30,6 +30,8 @@ p.add_argument('--apk', type=Path, required=True)
 p.add_argument('--package', default='org.husk.nojitsmoke')
 p.add_argument('--ui-timeout', type=int, default=300)
 p.add_argument('--framebuffer-ui', action='store_true', help='Verify actual frames and counter via OCR instead of UIAutomator')
+p.add_argument('--disable-guest-bluetooth-package', action='store_true',
+               help='Experimental: disable only the Android Bluetooth package in this disposable guest')
 p.add_argument('--platform-dialog-recovery-attempts', type=int, choices=range(4), default=0,
                help='Experimental bounded USB clicks on captured System UI/Bluetooth dialogs')
 p.add_argument('--guard', type=Path, required=True)
@@ -252,6 +254,13 @@ try:
         time.sleep(5)
     else:
         raise TimeoutError('Android did not complete boot')
+    if a.disable_guest_bluetooth_package:
+        log('[NoJIT] Experimental guest Bluetooth package disable (no virtual Bluetooth device)')
+        exchange('svc bluetooth disable')
+        exchange('pm disable-user --user 0 com.android.bluetooth',timeout=300)
+        disabled = exchange('pm list packages -d com.android.bluetooth',timeout=180).splitlines()
+        assert 'package:com.android.bluetooth' in disabled, 'Guest Bluetooth package disable not confirmed'
+        report['guest_bluetooth_package_disabled'] = True
     payload = a.apk.read_bytes()
     log('[NoJIT] Installing APK')
     remote = '/data/local/tmp/NoJITSmoke.apk'

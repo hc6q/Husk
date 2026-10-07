@@ -148,3 +148,14 @@ uiautomator, reconhece caption/contador/botões e recusa sobreposição de diál
 O clique Count touch só ocorre com contador zero visível; só aprova ao capturar
 um novo frame com contador um. Mantém guarda, mapas, package retomado, prazo
 e orçamento de recuperação. Áudio e iPhone continuam fora dessa aprovação.
+
+
+A execução 37554966943 confirmou boot/instalação/Activity retomada sob TCI e
+quatro threads, mas o diálogo Bluetooth voltou após três cliques, embora
+bluetooth_on=0. Resultado reprovado em 321,2 segundos; counter/input não
+aprovados. Desligar o rádio não basta para interromper essa falha do pacote.
+O próximo ensaio, em guest descartável, tenta `pm disable-user --user 0
+com.android.bluetooth` antes da instalação e exige presença em `pm list
+packages -d`. Não modifica a imagem distribuída nem o Bluetooth do iPhone.
+A flag é explícita e não integra o app. APKs que dependem de Bluetooth não
+são alvo deste ensaio offline. A aprovação ainda exige frames/counter/input.
