@@ -30,10 +30,13 @@ struct LibraryTab: View {
         NavigationStack(path: $router.library) {
             ScrollView {
                 VStack(spacing: 16) {
+                    librarySummary
                     if !host.isReady { machineStrip }
                     if let busy = host.busy { busyStrip(busy) }
                     #if HUSK_NO_JIT
-                    InterpreterNotice().padding(14).huskCard()
+                    if !host.isReady {
+                        InterpreterNotice().padding(14).huskCard()
+                    }
                     #else
                     if jit.busy, !jit.showSetup { busyStrip(jit.status ?? "Turning on JIT…") }
                     #endif
@@ -61,13 +64,22 @@ struct LibraryTab: View {
                         EmptyState(title: "No Results",
                                    message: "Nothing installed is called “\(query)”.",
                                    systemImage: "magnifyingglass")
-                    } else if host.packages.isEmpty && host.isReady {
-                        EmptyState(title: "No Apps Yet",
-                                   message: "Install an APK and it appears here. Split sets "
-                                          + "work too — pick every piece at once.",
-                                   systemImage: "square.grid.2x2",
-                                   actionTitle: "Install APK(s)",
-                                   action: { importing = true })
+                    } else if host.packages.isEmpty {
+                        EmptyState(
+                            title: host.isReady ? "No Apps Yet" : "Your Library Is Waiting",
+                            message: host.isReady
+                                ? "Import an APK to add your first app. For split APKs, select every part together."
+                                : "Start Android to load your apps. This can take a while in interpreter mode.",
+                            systemImage: host.isReady ? "square.grid.2x2" : "square.stack.3d.up",
+                            actionTitle: host.isReady ? "Install APK" : nil,
+                            action: host.isReady ? { importing = true } : nil
+                        )
+                    } else {
+                        EmptyState(title: "No Apps in This Category",
+                                   message: "Choose another category or show all installed apps.",
+                                   systemImage: "line.3.horizontal.decrease.circle",
+                                   actionTitle: "Show All",
+                                   action: { filter = "All" })
                     }
                 }
                 .padding(.horizontal, 16)
@@ -105,6 +117,26 @@ struct LibraryTab: View {
 
     // MARK: status
 
+    private var librarySummary: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(host.packages.isEmpty ? "Your Android apps"
+                     : host.packages.count == 1 ? "1 installed app"
+                     : "\(host.packages.count) installed apps")
+                    .font(.subheadline.weight(.semibold))
+                Text(ExecutionMode.noJIT ? "Interpreter mode · Experimental" : "Android app library")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            if host.isReady {
+                StatusPill(text: "Ready", systemImage: "checkmark.circle.fill", tint: .green)
+            }
+        }
+        .padding(.horizontal, 2)
+        .padding(.vertical, 4)
+    }
+
     /// One line about the machine, only while it cannot open anything.
     private var machineStrip: some View {
         HStack(spacing: 12) {
@@ -127,19 +159,23 @@ struct LibraryTab: View {
                     Text(started ? host.status
                                  : ExecutionMode.canStart
                                    ? "Your apps are here; start it to open them."
-                                   : "Needs JIT. StikJIT is built in — the recommended way.")
+                                   : ExecutionMode.noJIT
+                                     ? "The interpreter backend is unavailable in this build."
+                                     : "Needs JIT. StikJIT is built in — the recommended way.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
             }
             Spacer(minLength: 6)
-            Button(started ? "Show" : ExecutionMode.canStart ? "Start" : "Enable JIT") {
+            Button(started ? "Show" : ExecutionMode.canStart ? "Start"
+                   : ExecutionMode.noJIT ? "Unavailable" : "Enable JIT") {
                 if started { onOpenGuest() } else { onStartAndroid() }
             }
             .buttonStyle(.borderedProminent)
             .buttonBorderShape(.capsule)
             .controlSize(.small)
+            .disabled(!started && ExecutionMode.noJIT && !ExecutionMode.canStart)
         }
         .padding(14)
         .huskCard()
@@ -161,6 +197,9 @@ struct LibraryTab: View {
             ForEach(categories, id: \.self) { c in Text(plural(c)).tag(c) }
         }
         .pickerStyle(.segmented)
+        .onChange(of: categories) { available in
+            if filter != "All" && !available.contains(filter) { filter = "All" }
+        }
     }
 
     // MARK: what to show
@@ -179,7 +218,9 @@ struct LibraryTab: View {
 
     private var shown: [AndroidHost.Package] {
         var list = host.packages
-        if filter != "All" { list = list.filter { $0.category == filter } }
+        if filter != "All" && categories.contains(filter) {
+            list = list.filter { $0.category == filter }
+        }
         let q = query.trimmingCharacters(in: .whitespaces)
         guard !q.isEmpty else { return list }
         return list.filter {
@@ -196,7 +237,7 @@ struct AppCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            AppIcon(path: app.iconPath, size: 50)
+            AppIcon(path: app.iconPath, size: 54)
                 .opacity(dimmed ? 0.5 : 1)
             VStack(alignment: .leading, spacing: 2) {
                 Text(app.label)
@@ -210,7 +251,9 @@ struct AppCard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
+        .padding(14)
+        .frame(minHeight: 115, alignment: .topLeading)
         .huskCard()
+        .accessibilityElement(children: .combine)
     }
 }
