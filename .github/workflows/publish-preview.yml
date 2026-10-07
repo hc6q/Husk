@@ -60,6 +60,7 @@ jobs:
               assert info['CFBundleVersion']==str(expected['build'])
               assert info['CFBundleIdentifier']=='com.husk.nojit' and info['HuskExecutionMode']=='TCI'
               assert 'Payload/Husk-NoJIT.app/nojit-performance.sh' in ipa.namelist()
+              assert 'Payload/Husk-NoJIT.app/nojit-disable-bluetooth.sh' in ipa.namelist()
           PY
           version=$(python3 -c 'import json; print(json.load(open("config/nojit-version.json"))["version"])')
           sha256sum release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk > release-assets/SHA256SUMS.txt
