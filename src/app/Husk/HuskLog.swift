@@ -266,7 +266,8 @@ enum HuskLog {
             HuskLog.flushNow()
         }
         log("boot", "crash handlers installed (SEGV/ABRT/ILL/FPE/SYS; "
-                  + "TRAP+BUS left to the JIT guard; SIGPIPE ignored)")
+                  + (ExecutionMode.noJIT ? "no JIT trap guard; " : "TRAP+BUS left to the JIT guard; ")
+                  + "SIGPIPE ignored)")
     }
 
     // MARK: - Emitting

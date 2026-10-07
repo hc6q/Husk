@@ -688,7 +688,7 @@ final class GuestBridge {
                 // stays open. That is exactly what these two commands show, and
                 // both run fine as shell. The last sample before the silence is
                 // the one that matters.
-                if alive, ticks % 3 == 0, ticks < 30 {
+                if alive, !ExecutionMode.noJIT, ticks % 3 == 0, ticks < 30 {
                     for cmd in ["ip addr show", "ip rule show", "ip route show table all"] {
                         if let out = try? self.shell(cmd, timeout: 20) {
                             HuskLog.log("net", "[t+\(ticks * 5)s] \(cmd):\n"
@@ -707,7 +707,7 @@ final class GuestBridge {
                 //
                 // `-b crash` is a small dedicated ring, so this is cheap: a few
                 // lines every half minute, and only the ones not seen before.
-                if alive, ticks % 6 == 0, ticks > 0 {
+                if alive, !ExecutionMode.noJIT || QemuRunner.soundEnabled, ticks % 6 == 0, ticks > 0 {
                     // Android's audio stack, at warning level and above. One
                     // sound effect played and then silence, with the guest
                     // queueing three buffers in three minutes -- whatever made
@@ -944,6 +944,23 @@ final class AndroidHost: ObservableObject {
         }
     }
 
+    private func restorePendingImports() {
+        let fm = FileManager.default
+        let known = Set(pendingInstalls.compactMap { $0.first?.deletingLastPathComponent() })
+        guard let directories = try? fm.contentsOfDirectory(at: pendingDirectory,
+                includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) else { return }
+        for directory in directories.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
+            guard !known.contains(directory),
+                  (try? directory.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true,
+                  let files = try? fm.contentsOfDirectory(at: directory,
+                        includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) else { continue }
+            let apks = files.filter { $0.pathExtension.lowercased() == "apk" }
+                .sorted { $0.lastPathComponent < $1.lastPathComponent }
+            if !apks.isEmpty { pendingInstalls.append(apks) }
+        }
+        ExecutionMode.log("Recovered \(pendingInstalls.count) pending APK imports")
+    }
+
     private func installNextPending() {
         guard isReady, busy == nil, !pendingInstalls.isEmpty else { return }
         install(pendingInstalls.removeFirst())
@@ -969,6 +986,9 @@ final class AndroidHost: ObservableObject {
         guard !polling, !isReady else { return }
         polling = true
         status = "Starting Android…"
+        #if HUSK_NO_JIT
+        restorePendingImports()
+        #endif
         Task.detached { [weak self] in
             var attempt = 0
             while true {
@@ -1000,14 +1020,19 @@ final class AndroidHost: ObservableObject {
                         // the last session and not afterwards, so the moment the
                         // guest first answers is the moment to claim one.
                         GuestBridge.shared.holdConnection()
-                        #if HUSK_NO_JIT
-                        GuestBridge.shared.startHealthWatch()
-                        #endif
                         await self?.quietAbsentHardware()
+                        #if HUSK_NO_JIT
+                        // Imported APKs take priority over icon/renderer probes.
+                        let queued = await MainActor.run { () -> Bool in
+                            let queued = !(self?.pendingInstalls.isEmpty ?? true)
+                            self?.installNextPending()
+                            return queued
+                        }
+                        if !queued { await self?.refreshPackages() }
+                        GuestBridge.shared.startHealthWatch()
+                        #else
                         await self?.refreshPackages()
                         await MainActor.run { self?.dumpDiagnostics() }
-                        #if HUSK_NO_JIT
-                        await MainActor.run { self?.installNextPending() }
                         #endif
                         return
                     }
