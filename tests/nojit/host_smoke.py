@@ -258,14 +258,6 @@ try:
         time.sleep(5)
     else:
         raise TimeoutError('Android did not complete boot')
-    if a.collect_guest_diagnostics:
-        # Detached bounded guest log, retained even when UIAutomator fails.
-        exchange("logcat -b all -v threadtime -f /data/local/tmp/rottweiler-diagnostic.log -r 2048 -n 1 >/dev/null 2>&1 </dev/null &",timeout=120)
-        try:
-            crash = exchange('logcat -b crash -d -t 200',timeout=120)
-            (a.output/'guest-crash-before.txt').write_text(crash)
-        except (OSError, TimeoutError, RuntimeError) as error:
-            report['crash_collection_before_error'] = str(error)
     if a.quiet_guest_radio:
         log('[NoJIT] Disable absent guest radio before installation')
         exchange('settings put global bluetooth_on 0; settings put global ble_scan_always_enabled 0',timeout=180)
@@ -274,11 +266,19 @@ try:
         report['guest_radio_disabled_before_install'] = True
     if a.disable_guest_bluetooth_package:
         log('[NoJIT] Experimental guest Bluetooth package disable (no virtual Bluetooth device)')
-        exchange('svc bluetooth disable')
         exchange('pm disable-user --user 0 com.android.bluetooth',timeout=300)
         disabled = exchange('pm list packages -d com.android.bluetooth',timeout=180).splitlines()
         assert 'package:com.android.bluetooth' in disabled, 'Guest Bluetooth package disable not confirmed'
+        exchange('am force-stop --user 0 com.android.bluetooth',timeout=300)
         report['guest_bluetooth_package_disabled'] = True
+    if a.collect_guest_diagnostics:
+        # Collect after radio recovery; log collection must not delay it.
+        exchange("logcat -b all -v threadtime -f /data/local/tmp/rottweiler-diagnostic.log -r 2048 -n 1 >/dev/null 2>&1 </dev/null &",timeout=120)
+        try:
+            crash = exchange('logcat -b crash -d -t 200',timeout=120)
+            (a.output/'guest-crash-before.txt').write_text(crash)
+        except (OSError, TimeoutError, RuntimeError) as error:
+            report['crash_collection_before_error'] = str(error)
     payload = a.apk.read_bytes()
     log('[NoJIT] Installing APK')
     remote = '/data/local/tmp/NoJITSmoke.apk'
