@@ -35,6 +35,7 @@ struct DirectoryView: View {
     @State private var entries: [AndroidHost.GuestEntry] = []
     @State private var space: (free: Int64, total: Int64)?
     @State private var loading = true
+    @State private var loadID = UUID()
     @State private var failure: String?
     @State private var importing = false
     @State private var showImportSheet = false
@@ -57,12 +58,20 @@ struct DirectoryView: View {
         }
         .listStyle(.insetGrouped)
         .overlay {
-            if loading && entries.isEmpty {
-                ProgressView()
+            if !host.isReady {
+                EmptyState(title: "Android Not Ready",
+                           message: "Files live inside Android. Start it from Library to browse or import.",
+                           systemImage: "externaldrive.badge.exclamationmark",
+                           actionTitle: "Open Library",
+                           action: { Router.shared.tab = .library })
+            } else if loading && entries.isEmpty {
+                ProgressView("Loading Files…")
             } else if let failure {
-                EmptyState(title: "Cannot Read This Folder", message: failure, systemImage: "lock")
+                EmptyState(title: "Cannot Read This Folder", message: failure,
+                           systemImage: "exclamationmark.folder",
+                           actionTitle: "Try Again", action: load)
             } else if entries.isEmpty {
-                EmptyState(title: "Empty", message: "Nothing is in this folder yet.",
+                EmptyState(title: "Empty Folder", message: "No files here yet.",
                            systemImage: "folder", actionTitle: "Import Files",
                            action: { showImportSheet = true })
             }
@@ -72,7 +81,9 @@ struct DirectoryView: View {
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button { load() } label: { Label("Refresh", systemImage: "arrow.clockwise") }
+                    .disabled(!host.isReady || loading)
                 Button { showImportSheet = true } label: { Label("Import", systemImage: "plus") }
+                    .disabled(!host.isReady)
             }
         }
         .sheet(isPresented: $showImportSheet) {
@@ -94,8 +105,21 @@ struct DirectoryView: View {
         } message: {
             Text("Android installs it from where it already is — nothing is copied.")
         }
-        .task(id: path) { load() }
-        .refreshable { load() }
+        .task(id: path) {
+            if host.isReady { load() } else { loading = false }
+        }
+        .onChange(of: host.isReady) { ready in
+            if ready {
+                load()
+            } else {
+                loadID = UUID() // Ignore in-flight responses from the previous guest.
+                entries = []
+                space = nil
+                failure = nil
+                loading = false
+            }
+        }
+        .refreshable { if host.isReady { load() } }
     }
 
     @ViewBuilder private func row(_ e: AndroidHost.GuestEntry) -> some View {
@@ -104,19 +128,21 @@ struct DirectoryView: View {
                 fileLabel(icon: "folder.fill", tint: .accentColor, title: e.name,
                           subtitle: e.modified.map(Self.when))
             }
-        } else {
-            Button {
-                if e.name.lowercased().hasSuffix(".apk") { installing = e }
-            } label: {
+        } else if e.name.lowercased().hasSuffix(".apk") {
+            Button { installing = e } label: {
                 HStack {
-                    fileLabel(icon: icon(for: e.name), tint: .secondary, title: e.name, subtitle: subtitle(e))
-                    if e.name.lowercased().hasSuffix(".apk") {
-                        Spacer()
-                        Image(systemName: "arrow.down.circle").foregroundStyle(Color.accentColor)
-                    }
+                    fileLabel(icon: icon(for: e.name), tint: .secondary,
+                              title: e.name, subtitle: subtitle(e))
+                    Spacer()
+                    Image(systemName: "arrow.down.circle")
+                        .foregroundStyle(Color.accentColor)
                 }
             }
             .foregroundStyle(.primary)
+            .accessibilityHint("Install this APK into Android")
+        } else {
+            fileLabel(icon: icon(for: e.name), tint: .secondary,
+                      title: e.name, subtitle: subtitle(e))
         }
     }
 
@@ -151,7 +177,7 @@ struct DirectoryView: View {
 
     private func used(_ s: (free: Int64, total: Int64)) -> CGFloat {
         guard s.total > 0 else { return 0 }
-        return min(max(CGFloat(s.total - s.free) / CGFloat(s.total), 0.02), 1)
+        return min(max(CGFloat(s.total - s.free) / CGFloat(s.total), 0), 1)
     }
 
     private func subtitle(_ e: AndroidHost.GuestEntry) -> String {
@@ -184,7 +210,11 @@ struct DirectoryView: View {
     }
 
     private func load() {
+        guard host.isReady else { return }
+        let request = UUID()
+        loadID = request
         loading = true
+        failure = nil
         let where_ = path
         Task.detached {
             var rows: [AndroidHost.GuestEntry] = []
@@ -193,6 +223,7 @@ struct DirectoryView: View {
             catch { why = error.localizedDescription }
             let s = AndroidHost.shared.freeSpace(at: where_)
             await MainActor.run {
+                guard loadID == request, host.isReady else { return }
                 entries = rows
                 space = s
                 failure = rows.isEmpty ? why : nil
