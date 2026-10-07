@@ -32,6 +32,7 @@ p.add_argument('--apk', type=Path, required=True)
 p.add_argument('--package', default='org.husk.nojitsmoke')
 p.add_argument('--ui-timeout', type=int, default=300)
 p.add_argument('--framebuffer-ui', action='store_true', help='Verify actual frames and counter via OCR instead of UIAutomator')
+p.add_argument('--optimized-guest', action='store_true', help='Apply reversible 75% rendering and animation profile')
 p.add_argument('--quiet-guest-radio', action='store_true', help='Apply the app radio settings before APK installation')
 p.add_argument('--collect-guest-diagnostics', action='store_true')
 p.add_argument('--disable-guest-bluetooth-package', action='store_true',
@@ -333,6 +334,24 @@ try:
         assert 'package:com.android.bluetooth' in disabled, 'Guest Bluetooth package disable not confirmed'
         exchange('am force-stop --user 0 com.android.bluetooth',timeout=300)
         report['guest_bluetooth_package_disabled'] = True
+    if a.disable_guest_bluetooth_package:
+        exchange('am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS', timeout=180)
+    report['guest_optimized_profile_requested'] = a.optimized_guest
+    before = exchange('wm size; wm density; settings get global window_animation_scale; settings get system show_touches', timeout=300)
+    (a.output/'guest-rendering-before.txt').write_text(before)
+    if a.optimized_guest:
+        log('[NoJIT] Applying reversible rendering profile after Bluetooth recovery')
+        profile = (Path(__file__).resolve().parents[2]/'src/app/Husk/Resources/nojit-performance.sh').read_text()
+        escaped = profile.replace("'", "'\"'\"'")
+        started = time.monotonic()
+        result = exchange("sh -c '"+escaped+"' sh apply", timeout=600)
+        (a.output/'guest-performance-profile.txt').write_text(result)
+        report['guest_optimized_profile_seconds'] = round(time.monotonic()-started,1)
+        report['guest_optimized_profile_verified'] = 'Performance profile verified' in result or 'Performance profile already applied' in result
+        assert report['guest_optimized_profile_verified'], 'Rendering profile was not verified'
+    else:
+        report['guest_optimized_profile_verified'] = False
+    (a.output/'guest-rendering-after.txt').write_text(exchange('wm size; wm density; settings get global window_animation_scale; settings get system show_touches', timeout=300))
     if a.collect_guest_diagnostics:
         # Collect after radio recovery; log collection must not delay it.
         exchange("logcat -b all -v threadtime -f /data/local/tmp/rottweiler-diagnostic.log -r 2048 -n 1 >/dev/null 2>&1 </dev/null &",timeout=120)
