@@ -1,96 +1,86 @@
 <p align="center">
-  <img src="docs/assets/rottweiler-banner.svg" alt="Rottweiler — Android on iOS, interpreted" width="900">
+  <img src="docs/assets/rottweiler-banner.svg" alt="Rottweiler — Android on iOS without JIT" width="100%">
 </p>
 
 <p align="center">
-  <strong>An experimental Android APK launcher for iOS — powered by QEMU TCI.</strong>
+  <strong>An experimental way to run Android APKs on iOS without enabling JIT.</strong><br>
+  Built on <a href="https://github.com/Leviidev/Husk">Husk</a> and the QEMU TCG interpreter (TCI).
 </p>
 
 <p align="center">
-  <a href="https://github.com/hc6q/Husk/actions/workflows/nojit.yml?query=branch%3Afeat%2Fnojit"><img src="https://github.com/hc6q/Husk/actions/workflows/nojit.yml/badge.svg?branch=feat%2Fnojit" alt="No-JIT build"></a>
-  <img src="https://img.shields.io/badge/platform-iOS_arm64-111827?style=flat-square" alt="iOS arm64">
-  <img src="https://img.shields.io/badge/CPU-QEMU_TCI-f97316?style=flat-square" alt="QEMU TCI">
-  <img src="https://img.shields.io/badge/status-experimental-f59e0b?style=flat-square" alt="Experimental">
+  <a href="https://github.com/hc6q/Rottweiler/actions/workflows/nojit.yml?query=branch%3Amain"><img src="https://github.com/hc6q/Rottweiler/actions/workflows/nojit.yml/badge.svg?branch=main" alt="No-JIT build status"></a>
+  <img src="https://img.shields.io/badge/platform-iOS%20arm64-20242a?style=flat-square" alt="Platform: iOS arm64">
+  <img src="https://img.shields.io/badge/backend-QEMU%20TCI-20242a?style=flat-square" alt="Backend: QEMU TCI">
+  <img src="https://img.shields.io/badge/status-experimental-a95042?style=flat-square" alt="Status: experimental">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--2.0--or--later-20242a?style=flat-square" alt="License: GPL-2.0-or-later"></a>
 </p>
 
 <p align="center">
-  <a href="#the-project">About</a> ·
-  <a href="#current-status">Status</a> ·
-  <a href="#try-rottweiler">Install</a> ·
-  <a href="docs/nojit.md">Technical documentation</a> ·
-  <a href="https://github.com/Leviidev/Husk">Original Husk</a>
+  <a href="#overview">Overview</a> &nbsp;·&nbsp;
+  <a href="#project-status">Status</a> &nbsp;·&nbsp;
+  <a href="#try-a-build">Try a build</a> &nbsp;·&nbsp;
+  <a href="#build-from-source">Build</a> &nbsp;·&nbsp;
+  <a href="#documentation">Docs</a> &nbsp;·&nbsp;
+  <a href="#contributing">Contribute</a>
 </p>
 
-## The project
+---
 
-**Rottweiler** is the No-JIT variant of [Husk, created by Leviidev](https://github.com/Leviidev/Husk). Its goal is to import and run small Android APKs on an iPhone through ordinary sideloading, without enabling JIT, attaching a debugger, using StikJIT/StikDebug, or pairing for JIT.
+## Overview
 
-The first milestone is deliberately small:
+**Rottweiler** is a No-JIT variant of [Husk](https://github.com/Leviidev/Husk), an Android emulator project for iOS. Instead of generating executable machine code at runtime, its experimental CPU backend interprets QEMU TCI bytecode. The goal is to import and interact with **small, offline Android APKs on an iPhone** using ordinary sideloading — without a debugger, JIT pairing or a jailbreak.
 
-**iPhone → Rottweiler → import APK → start Android → install APK → open and interact with a simple app.**
-
-Start with offline Java/Kotlin apps that do not require Google Play Services. Heavy games are outside the initial validation scope.
+This is a development project, **not a general-purpose Android app runner**. Android boot and APK execution are still being validated, and interpreting instructions is significantly slower than JIT.
 
 > [!IMPORTANT]
-> **This milestone has not yet been achieved.** Rottweiler is an experimental build for testing and development. A successful CI build does not certify a working Android app on an iPhone.
+> **End-to-end APK use on a physical iPhone has not been confirmed.** A successful IPA build, restored Android screen, or resumed Activity does not prove an app can be used. See the [validation record](docs/nojit.md) before reporting success or compatibility.
 
-## What changes in this fork?
+### How it differs
 
-Rottweiler keeps Husk's Android VM, LineageOS v12 image, QCOW2 disks, APK bridge, display, USB input and audio infrastructure. The CPU executes QEMU TCI bytecode instead of dynamically generated native code.
+| | Rottweiler No-JIT |
+| --- | --- |
+| CPU execution | QEMU 10.0.12-utm, interpreted with TCI |
+| No-JIT build flag | `HUSK_NO_JIT=1` |
+| Android guest | Existing Husk LineageOS v12 image |
+| Graphics | Existing display path; CPU renderer recommended for the shipped snapshot |
+| APK handling | Existing Husk guest bridge and installer |
+| iOS target | arm64; project deployment target iOS 16.4 |
+| Original Husk build | Kept separately with `HUSK_NO_JIT=0` |
 
-| Component | Rottweiler No-JIT |
-| :--- | :--- |
-| CPU backend | Exact **UTM QEMU 10.0.12-utm**, standard TCG Interpreter / TCI |
-| Build selection | `HUSK_NO_JIT=1` |
-| Translation buffer | Read/write bytecode; no executable JIT buffer |
-| Android | Existing Husk LineageOS v12 image and snapshot infrastructure |
-| Graphics | Existing VM ANGLE/Metal path retained; software display available |
-| APK import | Existing guest bridge with framing, staging and readiness fixes |
-| App identity | **Rottweiler**, bundle identifier `com.husk.nojit` |
-| Original Husk target | Available with `HUSK_NO_JIT=0` |
+Internal `Husk` directory names, settings keys and the `com.husk.nojit` bundle identifier are intentionally retained for compatibility. The application and repository are presented as **Rottweiler**.
 
-Only the CPU backend uses interpretation. The GPU path is retained, although the shipped software snapshot requires **CPU** renderer selection. GPU mode has a different VM configuration and uses cold boot when the snapshot is incompatible.
+## Project status
 
-The repository remains **`hc6q/Husk`**. Rottweiler is the fork's user-facing name. Internal identifiers and storage keys remain stable to preserve existing Android downloads, settings and imported APKs during upgrades.
+These are separate validation steps, not a single “working” badge.
 
-## Current status
+| Milestone | Evidence |
+| --- | --- |
+| Build an iOS arm64 IPA | **Confirmed in CI** |
+| Compile the interpreter and exclude JIT code | **Confirmed by build audits** |
+| Restore the guest image and observe Android on iPhone | **Observed in device logs/screenshots** |
+| Install and resume a small APK on a Linux test host | **Observed, with UI limitations** |
+| Use an APK interactively on iPhone | **Not confirmed** |
+| Verify that a touch changes the test app's counter | **Not confirmed** |
+| Confirm usable guest audio | **Not confirmed** |
 
-| Check | Result |
-| :--- | :--- |
-| iOS arm64 IPA builds | Confirmed in GitHub Actions |
-| TCI selected; JIT source objects excluded | Confirmed by build and bundle audits |
-| Memory permissions | TCI buffer is RW; runtime audits found no W+X at sampled stages |
-| iPhone snapshot restoration | Confirmed from user-provided logs and screenshots |
-| Android boot property through the iPhone bridge | Confirmed after restoring the snapshot |
-| APK installation and Activity resume | Confirmed in some Linux host experiments |
-| Usable APK on an iPhone | **Not confirmed** |
-| Touch counter changing from 0 to 1 | **Not confirmed** |
-| Audio | **Not confirmed** |
+Bluetooth crash dialogs, System UI stalls and slow responses remain known blockers. A restored snapshot is not proof of a successful cold boot. Detailed test reports, timings and failures are preserved in [docs/nojit.md](docs/nojit.md).
 
-Bluetooth crash dialogs, System UI failures and slow guest responses still block acceptance. A fix moves Bluetooth shell commands off the iOS main actor to address the unresponsive import interface; it still needs build and physical validation.
+## Try a build
 
-“Android boot completed” after loading a snapshot proves restored guest readiness, not a successful cold boot. Low-performance guest settings and alternate backends remain separate experiments; failed trials are documented and are not silently included in the IPA.
+1. Open the [Rottweiler No-JIT workflow](https://github.com/hc6q/Rottweiler/actions/workflows/nojit.yml?query=branch%3Amain) and select a successful run from `main`.
+2. From **Artifacts**, obtain `Rottweiler` (the unsigned `Rottweiler.ipa`) and `NoJITSmoke-APK` (the offline test app). Artifacts are only present when the relevant jobs succeed and may expire.
+3. Sign the IPA and its embedded libraries using your usual iOS sideloading method. Developer Mode may be necessary, depending on the signing method.
+4. Open Rottweiler and complete the Android image setup.
+5. For the supplied snapshot, select the **CPU renderer**, keep **snapshot loading enabled**, and turn **Sound off**.
+6. Import `NoJITSmoke.apk`, attempt to install and launch it, then check whether **Count touch** changes its counter from 0 to 1.
 
-See [the validation record](docs/nojit.md) for exact commits, artifact hashes, test reports and limitations.
+This is a **test procedure**, not a promise the workflow will succeed on your device. Ordinary sideloading is the intended route; a JIT enabler or jailbreak is not a prerequisite for the No-JIT target. The Android guest can require substantial storage and memory.
 
-## Try Rottweiler
-
-1. Open the [No-JIT builds on `feat/nojit`](https://github.com/hc6q/Husk/actions/workflows/nojit.yml?query=branch%3Afeat%2Fnojit) and choose a **successful** run.
-2. Download the **Rottweiler** artifact and extract `Rottweiler.ipa`. Download and extract **NoJITSmoke-APK** for the small offline test app.
-3. Sign and install the unsigned IPA with your usual sideload method. Embedded dylibs must also be signed. Developer Mode may be required by your signing method.
-4. Open Rottweiler and download the Android image through the existing setup flow.
-5. For the shipped snapshot, select **CPU** renderer, enable snapshot and disable **Sound**.
-6. Import the extracted **`.apk`**, wait for installation, then launch **NoJITSmoke**.
-7. Check that the app is visible and that **Count touch** changes the counter from **0 to 1**.
-
-> [!NOTE]
-> The intended installation path is ordinary sideloading on iOS arm64, without TrollStore or jailbreak. The complete APK workflow still needs physical verification. TCI is substantially slower than JIT, and the snapshot's 4 GB guest memory can exceed a device's process memory budget.
-
-Sound changes VM hardware and snapshot compatibility. Validate it separately after the basic APK and touch test succeeds.
+For a reproducible report, follow the [testing guide](docs/TESTING.md).
 
 ## Build from source
 
-Use macOS arm64 with Xcode and Command Line Tools:
+Requires **macOS arm64**, Xcode and Xcode Command Line Tools.
 
 ```sh
 brew install meson ninja pkg-config xcodegen qemu autoconf automake libtool
@@ -101,22 +91,42 @@ pip install PyYAML
 HUSK_NO_JIT=1 ./scripts/ci_build.sh "$PWD/build/Rottweiler.ipa"
 ```
 
-The [workflow](.github/workflows/nojit.yml) runs target-isolation and bridge-framing checks, builds the IPA and audits the backend before publishing it. Separate build directories prevent an old JIT library from entering the No-JIT package.
+The No-JIT workflow performs target-isolation checks, a guest shell framing test, an iOS IPA build and a separate offline test APK build. An IPA created locally is **not automatically signed** for installation.
 
-[Build details and reproducible tests →](docs/nojit.md)
+## Documentation
+
+| Resource | Contents |
+| --- | --- |
+| [Validation log](docs/nojit.md) | Test evidence, limitations, failure modes and historical experiments |
+| [Architecture](docs/00-architecture.md) | Overview of the VM and guest components |
+| [Testing guide](docs/TESTING.md) | How to reproduce and report a physical-device test |
+| [Contributing](CONTRIBUTING.md) | Development workflow and contribution requirements |
+| [Licensing](docs/01-licensing.md) | GPL and third-party components |
+
+<details>
+<summary><strong>Repository layout</strong></summary>
+
+| Path | Purpose |
+| --- | --- |
+| `src/app/` | iOS application and Xcode project |
+| `src/ios-jit/` | Original Husk guest integration |
+| `src/translation-layer*/` | Existing experimental translation components |
+| `scripts/` | Source acquisition, build, packaging and verification |
+| `tests/nojit/` | No-JIT checks, fixtures and test evidence |
+| `patches/` | QEMU and dependency patches |
+| `docs/` | Architecture, licensing and engineering notes |
+| `.github/workflows/` | CI workflows and IPA artifacts |
+
+</details>
 
 ## Contributing
 
-Useful contributions include small offline APK test cases, reproducible crash reports, guest boot fixes and input/bridge improvements.
+Useful contributions include reproductions of guest boot problems, APK installation or input bugs, small offline test APKs, and improvements to build reproducibility. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and use a [bug report](https://github.com/hc6q/Rottweiler/issues/new?template=bug_report.yml) when something fails.
 
-For a report, include the IPA commit, iPhone model, iOS version, renderer, snapshot/sound settings, APK package and the step that failed. Attach a relevant log excerpt after removing device UUIDs, private paths and personal data. State whether the app was actually visible and whether its touch counter changed.
+The No-JIT target must remain genuinely interpreted: no dynamically executable JIT buffers, debugger dependency or hidden JIT pairing requirement. Do not publish personal device identifiers, signing credentials or proprietary APKs in issues.
 
-Keep the existing architecture and the original JIT target. No-JIT changes must preserve `HUSK_NO_JIT`, genuine TCI execution and the absence of dynamic native code, W+X mappings, BreakpointJIT and JIT pairing flows.
+## Credits & license
 
-## Credits and licence
+Rottweiler is maintained by [hc6q](https://github.com/hc6q), based on **[Husk by Leviidev and its contributors](https://github.com/Leviidev/Husk)**. The original architecture and upstream contributions remain credited to their respective authors. QEMU, UTM, Android, LineageOS, ANGLE and other dependencies retain their own licenses.
 
-Rottweiler is maintained as a fork by [hc6q](https://github.com/hc6q). **Husk and its architecture are the work of [Leviidev and upstream contributors](https://github.com/Leviidev/Husk).** QEMU, UTM, Android, LineageOS, ANGLE and other dependencies retain their respective authorship and licences.
-
-The original JIT target keeps its original requirements. Rottweiler does not claim authorship of upstream work.
-
-This derivative inherits **GPL-2.0-or-later** from Husk. See [licensing documentation](docs/01-licensing.md) and the bundled notices for component-specific terms. Source changes for this fork are available in [`feat/nojit`](https://github.com/hc6q/Husk/tree/feat/nojit).
+The project source is distributed under **GPL-2.0-or-later**; see [LICENSE](LICENSE) and [third-party licensing notes](docs/01-licensing.md). This fork does not claim authorship of the original Husk implementation.

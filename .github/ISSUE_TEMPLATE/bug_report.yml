@@ -1,0 +1,78 @@
+name: Bug report
+description: Report a reproducible build, boot, APK installation or touch problem.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Rottweiler is experimental. A working CI build does not imply APK compatibility on a physical iPhone.
+        **Do not attach credentials, device UUIDs, signing files, private APKs or unredacted logs.**
+  - type: input
+    id: build
+    attributes:
+      label: Rottweiler build
+      description: Commit SHA or GitHub Actions run URL.
+      placeholder: "e.g. main @ <commit> / actions run URL"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and iOS version
+      placeholder: "e.g. iPhone 13, iOS 26.x / macOS test host"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Problem area
+      options:
+        - Build or signing
+        - App launch or guest boot
+        - Snapshot or guest image
+        - APK import or installation
+        - Guest display or touch
+        - Audio or graphics
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: Configuration
+      description: Guest image/snapshot, renderer (CPU/GPU), sound, device memory and APK package if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps starting from a known state.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Say whether the APK was visible and whether touch changed the screen. Paste only redacted evidence.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed personal data and secrets from all attached logs/screenshots.
+          required: true
+        - label: I distinguished confirmed device behavior from CI or Linux-host evidence.
+          required: true
