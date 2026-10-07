@@ -107,6 +107,17 @@ MTTCG não é um backend JIT: o fork permite múltiplas threads com TCI para ARM
 Esse ensaio ainda não comprovou o contador de toque; o IPA mantém thread única.
 Os tempos não constituem comparação de desempenho no iPhone ou JIT/No-JIT.
 
+O [ensaio MTTCG com APK software](https://github.com/hc6q/Husk/actions/runs/37552404244)
+confirmou boot em 18,5 segundos, instalação em 93,3 segundos e Activity retomada
+em 142,3 segundos. A interface exibiu “Bluetooth keeps stopping” e o XML veio
+vazio. O teste recusou clicar nesse diálogo, pois só permitia System UI ANR.
+Resultado reprovado em 248,7 segundos; nenhum toque no fixture foi confirmado.
+[Dados originais](https://github.com/hc6q/Husk/actions/runs/37552404244/artifacts/11454250640)
+e [relatório versionado](../tests/nojit/evidence/arm64-tci-mttcg-software/report.json).
+A branch de teste separada passa a reconhecer esse diálogo específico, desativar
+Bluetooth somente no guest e verificar seu estado antes de fechar o diálogo.
+Isso não altera o Bluetooth do iPhone nem aprova o teste por si só.
+
 Três cold boots com relógio por instrução também não chegaram ao boot:
 
 | Ensaio | Configuração | Resultado |

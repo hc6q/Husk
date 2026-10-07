@@ -1,0 +1,47 @@
+[0.0s] [NoJIT] Starting Android under mmap/mprotect guard
+[16.6s] [NoJIT] Snapshot load job completed; checking Android readiness
+[18.5s] $ getprop sys.boot_completed
+1
+exit=0
+[18.5s] [NoJIT] Android boot completed
+[18.5s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+[18.5s] [NoJIT] Installing APK
+[19.4s] $ head -c 8553 > /data/local/tmp/NoJITSmoke.apk
+
+exit=0
+[20.2s] $ wc -c < /data/local/tmp/NoJITSmoke.apk
+8553
+exit=0
+[93.3s] $ pm install -r -t /data/local/tmp/NoJITSmoke.apk
+Success
+exit=0
+[101.2s] $ settings put global device_provisioned 1; settings put secure user_setup_complete 1
+
+exit=0
+[103.7s] $ input keyevent 82
+
+exit=0
+[103.7s] [NoJIT] Launching package
+[105.7s] $ cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.LAUNCHER org.husk.nojitsmoke.software
+priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=false
+org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity
+exit=0
+[115.5s] $ am start -n org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity
+Starting: Intent { cmp=org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity }
+exit=0
+[124.2s] $ dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+
+exit=0
+[142.3s] $ dumpsys activity activities | grep -E "mResumedActivity|topResumedActivity" || true
+topResumedActivity=ActivityRecord{220392448 u0 org.husk.nojitsmoke.software/org.husk.nojitsmoke.MainActivity t9}
+exit=0
+[142.3s] [NoJIT] host mappings audited: no W+X or anonymous executable region
+[144.4s] $ rm -f /data/local/tmp/window.xml
+
+exit=0
+[238.9s] $ uiautomator dump /data/local/tmp/window.xml
+ERROR: null root node returned by UiTestAutomationBridge.
+exit=0
+[244.2s] $ cat /data/local/tmp/window.xml 2>/dev/null || true
+
+exit=0

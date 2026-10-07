@@ -1,0 +1,289 @@
+ab1dd03d0000-ab1dd1543000 r-xp 00000000 08:01 6052429                    /home/runner/work/Husk/Husk/third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64
+ab1dd155c000-ab1dd21c0000 r--p 0117c000 08:01 6052429                    /home/runner/work/Husk/Husk/third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64
+ab1dd21c0000-ab1dd22f1000 rw-p 01de0000 08:01 6052429                    /home/runner/work/Husk/Husk/third_party/build/qemu-10.0.12-utm/_husk_host_nojit/qemu-system-aarch64
+ab1dd22f1000-ab1dd2324000 rw-p 00000000 00:00 0 
+ab1de754f000-ab1dea03f000 rw-p 00000000 00:00 0                          [heap]
+ff37d0000000-ff37d02ac000 rw-p 00000000 00:00 0 
+ff37d02ac000-ff37d4000000 ---p 00000000 00:00 0 
+ff37d4fb0000-ff37d4fb1000 ---p 00000000 00:00 0 
+ff37d4fb1000-ff37d50b1000 rw-p 00000000 00:00 0 
+ff37d50b1000-ff37d50b2000 ---p 00000000 00:00 0 
+ff37d50b2000-ff37d51b2000 rw-p 00000000 00:00 0 
+ff37d51b2000-ff37d51b3000 ---p 00000000 00:00 0 
+ff37d51b3000-ff37d52b3000 rw-p 00000000 00:00 0 
+ff37d52b3000-ff37d52b4000 ---p 00000000 00:00 0 
+ff37d52b4000-ff37d53b4000 rw-p 00000000 00:00 0 
+ff37d53b4000-ff37d53b5000 ---p 00000000 00:00 0 
+ff37d53b5000-ff37d54b5000 rw-p 00000000 00:00 0 
+ff37d54b5000-ff37d54b6000 ---p 00000000 00:00 0 
+ff37d54b6000-ff37d55b6000 rw-p 00000000 00:00 0 
+ff37d55b6000-ff37d55b7000 ---p 00000000 00:00 0 
+ff37d55b7000-ff37d56b7000 rw-p 00000000 00:00 0 
+ff37d56b7000-ff37d56b8000 ---p 00000000 00:00 0 
+ff37d56b8000-ff37d57b8000 rw-p 00000000 00:00 0 
+ff37d57b8000-ff37d57b9000 ---p 00000000 00:00 0 
+ff37d57b9000-ff37d58b9000 rw-p 00000000 00:00 0 
+ff37d58b9000-ff37d58ba000 ---p 00000000 00:00 0 
+ff37d58ba000-ff37d59ba000 rw-p 00000000 00:00 0 
+ff37d59ba000-ff37d59bb000 ---p 00000000 00:00 0 
+ff37d59bb000-ff37d5abb000 rw-p 00000000 00:00 0 
+ff37d5abb000-ff37d5abc000 ---p 00000000 00:00 0 
+ff37d5abc000-ff37d5bbc000 rw-p 00000000 00:00 0 
+ff37d5bbc000-ff37d5bbd000 ---p 00000000 00:00 0 
+ff37d5bbd000-ff37d5cbd000 rw-p 00000000 00:00 0 
+ff37d5cbd000-ff37d5cbe000 ---p 00000000 00:00 0 
+ff37d5cbe000-ff37d5dbe000 rw-p 00000000 00:00 0 
+ff37d5dbe000-ff37d5dbf000 ---p 00000000 00:00 0 
+ff37d5dbf000-ff37d5ebf000 rw-p 00000000 00:00 0 
+ff37d5ebf000-ff37d5ec0000 ---p 00000000 00:00 0 
+ff37d5ec0000-ff37d5fc0000 rw-p 00000000 00:00 0 
+ff37d5fc0000-ff37d5fc1000 ---p 00000000 00:00 0 
+ff37d5fc1000-ff37d60c1000 rw-p 00000000 00:00 0 
+ff37d60c1000-ff37d60c2000 ---p 00000000 00:00 0 
+ff37d60c2000-ff37d61c2000 rw-p 00000000 00:00 0 
+ff37d61c2000-ff37d61c3000 ---p 00000000 00:00 0 
+ff37d61c3000-ff37d62c3000 rw-p 00000000 00:00 0 
+ff37d62c3000-ff37d62c4000 ---p 00000000 00:00 0 
+ff37d62c4000-ff37d67c5000 rw-p 00000000 00:00 0 
+ff37d68c5000-ff37d68c6000 ---p 00000000 00:00 0 
+ff37d68c6000-ff37d69c6000 rw-p 00000000 00:00 0 
+ff37d69c6000-ff37d6ae0000 rw-s 00000000 00:01 69                         /memfd:virtio-gpu res (deleted)
+ff37d6ae0000-ff37d6b6c000 rw-s 00000000 00:01 68                         /memfd:virtio-gpu res (deleted)
+ff37d6b6c000-ff37d6ff0000 rw-s 00000000 00:01 64                         /memfd:virtio-gpu res (deleted)
+ff37d6ff0000-ff37d7000000 ---p 00000000 00:00 0 
+ff37d7000000-ff37d8000000 rw-p 00000000 00:00 0 
+ff37d8000000-ff37d8307000 rw-p 00000000 00:00 0 
+ff37d8307000-ff37dc000000 ---p 00000000 00:00 0 
+ff37dc000000-ff37dc31b000 rw-p 00000000 00:00 0 
+ff37dc31b000-ff37e0000000 ---p 00000000 00:00 0 
+ff37e0000000-ff37e0214000 rw-p 00000000 00:00 0 
+ff37e0214000-ff37e4000000 ---p 00000000 00:00 0 
+ff37e4078000-ff37e4104000 rw-s 00000000 00:01 67                         /memfd:virtio-gpu res (deleted)
+ff37e4104000-ff37e4190000 rw-s 00000000 00:01 66                         /memfd:virtio-gpu res (deleted)
+ff37e4190000-ff37e42c8000 rw-s 00000000 00:01 62                         /memfd:virtio-gpu res (deleted)
+ff37e42c8000-ff37e4400000 rw-s 00000000 00:01 58                         /memfd:virtio-gpu res (deleted)
+ff37e4400000-ff37e4600000 rw-p 00000000 00:00 0 
+ff37e4600000-ff37e4601000 ---p 00000000 00:00 0 
+ff37e4628000-ff37e4760000 rw-s 00000000 00:01 50                         /memfd:virtio-gpu res (deleted)
+ff37e4760000-ff37e4898000 rw-s 00000000 00:01 49                         /memfd:virtio-gpu res (deleted)
+ff37e4898000-ff37e49d0000 rw-s 00000000 00:01 48                         /memfd:virtio-gpu res (deleted)
+ff37e49d0000-ff37e49e0000 ---p 00000000 00:00 0 
+ff37e49e0000-ff37e59e0000 rw-p 00000000 00:00 0 
+ff37e59e0000-ff37e59f0000 ---p 00000000 00:00 0 
+ff37e59f0000-ff37e69f0000 rw-p 00000000 00:00 0 
+ff37e69f0000-ff37e6a00000 ---p 00000000 00:00 0 
+ff37e6a00000-ff37e7a00000 rw-p 00000000 00:00 0 
+ff37e7a00000-ff37eba00000 rw-p 00000000 00:00 0 
+ff37eba00000-ff37eba01000 ---p 00000000 00:00 0 
+ff37eba3c000-ff37ebac8000 rw-s 00000000 00:01 65                         /memfd:virtio-gpu res (deleted)
+ff37ebac8000-ff37ebc00000 rw-s 00000000 00:01 47                         /memfd:virtio-gpu res (deleted)
+ff37ebc00000-ff37efc00000 rw-p 00000000 00:00 0 
+ff37efc00000-ff37efc01000 ---p 00000000 00:00 0 
+ff37efc73000-ff37efcff000 rw-s 00000000 00:01 63                         /memfd:virtio-gpu res (deleted)
+ff37efcff000-ff37efd00000 ---p 00000000 00:00 0 
+ff37efd00000-ff37efe00000 rw-p 00000000 00:00 0 
+ff37efe00000-ff37efe04000 rw-p 00000000 00:00 0 
+ff37efe04000-ff37efe05000 ---p 00000000 00:00 0 
+ff37efe47000-ff37efed3000 rw-s 00000000 00:01 61                         /memfd:virtio-gpu res (deleted)
+ff37efefe000-ff37efeff000 ---p 00000000 00:00 0 
+ff37efeff000-ff37effff000 rw-p 00000000 00:00 0 
+ff37effff000-ff38effff000 rw-s 00000000 08:01 6052532                    /home/runner/work/Husk/Husk/guests/nojit-host/ram.bin
+ff38effff000-ff38f0000000 ---p 00000000 00:00 0 
+ff38f0000000-ff38f03ff000 rw-p 00000000 00:00 0 
+ff38f03ff000-ff38f0400000 ---p 00000000 00:00 0 
+ff38f0400000-ff38f07ff000 rw-p 00000000 00:00 0 
+ff38f07ff000-ff38f0800000 ---p 00000000 00:00 0 
+ff38f0800000-ff38f0bff000 rw-p 00000000 00:00 0 
+ff38f0bff000-ff38f0c00000 ---p 00000000 00:00 0 
+ff38f0c00000-ff38f0fff000 rw-p 00000000 00:00 0 
+ff38f0fff000-ff38f1000000 ---p 00000000 00:00 0 
+ff38f1000000-ff38f13ff000 rw-p 00000000 00:00 0 
+ff38f13ff000-ff38f1400000 ---p 00000000 00:00 0 
+ff38f1400000-ff38f17ff000 rw-p 00000000 00:00 0 
+ff38f17ff000-ff38f1800000 ---p 00000000 00:00 0 
+ff38f1800000-ff38f1bff000 rw-p 00000000 00:00 0 
+ff38f1bff000-ff38f1c00000 ---p 00000000 00:00 0 
+ff38f1c00000-ff38f1fff000 rw-p 00000000 00:00 0 
+ff38f1fff000-ff38f2000000 ---p 00000000 00:00 0 
+ff38f2000000-ff38f23ff000 rw-p 00000000 00:00 0 
+ff38f23ff000-ff38f2400000 ---p 00000000 00:00 0 
+ff38f2400000-ff38f27ff000 rw-p 00000000 00:00 0 
+ff38f27ff000-ff38f2800000 ---p 00000000 00:00 0 
+ff38f2800000-ff38f2bff000 rw-p 00000000 00:00 0 
+ff38f2bff000-ff38f2c00000 ---p 00000000 00:00 0 
+ff38f2c00000-ff38f2fff000 rw-p 00000000 00:00 0 
+ff38f2fff000-ff38f3000000 ---p 00000000 00:00 0 
+ff38f3000000-ff38f33ff000 rw-p 00000000 00:00 0 
+ff38f33ff000-ff38f3400000 ---p 00000000 00:00 0 
+ff38f3400000-ff38f37ff000 rw-p 00000000 00:00 0 
+ff38f37ff000-ff38f3800000 ---p 00000000 00:00 0 
+ff38f3800000-ff38f3bff000 rw-p 00000000 00:00 0 
+ff38f3bff000-ff38f3c00000 ---p 00000000 00:00 0 
+ff38f3c00000-ff38f3fff000 rw-p 00000000 00:00 0 
+ff38f3fff000-ff38f4000000 ---p 00000000 00:00 0 
+ff38f4000000-ff38f43ff000 rw-p 00000000 00:00 0 
+ff38f43ff000-ff38f4400000 ---p 00000000 00:00 0 
+ff38f4400000-ff38f47ff000 rw-p 00000000 00:00 0 
+ff38f47ff000-ff38f4800000 ---p 00000000 00:00 0 
+ff38f4800000-ff38f4bff000 rw-p 00000000 00:00 0 
+ff38f4bff000-ff38f4c00000 ---p 00000000 00:00 0 
+ff38f4c00000-ff38f4fff000 rw-p 00000000 00:00 0 
+ff38f4fff000-ff38f5000000 ---p 00000000 00:00 0 
+ff38f5000000-ff38f53ff000 rw-p 00000000 00:00 0 
+ff38f53ff000-ff38f5400000 ---p 00000000 00:00 0 
+ff38f5400000-ff38f57ff000 rw-p 00000000 00:00 0 
+ff38f57ff000-ff38f5800000 ---p 00000000 00:00 0 
+ff38f5800000-ff38f5bff000 rw-p 00000000 00:00 0 
+ff38f5bff000-ff38f5c00000 ---p 00000000 00:00 0 
+ff38f5c00000-ff38f5fff000 rw-p 00000000 00:00 0 
+ff38f5fff000-ff38f6000000 ---p 00000000 00:00 0 
+ff38f6000000-ff38f63ff000 rw-p 00000000 00:00 0 
+ff38f63ff000-ff38f6400000 ---p 00000000 00:00 0 
+ff38f6400000-ff38f67ff000 rw-p 00000000 00:00 0 
+ff38f67ff000-ff38f6800000 ---p 00000000 00:00 0 
+ff38f6800000-ff38f6bff000 rw-p 00000000 00:00 0 
+ff38f6bff000-ff38f6c00000 ---p 00000000 00:00 0 
+ff38f6c00000-ff38f6fff000 rw-p 00000000 00:00 0 
+ff38f6fff000-ff38f7000000 ---p 00000000 00:00 0 
+ff38f7000000-ff38f73ff000 rw-p 00000000 00:00 0 
+ff38f73ff000-ff38f7400000 ---p 00000000 00:00 0 
+ff38f7400000-ff38f77ff000 rw-p 00000000 00:00 0 
+ff38f77ff000-ff38f7800000 ---p 00000000 00:00 0 
+ff38f7800000-ff38f7bff000 rw-p 00000000 00:00 0 
+ff38f7bff000-ff38f7c00000 ---p 00000000 00:00 0 
+ff38f7c00000-ff38f7fff000 rw-p 00000000 00:00 0 
+ff38f7fff000-ff38f8000000 ---p 00000000 00:00 0 
+ff38f8000000-ff38f8021000 rw-p 00000000 00:00 0 
+ff38f8021000-ff38fc000000 ---p 00000000 00:00 0 
+ff38fc000000-ff38fc021000 rw-p 00000000 00:00 0 
+ff38fc021000-ff3900000000 ---p 00000000 00:00 0 
+ff3900000000-ff3900021000 rw-p 00000000 00:00 0 
+ff3900021000-ff3904000000 ---p 00000000 00:00 0 
+ff3904073000-ff39040ff000 rw-s 00000000 00:01 60                         /memfd:virtio-gpu res (deleted)
+ff39040ff000-ff3904100000 ---p 00000000 00:00 0 
+ff3904100000-ff3904200000 rw-p 00000000 00:00 0 
+ff3904200000-ff3904210000 rw-p 00000000 00:00 0 
+ff3904210000-ff3904211000 ---p 00000000 00:00 0 
+ff390427e000-ff390430a000 rw-s 00000000 00:01 59                         /memfd:virtio-gpu res (deleted)
+ff390430a000-ff39046d4000 rw-p 00000000 00:00 0 
+ff39046e7000-ff39046ff000 rw-s 00000000 00:01 56                         /memfd:virtio-gpu res (deleted)
+ff39046ff000-ff3904700000 ---p 00000000 00:00 0 
+ff3904700000-ff3904800000 rw-p 00000000 00:00 0 
+ff3904800000-ff3904840000 rw-p 00000000 00:00 0 
+ff3904840000-ff3904841000 ---p 00000000 00:00 0 
+ff3904855000-ff390486d000 rw-s 00000000 00:01 55                         /memfd:virtio-gpu res (deleted)
+ff390486d000-ff3904885000 rw-s 00000000 00:01 54                         /memfd:virtio-gpu res (deleted)
+ff3904885000-ff390489d000 rw-s 00000000 00:01 53                         /memfd:virtio-gpu res (deleted)
+ff390489d000-ff39048b5000 rw-s 00000000 00:01 45                         /memfd:virtio-gpu res (deleted)
+ff39048b5000-ff39048cd000 rw-s 00000000 00:01 44                         /memfd:virtio-gpu res (deleted)
+ff39048cd000-ff39048e5000 rw-s 00000000 00:01 43                         /memfd:virtio-gpu res (deleted)
+ff39048e5000-ff39048fd000 rw-s 00000000 00:01 42                         /memfd:virtio-gpu res (deleted)
+ff39048fd000-ff39049fe000 rw-p 00000000 00:00 0 
+ff39049fe000-ff3904aee000 rw-s 00000000 00:01 2101                       /memfd:displaysurface (deleted)
+ff3904aee000-ff3904afe000 ---p 00000000 00:00 0 
+ff3904afe000-ff3905afe000 rw-p 00000000 00:00 0 
+ff3905afe000-ff3905bc1000 rw-p 00000000 00:00 0 
+ff3905c42000-ff3905fce000 rw-p 00000000 00:00 0 
+ff3905fce000-ff3905fde000 ---p 00000000 00:00 0 
+ff3905fde000-ff3906fde000 rw-p 00000000 00:00 0 
+ff3906fde000-ff3906fdf000 ---p 00000000 00:00 0 
+ff3906fdf000-ff39070df000 rw-p 00000000 00:00 0 
+ff39070df000-ff39070e0000 ---p 00000000 00:00 0 
+ff39070e0000-ff39071e0000 rw-p 00000000 00:00 0 
+ff39071e0000-ff39071f0000 ---p 00000000 00:00 0 
+ff39071f0000-ff39081f0000 rw-p 00000000 00:00 0 
+ff39081f0000-ff3908226000 r-xp 00000000 08:01 4878                       /usr/lib/aarch64-linux-gnu/libblkid.so.1.1.0
+ff3908226000-ff390823b000 ---p 00036000 08:01 4878                       /usr/lib/aarch64-linux-gnu/libblkid.so.1.1.0
+ff390823b000-ff3908240000 r--p 0003b000 08:01 4878                       /usr/lib/aarch64-linux-gnu/libblkid.so.1.1.0
+ff3908240000-ff3908241000 rw-p 00040000 08:01 4878                       /usr/lib/aarch64-linux-gnu/libblkid.so.1.1.0
+ff3908250000-ff39082d8000 r-xp 00000000 08:01 5210                       /usr/lib/aarch64-linux-gnu/libpcre2-8.so.0.11.2
+ff39082d8000-ff39082ef000 ---p 00088000 08:01 5210                       /usr/lib/aarch64-linux-gnu/libpcre2-8.so.0.11.2
+ff39082ef000-ff39082f0000 r--p 0008f000 08:01 5210                       /usr/lib/aarch64-linux-gnu/libpcre2-8.so.0.11.2
+ff39082f0000-ff39082f1000 rw-p 00090000 08:01 5210                       /usr/lib/aarch64-linux-gnu/libpcre2-8.so.0.11.2
+ff3908300000-ff390832c000 r-xp 00000000 08:01 5212                       /usr/lib/aarch64-linux-gnu/libselinux.so.1
+ff390832c000-ff390833f000 ---p 0002c000 08:01 5212                       /usr/lib/aarch64-linux-gnu/libselinux.so.1
+ff390833f000-ff3908340000 r--p 0002f000 08:01 5212                       /usr/lib/aarch64-linux-gnu/libselinux.so.1
+ff3908340000-ff3908341000 rw-p 00030000 08:01 5212                       /usr/lib/aarch64-linux-gnu/libselinux.so.1
+ff3908341000-ff3908343000 rw-p 00000000 00:00 0 
+ff3908350000-ff390839e000 r-xp 00000000 08:01 5984                       /usr/lib/aarch64-linux-gnu/libmount.so.1.1.0
+ff390839e000-ff39083ae000 ---p 0004e000 08:01 5984                       /usr/lib/aarch64-linux-gnu/libmount.so.1.1.0
+ff39083ae000-ff39083b0000 r--p 0004e000 08:01 5984                       /usr/lib/aarch64-linux-gnu/libmount.so.1.1.0
+ff39083b0000-ff39083b1000 rw-p 00050000 08:01 5984                       /usr/lib/aarch64-linux-gnu/libmount.so.1.1.0
+ff39083c0000-ff39083c3000 r-xp 00000000 08:01 7821                       /usr/lib/aarch64-linux-gnu/libgmodule-2.0.so.0.8000.0
+ff39083c3000-ff39083df000 ---p 00003000 08:01 7821                       /usr/lib/aarch64-linux-gnu/libgmodule-2.0.so.0.8000.0
+ff39083df000-ff39083e0000 r--p 0000f000 08:01 7821                       /usr/lib/aarch64-linux-gnu/libgmodule-2.0.so.0.8000.0
+ff39083e0000-ff39083e1000 rw-p 00010000 08:01 7821                       /usr/lib/aarch64-linux-gnu/libgmodule-2.0.so.0.8000.0
+ff39083f0000-ff390858a000 r-xp 00000000 08:01 35654                      /usr/lib/aarch64-linux-gnu/libc.so.6
+ff390858a000-ff390859d000 ---p 0019a000 08:01 35654                      /usr/lib/aarch64-linux-gnu/libc.so.6
+ff390859d000-ff39085a0000 r--p 0019d000 08:01 35654                      /usr/lib/aarch64-linux-gnu/libc.so.6
+ff39085a0000-ff39085a2000 rw-p 001a0000 08:01 35654                      /usr/lib/aarch64-linux-gnu/libc.so.6
+ff39085a2000-ff39085ae000 rw-p 00000000 00:00 0 
+ff39085b0000-ff3908635000 r-xp 00000000 08:01 35694                      /usr/lib/aarch64-linux-gnu/libm.so.6
+ff3908635000-ff390864f000 ---p 00085000 08:01 35694                      /usr/lib/aarch64-linux-gnu/libm.so.6
+ff390864f000-ff3908650000 r--p 0008f000 08:01 35694                      /usr/lib/aarch64-linux-gnu/libm.so.6
+ff3908650000-ff3908651000 rw-p 00090000 08:01 35694                      /usr/lib/aarch64-linux-gnu/libm.so.6
+ff3908660000-ff390868f000 r-xp 00000000 08:01 6012                       /usr/lib/aarch64-linux-gnu/libtinfo.so.6.4
+ff390868f000-ff390869c000 ---p 0002f000 08:01 6012                       /usr/lib/aarch64-linux-gnu/libtinfo.so.6.4
+ff390869c000-ff39086a0000 r--p 0003c000 08:01 6012                       /usr/lib/aarch64-linux-gnu/libtinfo.so.6.4
+ff39086a0000-ff39086a1000 rw-p 00040000 08:01 6012                       /usr/lib/aarch64-linux-gnu/libtinfo.so.6.4
+ff39086b0000-ff39086e9000 r-xp 00000000 08:01 6069                       /usr/lib/aarch64-linux-gnu/libncursesw.so.6.4
+ff39086e9000-ff39086ff000 ---p 00039000 08:01 6069                       /usr/lib/aarch64-linux-gnu/libncursesw.so.6.4
+ff39086ff000-ff3908700000 r--p 0003f000 08:01 6069                       /usr/lib/aarch64-linux-gnu/libncursesw.so.6.4
+ff3908700000-ff3908701000 rw-p 00040000 08:01 6069                       /usr/lib/aarch64-linux-gnu/libncursesw.so.6.4
+ff3908710000-ff3908718000 r-xp 00000000 08:01 6082                       /usr/lib/aarch64-linux-gnu/libffi.so.8.1.4
+ff3908718000-ff390872f000 ---p 00008000 08:01 6082                       /usr/lib/aarch64-linux-gnu/libffi.so.8.1.4
+ff390872f000-ff3908730000 r--p 0000f000 08:01 6082                       /usr/lib/aarch64-linux-gnu/libffi.so.8.1.4
+ff3908730000-ff3908731000 rw-p 00010000 08:01 6082                       /usr/lib/aarch64-linux-gnu/libffi.so.8.1.4
+ff3908740000-ff390875d000 r-xp 00000000 08:01 88331                      /usr/lib/aarch64-linux-gnu/libslirp.so.0.4.0
+ff390875d000-ff390876f000 ---p 0001d000 08:01 88331                      /usr/lib/aarch64-linux-gnu/libslirp.so.0.4.0
+ff390876f000-ff3908770000 r--p 0001f000 08:01 88331                      /usr/lib/aarch64-linux-gnu/libslirp.so.0.4.0
+ff3908770000-ff3908772000 rw-p 00020000 08:01 88331                      /usr/lib/aarch64-linux-gnu/libslirp.so.0.4.0
+ff3908772000-ff3908773000 rw-p 00000000 00:00 0 
+ff3908780000-ff390881b000 r-xp 00000000 08:01 4882                       /usr/lib/aarch64-linux-gnu/libzstd.so.1.5.5
+ff390881b000-ff390882f000 ---p 0009b000 08:01 4882                       /usr/lib/aarch64-linux-gnu/libzstd.so.1.5.5
+ff390882f000-ff3908830000 r--p 0009f000 08:01 4882                       /usr/lib/aarch64-linux-gnu/libzstd.so.1.5.5
+ff3908830000-ff3908831000 rw-p 000a0000 08:01 4882                       /usr/lib/aarch64-linux-gnu/libzstd.so.1.5.5
+ff3908840000-ff3908997000 r-xp 00000000 08:01 7820                       /usr/lib/aarch64-linux-gnu/libglib-2.0.so.0.8000.0
+ff3908997000-ff39089af000 ---p 00157000 08:01 7820                       /usr/lib/aarch64-linux-gnu/libglib-2.0.so.0.8000.0
+ff39089af000-ff39089b0000 r--p 0015f000 08:01 7820                       /usr/lib/aarch64-linux-gnu/libglib-2.0.so.0.8000.0
+ff39089b0000-ff39089b1000 rw-p 00160000 08:01 7820                       /usr/lib/aarch64-linux-gnu/libglib-2.0.so.0.8000.0
+ff39089b1000-ff39089b2000 rw-p 00000000 00:00 0 
+ff39089c0000-ff3908a28000 r-xp 00000000 08:01 7822                       /usr/lib/aarch64-linux-gnu/libgobject-2.0.so.0.8000.0
+ff3908a28000-ff3908a3d000 ---p 00068000 08:01 7822                       /usr/lib/aarch64-linux-gnu/libgobject-2.0.so.0.8000.0
+ff3908a3d000-ff3908a40000 r--p 0006d000 08:01 7822                       /usr/lib/aarch64-linux-gnu/libgobject-2.0.so.0.8000.0
+ff3908a40000-ff3908a41000 rw-p 00070000 08:01 7822                       /usr/lib/aarch64-linux-gnu/libgobject-2.0.so.0.8000.0
+ff3908a41000-ff3908a42000 rw-p 00000000 00:00 0 
+ff3908a50000-ff3908c3e000 r-xp 00000000 08:01 7819                       /usr/lib/aarch64-linux-gnu/libgio-2.0.so.0.8000.0
+ff3908c3e000-ff3908c49000 ---p 001ee000 08:01 7819                       /usr/lib/aarch64-linux-gnu/libgio-2.0.so.0.8000.0
+ff3908c49000-ff3908c50000 r--p 001f9000 08:01 7819                       /usr/lib/aarch64-linux-gnu/libgio-2.0.so.0.8000.0
+ff3908c50000-ff3908c51000 rw-p 00200000 08:01 7819                       /usr/lib/aarch64-linux-gnu/libgio-2.0.so.0.8000.0
+ff3908c51000-ff3908c53000 rw-p 00000000 00:00 0 
+ff3908c60000-ff3908c69000 r-xp 00000000 08:01 7401                       /usr/lib/aarch64-linux-gnu/libfdt-1.7.0.so
+ff3908c69000-ff3908c7f000 ---p 00009000 08:01 7401                       /usr/lib/aarch64-linux-gnu/libfdt-1.7.0.so
+ff3908c7f000-ff3908c80000 r--p 0000f000 08:01 7401                       /usr/lib/aarch64-linux-gnu/libfdt-1.7.0.so
+ff3908c80000-ff3908c81000 rw-p 00010000 08:01 7401                       /usr/lib/aarch64-linux-gnu/libfdt-1.7.0.so
+ff3908c90000-ff3908d28000 r-xp 00000000 08:01 49610                      /usr/lib/aarch64-linux-gnu/libpixman-1.so.0.42.2
+ff3908d28000-ff3908d39000 ---p 00098000 08:01 49610                      /usr/lib/aarch64-linux-gnu/libpixman-1.so.0.42.2
+ff3908d39000-ff3908d40000 r--p 00099000 08:01 49610                      /usr/lib/aarch64-linux-gnu/libpixman-1.so.0.42.2
+ff3908d40000-ff3908d41000 rw-p 000a0000 08:01 49610                      /usr/lib/aarch64-linux-gnu/libpixman-1.so.0.42.2
+ff3908d50000-ff3908d6a000 r-xp 00000000 08:01 4879                       /usr/lib/aarch64-linux-gnu/libz.so.1.3
+ff3908d6a000-ff3908d7f000 ---p 0001a000 08:01 4879                       /usr/lib/aarch64-linux-gnu/libz.so.1.3
+ff3908d7f000-ff3908d80000 r--p 0001f000 08:01 4879                       /usr/lib/aarch64-linux-gnu/libz.so.1.3
+ff3908d80000-ff3908d81000 rw-p 00020000 08:01 4879                       /usr/lib/aarch64-linux-gnu/libz.so.1.3
+ff3908d8c000-ff3908d90000 rw-s 00000000 00:01 57                         /memfd:virtio-gpu res (deleted)
+ff3908d90000-ff3908d91000 r-xp 00000000 08:01 5847213                    /home/runner/work/Husk/Husk/build/nojit-mmap-guard.so
+ff3908d91000-ff3908daf000 ---p 00001000 08:01 5847213                    /home/runner/work/Husk/Husk/build/nojit-mmap-guard.so
+ff3908daf000-ff3908db0000 r--p 0000f000 08:01 5847213                    /home/runner/work/Husk/Husk/build/nojit-mmap-guard.so
+ff3908db0000-ff3908db1000 rw-p 00010000 08:01 5847213                    /home/runner/work/Husk/Husk/build/nojit-mmap-guard.so
+ff3908db3000-ff3908db7000 rw-s 00000000 00:01 52                         /memfd:virtio-gpu res (deleted)
+ff3908db7000-ff3908dbe000 rw-p 00000000 00:00 0 
+ff3908dbe000-ff3908de5000 r-xp 00000000 08:01 35651                      /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
+ff3908de6000-ff3908dea000 rw-p 00000000 00:00 0 
+ff3908dec000-ff3908df0000 rw-s 00000000 00:01 51                         /memfd:virtio-gpu res (deleted)
+ff3908df0000-ff3908df4000 rw-s 00000000 00:01 46                         /memfd:virtio-gpu res (deleted)
+ff3908df4000-ff3908df6000 rw-p 00000000 00:00 0 
+ff3908df6000-ff3908dfa000 r--p 00000000 00:00 0                          [vvar]
+ff3908dfa000-ff3908dfc000 r-xp 00000000 00:00 0                          [vdso]
+ff3908dfc000-ff3908dfe000 r--p 0002e000 08:01 35651                      /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
+ff3908dfe000-ff3908e00000 rw-p 00030000 08:01 35651                      /usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
+fffffc043000-fffffc06d000 rw-p 00000000 00:00 0                          [stack]
