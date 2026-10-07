@@ -285,7 +285,9 @@ O isolamento do pacote Bluetooth com framing correto também falhou no ensaio
 serviço de settings após instalar. [Evidências](../tests/nojit/evidence/bt-package-framed/README.md).
 A repetição `5347afe` respeita o prazo integral de 300 s depois de esgotar os
 três cliques de recuperação. Não há mais cliques nem flexibilização do
-contador. [Resultado em andamento](https://github.com/hc6q/Husk/actions/runs/37569832046).
+contador. [Resultado reprovado](https://github.com/hc6q/Husk/actions/runs/37569832046):
+single confirmou boot e instalação, mas não Activity retomada; multi perdeu
+o serviço de instalação. Nenhum confirmou touch ou áudio.
 
 Próxima alternativa, se o rádio não bastar: verificar a configuração de
 `ro.hw_timeout_multiplier` **antes do zygote**, sem mudar a imagem base por
@@ -311,8 +313,22 @@ reinicia a máquina após restaurar o snapshot, porque suas propriedades
 read-only já estavam em cache. Só aceita boot após confirmar
 `sys.boot_completed=1`, `ro.boot.low_perf=1` e
 `ro.hw_timeout_multiplier=50`. Framebuffer atual e contador USB 0→1
-continuam obrigatórios. Resultado pendente; opção ainda ausente do IPA.
-O pacote Bluetooth não é desativado nessa tentativa.
+continuam obrigatórios. O modo multi terminou reprovado em 899,0 s:
+o serial confirmou a opção de boot e seu early-init, mas o Android acionou
+`reboot,RescueParty` e encerrou `husk_agent`. `sys.boot_completed=1`, instalação,
+Activity e toque não foram confirmados. O teste single ainda estava em
+execução na verificação de 7 de outubro às 02:43 de Brasília.
+[Evidências e trecho do serial](../tests/nojit/evidence/low-perf-first/README.md).
+A opção continua ausente do IPA. O pacote Bluetooth não é desativado nessa tentativa.
+
+O commit experimental `d8ceb363` corrige a espera do teste: queda de transporte
+em consultas de boot somente de leitura reconecta dentro do prazo original,
+sem repetir instalação ou lançamento. Coleta o buffer de crashes antes de
+`sys.boot_completed`, para não perder a causa quando o Android reinicia.
+Quatro testes passaram (reconexão, prazo fixo, rejeição de propriedades antigas
+de snapshot e saída do QEMU).
+[Repetição com diagnóstico antecipado](https://github.com/hc6q/Husk/actions/runs/37577435425).
+Ela permanece pendente; reconexão não é uma correção do crash de System UI.
 
 Um [teste local anterior](../tests/nojit/evidence/local-tci-radio/README.md)
 confirmou boot, instalação e Activity retomada, mas continuou bloqueado
