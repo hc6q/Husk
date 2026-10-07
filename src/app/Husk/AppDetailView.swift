@@ -46,7 +46,7 @@ struct AppDetailView: View {
                 } label: {
                     HStack {
                         Spacer()
-                        Label(canOpen ? "Launch" : "Starting Android…",
+                        Label(canOpen ? "Launch" : "Waiting for Android",
                               systemImage: canOpen ? "play.fill" : "hourglass")
                             .font(.headline)
                         Spacer()
@@ -57,7 +57,7 @@ struct AppDetailView: View {
                 .disabled(!canOpen)
                 .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
             } footer: {
-                if !host.isReady { Text("It opens as soon as Android answers.") }
+                if !host.isReady { Text("Start Android in Library before launching this app.") }
             }
 
             Section {
