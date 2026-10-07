@@ -2,7 +2,7 @@
 
 Rottweiler is the user-facing name of this Husk No-JIT fork. Current builds publish `Rottweiler.ipa`; historical evidence below retains the original artifact names and hashes. The bundle identifier `com.husk.nojit` and storage keys remain unchanged for upgrades. Husk upstream credits and the original JIT target are preserved.
 
-# Husk No-JIT
+# Rottweiler No-JIT
 
 Esta variante conserva o Android em QEMU, a imagem LineageOS v12, os discos
 QCOW2, a ponte de comandos/APKs, o display, o USB HID e o áudio existentes.
@@ -260,10 +260,10 @@ nem aceita apenas Activity retomada:
 [execução 37568981358](https://github.com/hc6q/Husk/actions/runs/37568981358),
 commit `2316cd9659ef165cf5b283408d055adf13c442ea`.
 
-O artifact atual [Rottweiler.ipa](https://github.com/hc6q/Husk/actions/runs/37567843484/artifacts/11459967226)
-foi compilado no commit `496f926`, com nome Rottweiler e bundle
+O artifact atual [Rottweiler.ipa](https://github.com/hc6q/Husk/actions/runs/37569613800/artifacts/11459653974)
+foi compilado no commit `375b16e`, com nome Rottweiler e bundle
 `com.husk.nojit`. SHA-256 do IPA:
-`ecff1414b244c9870ce8ef22bf22804a60c49cb5d7cced28fb76365eb24a471d`.
+`6807d7326d9acf827d182494c8d9c8d7d474a8d21e034d34d97033ea67e52ca7`.
 O build e a auditoria passaram; ainda é uma versão experimental para repetir
 o teste físico, e não uma entrega aprovada pelo critério mínimo.
 
@@ -273,6 +273,19 @@ continua disponível nas configurações. Isso evita manter a instalação e seu
 save bloqueados por leitura de recursos. Rótulos, ícones existentes,
 metadados e último uso continuam preservados. O contador de espera passa a
 usar tempo real. [Build dessa correção](https://github.com/hc6q/Husk/actions/runs/37569220794).
+
+O commit `375b16e` só habilita lançamentos após terminar os settings iniciais,
+exige status zero e linha `Success` completa do instalador e só limpa arquivos
+na pasta de staging pertencente ao app. Seu [build iOS e auditoria](https://github.com/hc6q/Husk/actions/runs/37569613800)
+passaram, assim como os testes de framing e isolamento. Essas verificações não
+certificam Android utilizável no aparelho.
+
+O isolamento do pacote Bluetooth com framing correto também falhou no ensaio
+`2316cd9`: multi retomou a Activity mas continuou no diálogo; single perdeu o
+serviço de settings após instalar. [Evidências](../tests/nojit/evidence/bt-package-framed/README.md).
+A repetição `5347afe` respeita o prazo integral de 300 s depois de esgotar os
+três cliques de recuperação. Não há mais cliques nem flexibilização do
+contador. [Resultado em andamento](https://github.com/hc6q/Husk/actions/runs/37569832046).
 
 Próxima alternativa, se o rádio não bastar: verificar a configuração de
 `ro.hw_timeout_multiplier` **antes do zygote**, sem mudar a imagem base por
@@ -325,11 +338,11 @@ brew install meson ninja pkg-config xcodegen qemu autoconf automake libtool
 python3 -m venv build/ci-python
 . build/ci-python/bin/activate
 pip install PyYAML
-HUSK_NO_JIT=1 ./scripts/ci_build.sh "$PWD/build/Husk-NoJIT.ipa"
+HUSK_NO_JIT=1 ./scripts/ci_build.sh "$PWD/build/Rottweiler.ipa"
 ```
 
 `.github/workflows/nojit.yml` faz esse build em macOS e publica o artifact
-`Husk-NoJIT`, contendo **Husk-NoJIT.ipa**. O job independente publica
+`Rottweiler`, contendo **Rottweiler.ipa**. O job independente publica
 `NoJITSmoke-APK`. Os logs e os arquivos de configuração são guardados mesmo
 quando a compilação falha. O workflow não declara sucesso de boot físico.
 
@@ -349,13 +362,13 @@ não substituem RAM física e não comprovam sideload neste dispositivo.
 
 ## Instalação e APK
 
-1. Baixe e extraia o artifact `Husk-NoJIT` de uma execução bem-sucedida do
+1. Baixe e extraia o artifact `Rottweiler` de uma execução bem-sucedida do
    workflow. O IPA é **unsigned**: o instalador de sideload deve assinar também
    os dylibs embarcados com sua identidade/provisionamento normal.
 2. Instale em iPhone arm64 com iOS 16.4 ou superior usando seu método habitual
    de sideload. Ative Developer Mode se o método de assinatura o exigir.
    Não acrescente entitlements de JIT/dynamic-codesigning.
-3. Abra Husk No-JIT. A interface deve mostrar
+3. Abra Rottweiler. A interface deve mostrar
    `Execution mode: Interpreter (No JIT)` e o aviso de desempenho menor.
 4. Baixe a mesma imagem Android pelo fluxo existente. O download inicial exige
    internet e vários GB livres; o APK de teste funciona offline depois disso.
