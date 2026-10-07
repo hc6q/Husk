@@ -1,0 +1,33 @@
+{
+  "backend": "TCI",
+  "boot_completed": true,
+  "apk_installed": true,
+  "apk_resumed": true,
+  "usb_touch_confirmed": false,
+  "guest_audio_confirmed": false,
+  "ios_device_tested": false,
+  "package_id": "org.husk.nojitsmoke.software",
+  "apk_sha256": "081cb11d45647204fa34b28038db64bd802647def94f3e3b1453e633c5fd5034",
+  "cpu_threads": "multi",
+  "vcpus": 4,
+  "memory_mib": 4096,
+  "boot_seconds": 17.8,
+  "guest_bluetooth_package_disabled": true,
+  "last_framebuffer_error": "Platform dialog still covers the fixture",
+  "elapsed_seconds": 535.7,
+  "elapsed_seconds_with_diagnostics": 1117.9,
+  "diagnostic_errors": {
+    "last_framebuffer_error": "Platform dialog still covers the fixture",
+    "guest-watchdog-dropbox.txt_error": "timed out",
+    "guest-system-anr-dropbox.txt_error": "timed out",
+    "guest-last-anr.txt_error": "timed out",
+    "guest-logcat.txt_error": "timed out",
+    "guest-crash-after.txt_error": "guest bridge disconnected",
+    "guest-environment.txt_error": "guest bridge disconnected",
+    "guest-input.txt_error": "[Errno 32] Broken pipe",
+    "guest-activities.txt_error": "[Errno 32] Broken pipe",
+    "guest-windows.txt_error": "[Errno 32] Broken pipe",
+    "guest-surfaces.txt_error": "[Errno 32] Broken pipe",
+    "guest-bluetooth.txt_error": "[Errno 32] Broken pipe"
+  }
+}

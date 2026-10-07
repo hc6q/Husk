@@ -628,5 +628,11 @@ jetsam event is established by these logs.
 adds read-only DropBox system_server_watchdog / system_app_anr and activity
 lastanr collection under the existing shell UID. It preserves the original
 snapshot, exact standard TCI backend, memory guard and visible USB 0→1 acceptance.
-Its results are pending; collection permission/timeouts may limit stack evidence.
+It completed and failed UI/USB acceptance. DropBox returned DEAD_OBJECT after
+system_server died; logcat preserved the watchdog's PowerManager/main overdue
+checks, kill signal and annotated stacks in nativePollOnce. The parallel TCI
+control also failed UI/USB acceptance and lost its bridge. A kernel sample shows
+CachedAppOptimizer waiting for RCU while reading file locks; this is a candidate
+for isolation, not a proven deadlock or accepted fix. [Completed reports and
+limits](../tests/nojit/evidence/activitymanager-cpu-pressure/README.md).
 No new runtime tuning or IPA release is justified solely by this diagnostic.

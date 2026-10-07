@@ -46,5 +46,64 @@ Follow-up:
   counter acceptance remain the same. This is not the UTM threaded interpreter
   backend and does not introduce a JIT.
 
-Both follow-up results are pending. No physical APK/touch/audio acceptance or
-new IPA release is claimed. Personal device logs are deliberately excluded.
+Both follow-ups are now completed and failed acceptance; detailed findings follow.
+Personal device logs are deliberately excluded.
+
+
+## Completed watchdog / throughput controls
+
+Both follow-ups failed the unchanged visible APK and USB counter requirement.
+The serial run restored boot in 36.0 seconds, installed/resumed the fixture, but
+retained SystemUI ANR. Before framework death its logcat recorded CPU saturation
+(99%, then 97%), CPU PSI some avg10 88.26% and zero memory pressure averages.
+A later sample was dominated by system_server (260% of one guest CPU, 176%
+kernel), so composition is not the sole observed CPU consumer.
+
+The logcat preserved the decisive end of this failure: Watchdog reports
+PowerManagerService monitor overdue 65 seconds and main handler overdue
+64 seconds, then explicitly kills system_server with SIGKILL. The annotated
+monitor/main stacks captured at kill time are in MessageQueue.nativePollOnce.
+They do not expose a permanent Java monitor owner; the overdue condition may
+have cleared during slow stack collection. DropBox dumping returned DEAD_OBJECT
+and activity disappeared, so the full historical Java trace was not recovered.
+
+InputDispatcher records DOWN delivery timing out and cancels events for the
+unresponsive SystemUI ANR window. This explains why an Android touch marker can
+appear while the button action does not complete in this host reproduction.
+It does not certify the offline APK's counter or every physical iPhone tap.
+
+The parallel run restored boot in 17.8 seconds and installed/resumed the same
+fixture source. QMP confirms four distinct CPU thread IDs. It still retained a
+Bluetooth dialog, exhausted three captured USB close attempts, then lost the
+bridge during diagnostic collection. The disabled-package state is confirmed;
+the retained dialog is not evidence that a new Bluetooth process restarted.
+No visible fixture counter 0 to 1 or audio was observed. Parallel TCI alone is
+not an accepted correction and remains outside the IPA.
+
+APK archive hashes differ between builds; classes.dex and AndroidManifest.xml
+hashes are identical in both artifacts:
+- classes.dex: b9d63a5e095f349421fb81078602bd47f481ef3f98dd5a445ca6e532e92736c3
+- AndroidManifest.xml: 57c6426482b7178572f1747df931bcac37d85aa71a9e9a335a840506a58be9d0
+
+The parallel sysrq blocked-state sample shows CachedAppOptimizer in state D
+waiting in synchronize_rcu / locks_start / seq_read_iter, plus a launcher
+queued-work thread in state D. This points to a concrete next isolation target:
+the Android cached-app freezer and its file-lock checks. One sample does not
+prove a persistent RCU deadlock or that disabling this feature fixes the VM.
+[AOSP Android 16 CachedAppOptimizer source](https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android16-release/services/core/java/com/android/server/am/CachedAppOptimizer.java)
+provides an existing disabled setting for the freezer. It has not been changed
+in the IPA or tested in these runs.
+
+Exact QEMU's [EDID generator](https://github.com/utmapp/qemu/blob/v10.0.12-utm/hw/display/edid-generate.c)
+defaults to 75000 mHz when no refresh preference is supplied; logcat frame
+intervals correspond to 75 Hz. Lowering compositor demand is another candidate,
+but a requested mode must actually be accepted after snapshot restoration.
+No display-frequency patch or claimed FPS improvement is included.
+
+Verified follow-up artifact SHA-256:
+- Serial 11510406720: 4ed8fb876a15aa0155ee464e47f929acfef1a728d884bf6c8348a4f77e7bf911.
+- Parallel 11510286583: 3d5f6db9bd7c593b5754a130b0e1618e675d5627c7bf57e6d597f4d957a875b6.
+
+Selected reports are stored beside this file. All evidence here is from
+disposable hosts; no personal device logs are included. Released IPA remains
+0.8.2 build 25. No new runtime fix, physical acceptance, or release is claimed.

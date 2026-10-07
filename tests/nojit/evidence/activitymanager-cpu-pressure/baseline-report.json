@@ -1,0 +1,26 @@
+{
+  "backend": "TCI",
+  "boot_completed": true,
+  "apk_installed": true,
+  "apk_resumed": true,
+  "usb_touch_confirmed": false,
+  "guest_audio_confirmed": false,
+  "ios_device_tested": false,
+  "package_id": "org.husk.nojitsmoke.software",
+  "apk_sha256": "fa5e7422b6f3b9b359af419750044c095c8c2a536fc88c6bd8060e53d732ee56",
+  "cpu_threads": "single",
+  "vcpus": 4,
+  "memory_mib": 4096,
+  "boot_seconds": 36.0,
+  "guest_bluetooth_package_disabled": true,
+  "last_framebuffer_error": "Platform dialog still covers the fixture",
+  "elapsed_seconds": 966.8,
+  "elapsed_seconds_with_diagnostics": 1622.3,
+  "diagnostic_errors": {
+    "last_framebuffer_error": "Platform dialog still covers the fixture",
+    "guest-activities.txt_error": "timed out",
+    "guest-windows.txt_error": "timed out",
+    "guest-surfaces.txt_error": "timed out",
+    "guest-bluetooth.txt_error": "timed out"
+  }
+}
