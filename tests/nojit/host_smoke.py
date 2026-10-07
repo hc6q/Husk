@@ -30,6 +30,8 @@ p.add_argument('--apk', type=Path, required=True)
 p.add_argument('--package', default='org.husk.nojitsmoke')
 p.add_argument('--ui-timeout', type=int, default=300)
 p.add_argument('--framebuffer-ui', action='store_true', help='Verify actual frames and counter via OCR instead of UIAutomator')
+p.add_argument('--quiet-guest-radio', action='store_true', help='Apply the app radio settings before APK installation')
+p.add_argument('--collect-guest-diagnostics', action='store_true')
 p.add_argument('--disable-guest-bluetooth-package', action='store_true',
                help='Experimental: disable only the Android Bluetooth package in this disposable guest')
 p.add_argument('--platform-dialog-recovery-attempts', type=int, choices=range(4), default=0,
@@ -157,8 +159,9 @@ def exchange(command, timeout=300, payload=None):
     global sequence
     sequence += 1
     token = f'__HUSK_EOF__{sequence}:'
+    begin = f'__HUSK_BEGIN__{sequence}:'
     bridge.settimeout(timeout)
-    bridge.sendall(f'{command} 2>&1; echo {token}$?\n'.encode())
+    bridge.sendall(f'echo {begin}; {command} 2>&1; echo {token}$?\n'.encode())
     if payload is not None:
         bridge.sendall(payload)
     output = b''
@@ -168,8 +171,9 @@ def exchange(command, timeout=300, payload=None):
         if not chunk:
             raise RuntimeError('guest bridge disconnected')
         output += chunk
-        if token.encode() in output:
+        if (begin+'\n').encode() in output and token.encode() in output:
             body, status = output.rsplit(token.encode(), 1)
+            body = body.split((begin+'\n').encode(),1)[1]
             if b'\n' in status:
                 code = int(status.splitlines()[0].strip())
                 log(f'$ {command}\n{body.decode(errors="replace").strip()}\nexit={code}')
@@ -254,6 +258,20 @@ try:
         time.sleep(5)
     else:
         raise TimeoutError('Android did not complete boot')
+    if a.collect_guest_diagnostics:
+        # Detached bounded guest log, retained even when UIAutomator fails.
+        exchange("logcat -b all -v threadtime -f /data/local/tmp/rottweiler-diagnostic.log -r 2048 -n 1 >/dev/null 2>&1 </dev/null &",timeout=120)
+        try:
+            crash = exchange('logcat -b crash -d -t 200',timeout=120)
+            (a.output/'guest-crash-before.txt').write_text(crash)
+        except (OSError, TimeoutError, RuntimeError) as error:
+            report['crash_collection_before_error'] = str(error)
+    if a.quiet_guest_radio:
+        log('[NoJIT] Disable absent guest radio before installation')
+        exchange('settings put global bluetooth_on 0; settings put global ble_scan_always_enabled 0',timeout=180)
+        exchange('svc bluetooth disable',timeout=180)
+        assert exchange('settings get global bluetooth_on',timeout=120).strip() == '0'
+        report['guest_radio_disabled_before_install'] = True
     if a.disable_guest_bluetooth_package:
         log('[NoJIT] Experimental guest Bluetooth package disable (no virtual Bluetooth device)')
         exchange('svc bluetooth disable')
@@ -392,6 +410,17 @@ try:
     log('[NoJIT] Boot/install/resumed/USB touch checks passed; iPhone/Metal still require device validation')
 finally:
     report['elapsed_seconds'] = round(time.monotonic()-started,1)
+    if bridge and a.collect_guest_diagnostics:
+        for name, command in (
+                ('guest-logcat.txt', 'tail -c 2097152 /data/local/tmp/rottweiler-diagnostic.log'),
+                ('guest-crash-after.txt', 'logcat -b crash -d -t 300'),
+                ('guest-input.txt', 'dumpsys input'),
+                ('guest-bluetooth.txt', 'dumpsys bluetooth_manager')):
+            try:
+                (a.output/name).write_text(exchange(command,timeout=120))
+            except (OSError, TimeoutError, RuntimeError) as error:
+                report[name+'_error'] = str(error)
+    report['elapsed_seconds_with_diagnostics'] = round(time.monotonic()-started,1)
     if bridge:
         bridge.close()
     if proc.poll() is None:
