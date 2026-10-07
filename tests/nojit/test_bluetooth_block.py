@@ -21,6 +21,7 @@ elif tool=='am':
     s['stop_calls']+=1
     if not s.get('refuse_stop'): s['running']=False
 elif tool=='pidof':
+    if s.get('pidof_error'): sys.exit(3)
     if s['running']: print('1234')
     else: p.write_text(json.dumps(s)); sys.exit(1)
 p.write_text(json.dumps(s))
@@ -48,4 +49,7 @@ class BluetoothBlock(unittest.TestCase):
     def test_running_process_not_accepted(self):
         r,s=self.run_case(refuse_stop=True);self.assertEqual(r.returncode,4)
         self.assertTrue(s['running']);self.assertNotIn('Bluetooth startup blocked',r.stdout)
+    def test_process_query_error_not_accepted(self):
+        r,s=self.run_case(pidof_error=True);self.assertEqual(r.returncode,3)
+        self.assertNotIn('Bluetooth startup blocked',r.stdout)
 if __name__=='__main__': unittest.main()
