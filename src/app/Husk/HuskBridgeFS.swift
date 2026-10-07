@@ -990,6 +990,7 @@ final class AndroidHost: ObservableObject {
         restorePendingImports()
         #endif
         Task.detached { [weak self] in
+            let waitingSince = Date()
             var attempt = 0
             while true {
                 attempt += 1
@@ -1028,7 +1029,7 @@ final class AndroidHost: ObservableObject {
                             self?.installNextPending()
                             return queued
                         }
-                        if !queued { await self?.refreshPackages() }
+                        if !queued { await self?.refreshPackages(includeDetails: false) }
                         GuestBridge.shared.startHealthWatch()
                         #else
                         await self?.refreshPackages()
@@ -1039,9 +1040,10 @@ final class AndroidHost: ObservableObject {
                     await MainActor.run { self?.status = "Android is booting…" }
                 } catch {
                     GuestBridge.shared.disconnect()
+                    let elapsed = Int(Date().timeIntervalSince(waitingSince))
                     await MainActor.run {
                         self?.status = attempt < 4 ? "Starting Android…"
-                                                   : "Waiting for Android (\(attempt * 3)s)…"
+                                                   : "Waiting for Android (\(elapsed)s)…"
                     }
                 }
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
@@ -1050,9 +1052,14 @@ final class AndroidHost: ObservableObject {
     }
 
     /// Installed third-party packages -- the things a person actually put there.
-    nonisolated func refreshPackages() async {
+    nonisolated func refreshPackages(includeDetails: Bool = true) async {
         do {
-            let raw = try GuestBridge.shared.shell("pm list packages -3", timeout: 60)
+            let reply = try GuestBridge.shared.run("pm list packages -3",
+                timeout: ExecutionMode.noJIT ? 180 : 60)
+            guard reply.status == 0 else {
+                throw BridgeError.io("Android could not list packages: \(reply.out)")
+            }
+            let raw = reply.out
             let names = raw.split(separator: "\n")
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { $0.hasPrefix("package:") }
@@ -1060,7 +1067,7 @@ final class AndroidHost: ObservableObject {
                 .filter { !$0.isEmpty }
             // Android's own labels and icons, in one round trip for every app
             // at once, before anything is put on screen.
-            let known = names.isEmpty ? [:] : await self.launcherCatalogue()
+            let known = !includeDetails || names.isEmpty ? [:] : await self.launcherCatalogue()
             var labels: [String: String] = [:]
             for (package, entry) in known {
                 if let label = entry.label { labels[package] = label }
@@ -1078,27 +1085,30 @@ final class AndroidHost: ObservableObject {
                 }
                 self.guestListedPackages = true
                 let known = Dictionary(uniqueKeysWithValues:
-                    self.packages.map { ($0.name, $0.label) })
+                    self.packages.map { ($0.name, $0) })
                 self.packages = names.map { name in
                     let cached = Self.iconDirectory.appendingPathComponent("\(name).png")
                     // Whatever has already been resolved stays: a refresh is
                     // for finding new apps, not for undoing what was learned
                     // about the ones already here.
                     let resolved = known[name].flatMap {
-                        $0 == Self.pretty(name) ? nil : $0
+                        $0.label == Self.pretty(name) ? nil : $0.label
                     }
-                    return Package(name: name,
-                                   label: labels[name] ?? resolved ?? Self.pretty(name),
-                                   iconPath: FileManager.default.fileExists(atPath: cached.path)
-                                             ? cached.path : nil)
+                    var entry = known[name] ?? Package(name: name, label: Self.pretty(name))
+                    entry.label = labels[name] ?? resolved ?? Self.pretty(name)
+                    entry.iconPath = FileManager.default.fileExists(atPath: cached.path)
+                        ? cached.path : nil
+                    return entry
                 }
                     .sorted { $0.label.localizedCaseInsensitiveCompare($1.label)
                               == .orderedAscending }
                 self.saveCatalogue(self.packages)
             }
             HuskLog.log("bridge", "\(names.count) user package(s) installed")
-            await refreshMetadata(for: names)
-            for name in names { await fetchAppInfo(for: name) }
+            if includeDetails {
+                await refreshMetadata(for: names)
+                for name in names { await fetchAppInfo(for: name) }
+            }
         } catch {
             HuskLog.log("bridge", "could not list packages: \(error.localizedDescription)")
         }
@@ -1792,7 +1802,10 @@ final class AndroidHost: ObservableObject {
                               + "(select every .apk together) or the build has no "
                               + "arm64-v8a library and this guest is 64-bit only")
                 }
-                await self?.refreshPackages()
+                // Under interpretation, optional icon/resource reads must not
+                // hold installation and its snapshot save open for minutes.
+                // Settings' explicit refresh still requests full details.
+                await self?.refreshPackages(includeDetails: !ExecutionMode.noJIT)
 
                 // Persist it, or it is gone on the next launch.
                 //
