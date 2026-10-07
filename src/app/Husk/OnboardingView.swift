@@ -31,7 +31,7 @@ struct OnboardingView: View {
     let onDone: () -> Void
 
     @State private var page = 0
-    @State private var autoStart = true
+    @State private var autoStart = !ExecutionMode.noJIT
     @State private var landscape = UserDefaults.standard.bool(forKey: "husk.landscapeGuest")
     @State private var sound = UserDefaults.standard.bool(forKey: "husk.sound")
     @State private var autoSave =
@@ -53,7 +53,7 @@ struct OnboardingView: View {
                     welcome.tag(0)
                     choices.tag(1)
                     #if HUSK_NO_JIT
-                    InterpreterNotice().padding(34).tag(2)
+                    interpreterPage.tag(2)
                     #else
                     jitPage.tag(2)
                     #endif
@@ -84,7 +84,7 @@ struct OnboardingView: View {
                             onDone()
                         }
                     } label: {
-                        Text(page < pages - 1 ? "Continue" : "Start using Husk")
+                        Text(page < pages - 1 ? "Continue" : "Start using \(ExecutionMode.appName)")
                     }
                     .buttonStyle(PrimaryButtonStyle())
                     .padding(.horizontal, 28)
@@ -132,13 +132,13 @@ struct OnboardingView: View {
     private var choices: some View {
         ScrollView {
             VStack(spacing: 14) {
-                Text("How should Husk behave?")
+                Text("How should \(ExecutionMode.appName) behave?")
                     .font(.title2.weight(.semibold))
                     .padding(.top, 34).padding(.bottom, 6)
 
                 choice(icon: "bolt.fill", title: "Start Android on launch",
                        detail: ExecutionMode.noJIT
-                            ? "Boots Android when Husk opens. Startup is slower with interpretation."
+                            ? "Starts Android when Rottweiler opens. Interpretation is slower, so leaving this off is recommended."
                             : "Boots the guest as soon as Husk opens, once JIT is available. Off means you start it yourself.",
                        isOn: $autoStart)
 
@@ -180,6 +180,30 @@ struct OnboardingView: View {
         }
         .padding(16)
         .huskCard()
+    }
+
+    /// No-JIT users should see the limitations before starting a guest.
+    private var interpreterPage: some View {
+        VStack(spacing: 18) {
+            Spacer()
+            Image(systemName: "cpu")
+                .font(.system(size: 52, weight: .light))
+                .foregroundStyle(Theme.accent)
+                .frame(width: 96, height: 96)
+                .background(Theme.accentSoft, in: RoundedRectangle(cornerRadius: 24))
+            Text("No JIT required")
+                .font(.largeTitle.weight(.semibold))
+            Text("Rottweiler interprets Android instructions without a debugger, pairing, or JIT. This is experimental: startup can be slow and some APKs may not work yet.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 30)
+            Label("Start with small, offline APKs", systemImage: "checkmark.shield")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Theme.accent)
+            Spacer()
+        }
+        .padding(.horizontal, 16)
     }
 
 #if !HUSK_NO_JIT
