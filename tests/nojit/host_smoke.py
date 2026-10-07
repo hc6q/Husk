@@ -7,6 +7,7 @@ The mmap guard must be loaded into QEMU throughout this test.
 """
 import argparse
 from anr_recovery import wait_button
+import framebuffer_ui
 import hashlib
 import json
 import os
@@ -28,6 +29,7 @@ p.add_argument('--guest', type=Path, required=True)
 p.add_argument('--apk', type=Path, required=True)
 p.add_argument('--package', default='org.husk.nojitsmoke')
 p.add_argument('--ui-timeout', type=int, default=300)
+p.add_argument('--framebuffer-ui', action='store_true', help='Verify actual frames and counter via OCR instead of UIAutomator')
 p.add_argument('--platform-dialog-recovery-attempts', type=int, choices=range(4), default=0,
                help='Experimental bounded USB clicks on captured System UI/Bluetooth dialogs')
 p.add_argument('--guard', type=Path, required=True)
@@ -292,88 +294,91 @@ try:
         time.sleep(5)
     assert report['apk_resumed'], 'APK was installed but did not resume'
     audit_maps('apk')
-    report['anr_recovery'] = []
-    for attempt in range(a.platform_dialog_recovery_attempts+1):
-        # Remove any old dump so a failed UI dump cannot accept stale content.
-        exchange('rm -f /data/local/tmp/window.xml')
-        dump = exchange('uiautomator dump /data/local/tmp/window.xml',timeout=a.ui_timeout)
-        xml = exchange('cat /data/local/tmp/window.xml 2>/dev/null || true')
-        (a.output/f'ui-attempt-{attempt}.txt').write_text(dump+'\n'+xml)
-        try:
-            nodes = ET.fromstring(xml).iter('node')
-            ready = any(n.get('text','').casefold() == 'count touch' and
-                        n.get('package') == a.package for n in nodes)
-        except ET.ParseError:
-            ready = False
-        if ready:
-            report['ui_xml'] = xml
-            break
-        if attempt == a.platform_dialog_recovery_attempts:
-            raise RuntimeError('No current fixture UI; APK resumed is insufficient')
-        with socket.create_connection(('127.0.0.1',15598),timeout=180) as control, control.makefile('rwb',buffering=0) as stream:
-            stream.readline()
-            def recover(name, arguments=None):
-                stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
+    if a.framebuffer_ui:
+        framebuffer_ui.verify(a, report, exchange, log)
+    else:
+        report['anr_recovery'] = []
+        for attempt in range(a.platform_dialog_recovery_attempts+1):
+            # Remove any old dump so a failed UI dump cannot accept stale content.
+            exchange('rm -f /data/local/tmp/window.xml')
+            dump = exchange('uiautomator dump /data/local/tmp/window.xml',timeout=a.ui_timeout)
+            xml = exchange('cat /data/local/tmp/window.xml 2>/dev/null || true')
+            (a.output/f'ui-attempt-{attempt}.txt').write_text(dump+'\n'+xml)
+            try:
+                nodes = ET.fromstring(xml).iter('node')
+                ready = any(n.get('text','').casefold() == 'count touch' and
+                            n.get('package') == a.package for n in nodes)
+            except ET.ParseError:
+                ready = False
+            if ready:
+                report['ui_xml'] = xml
+                break
+            if attempt == a.platform_dialog_recovery_attempts:
+                raise RuntimeError('No current fixture UI; APK resumed is insufficient')
+            with socket.create_connection(('127.0.0.1',15598),timeout=180) as control, control.makefile('rwb',buffering=0) as stream:
+                stream.readline()
+                def recover(name, arguments=None):
+                    stream.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
+                    while True:
+                        response = json.loads(stream.readline())
+                        if 'error' in response:
+                            raise RuntimeError(response)
+                        if 'return' in response:
+                            return response['return']
+                recover('qmp_capabilities')
+                screen = a.output.resolve()/f'anr-before-{attempt}.ppm'
+                recover('screendump', {'filename':str(screen)})
+                ocr = subprocess.check_output(['tesseract',str(screen),'stdout','tsv'],text=True)
+                (a.output/f'anr-before-{attempt}.tsv').write_text(ocr)
+                action, x, y = wait_button(ocr)  # Fail closed for an unrelated dialog.
+                if action == 'Close Bluetooth':
+                    exchange('svc bluetooth disable')
+                    bluetooth_state = exchange('settings get global bluetooth_on').strip()
+                    assert bluetooth_state == '0', 'Guest Bluetooth disable was not confirmed'
+                    report['guest_bluetooth_disabled'] = True
+                report['anr_recovery'].append({'attempt':attempt+1,'action':action,
+                                              'x':x,'y':y,'screen':screen.name})
+                log(f'[NoJIT] Captured platform dialog; {action} recovery {attempt+1}')
+                recover('input-send-event', {'events': [
+                    {'type':'abs','data':{'axis':'x','value':int(x*32767/360)}},
+                    {'type':'abs','data':{'axis':'y','value':int(y*32767/800)}},
+                    {'type':'btn','data':{'button':'left','down':True}}]})
+                time.sleep(0.2)
+                recover('input-send-event', {'events':[
+                    {'type':'btn','data':{'button':'left','down':False}}]})
+                time.sleep(15)
+                recover('screendump', {'filename':str(a.output.resolve()/f'anr-after-{attempt}.ppm')})
+        with socket.create_connection(('127.0.0.1',15598),timeout=180) as qmp, qmp.makefile('rwb',buffering=0) as f:
+            f.readline()
+            def request(name, arguments=None):
+                f.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
                 while True:
-                    response = json.loads(stream.readline())
+                    response = json.loads(f.readline())
                     if 'error' in response:
                         raise RuntimeError(response)
                     if 'return' in response:
                         return response['return']
-            recover('qmp_capabilities')
-            screen = a.output.resolve()/f'anr-before-{attempt}.ppm'
-            recover('screendump', {'filename':str(screen)})
-            ocr = subprocess.check_output(['tesseract',str(screen),'stdout','tsv'],text=True)
-            (a.output/f'anr-before-{attempt}.tsv').write_text(ocr)
-            action, x, y = wait_button(ocr)  # Fail closed for an unrelated dialog.
-            if action == 'Close Bluetooth':
-                exchange('svc bluetooth disable')
-                bluetooth_state = exchange('settings get global bluetooth_on').strip()
-                assert bluetooth_state == '0', 'Guest Bluetooth disable was not confirmed'
-                report['guest_bluetooth_disabled'] = True
-            report['anr_recovery'].append({'attempt':attempt+1,'action':action,
-                                          'x':x,'y':y,'screen':screen.name})
-            log(f'[NoJIT] Captured platform dialog; {action} recovery {attempt+1}')
-            recover('input-send-event', {'events': [
-                {'type':'abs','data':{'axis':'x','value':int(x*32767/360)}},
-                {'type':'abs','data':{'axis':'y','value':int(y*32767/800)}},
-                {'type':'btn','data':{'button':'left','down':True}}]})
-            time.sleep(0.2)
-            recover('input-send-event', {'events':[
-                {'type':'btn','data':{'button':'left','down':False}}]})
-            time.sleep(15)
-            recover('screendump', {'filename':str(a.output.resolve()/f'anr-after-{attempt}.ppm')})
-    with socket.create_connection(('127.0.0.1',15598),timeout=180) as qmp, qmp.makefile('rwb',buffering=0) as f:
-        f.readline()
-        def request(name, arguments=None):
-            f.write((json.dumps({'execute':name, **({'arguments':arguments} if arguments else {})})+'\n').encode())
-            while True:
-                response = json.loads(f.readline())
-                if 'error' in response:
-                    raise RuntimeError(response)
-                if 'return' in response:
-                    return response['return']
-        request('qmp_capabilities')
-        request('screendump',{'filename':str(a.output.resolve()/'screen.ppm')})
-        def touch(text):
-            node = next(n for n in ET.fromstring(report['ui_xml']).iter('node')
-                        if n.get('text','').casefold() == text.casefold())
-            x1,y1,x2,y2 = map(int,re.findall(r'\d+',node.get('bounds')))
-            request('input-send-event', {'events': [
-                {'type':'abs','data':{'axis':'x','value':int((x1+x2)/2*32767/360)}},
-                {'type':'abs','data':{'axis':'y','value':int((y1+y2)/2*32767/800)}},
-                {'type':'btn','data':{'button':'left','down':True}}]})
-            time.sleep(0.2)
-            request('input-send-event', {'events':[
-                {'type':'btn','data':{'button':'left','down':False}}]})
-        touch('Count touch')
-        time.sleep(5)
-        exchange('uiautomator dump /data/local/tmp/window.xml',timeout=a.ui_timeout)
-        report['ui_xml_after_touch'] = exchange('cat /data/local/tmp/window.xml')
-        report['usb_touch_confirmed'] = 'Touches: 1' in report['ui_xml_after_touch']
-        assert report['usb_touch_confirmed'], 'USB HID did not change the touch counter'
-        touch('Play tone')
-        time.sleep(10)
+            request('qmp_capabilities')
+            request('screendump',{'filename':str(a.output.resolve()/'screen.ppm')})
+            def touch(text):
+                node = next(n for n in ET.fromstring(report['ui_xml']).iter('node')
+                            if n.get('text','').casefold() == text.casefold())
+                x1,y1,x2,y2 = map(int,re.findall(r'\d+',node.get('bounds')))
+                request('input-send-event', {'events': [
+                    {'type':'abs','data':{'axis':'x','value':int((x1+x2)/2*32767/360)}},
+                    {'type':'abs','data':{'axis':'y','value':int((y1+y2)/2*32767/800)}},
+                    {'type':'btn','data':{'button':'left','down':True}}]})
+                time.sleep(0.2)
+                request('input-send-event', {'events':[
+                    {'type':'btn','data':{'button':'left','down':False}}]})
+            touch('Count touch')
+            time.sleep(5)
+            exchange('uiautomator dump /data/local/tmp/window.xml',timeout=a.ui_timeout)
+            report['ui_xml_after_touch'] = exchange('cat /data/local/tmp/window.xml')
+            report['usb_touch_confirmed'] = 'Touches: 1' in report['ui_xml_after_touch']
+            assert report['usb_touch_confirmed'], 'USB HID did not change the touch counter'
+            touch('Play tone')
+            time.sleep(10)
     report['dynamic_executable_mapping_guard_passed'] = True
     log('[NoJIT] Boot/install/resumed/USB touch checks passed; iPhone/Metal still require device validation')
 finally:

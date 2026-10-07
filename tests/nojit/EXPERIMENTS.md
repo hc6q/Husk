@@ -136,3 +136,15 @@ Bluetooth, solicita `svc bluetooth disable` no guest e exige bluetooth_on=0
 antes de clicar no seu Close app via USB. O Bluetooth do iPhone não é alterado.
 Capturas, decisão e estado do guest ficam no relatório. Isso não aprova a
 interface: XML atual e contador respondendo ainda são obrigatórios.
+
+
+O ensaio 37553534159 confirmou Bluetooth desativado no guest e fechou o
+diálogo por USB. O framebuffer então mostrou o fixture com contador zero,
+mas “System UI isn't responding” voltou e uiautomator terminou com SIGKILL
+(exit 137). Isso não prova OOM nem toque no fixture. A aprovação continua falsa.
+
+O próximo ensaio usa `--framebuffer-ui`: captura frames reais sem executar
+uiautomator, reconhece caption/contador/botões e recusa sobreposição de diálogo.
+O clique Count touch só ocorre com contador zero visível; só aprova ao capturar
+um novo frame com contador um. Mantém guarda, mapas, package retomado, prazo
+e orçamento de recuperação. Áudio e iPhone continuam fora dessa aprovação.
