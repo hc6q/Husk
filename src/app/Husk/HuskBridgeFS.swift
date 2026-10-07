@@ -1934,7 +1934,11 @@ final class AndroidHost: ObservableObject {
     /// Done from the bridge rather than the guest image because the bridge is
     /// already a shell and `settings` is a shell command -- the same call from
     /// init fails, which is why husk-provision.rc has never worked.
-    func quietAbsentHardware() async {
+    // GuestBridge.run is synchronous socket I/O. This method must leave the
+    // main actor while Android executes settings/pm/am; otherwise UIKit cannot
+    // deliver the document picker's Open action until every command finishes.
+    // It reads no AndroidHost UI state; readiness is published by the caller.
+    nonisolated func quietAbsentHardware() async {
         let off = [
             ("bluetooth", "settings put global bluetooth_on 0"),
             ("ble scan",  "settings put global ble_scan_always_enabled 0"),
