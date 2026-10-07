@@ -110,3 +110,12 @@ registradores voláteis. O patch do ensaio declara x16/x17, x18 apenas fora de
 Apple, x24/LR e SIMD para preservar a ABI e impedir operandos de memória em
 registradores destruídos. Isso altera o código estático compilado; não cria
 código executável em runtime. A correção ainda precisa passar pela execução.
+
+
+A divisão em 766 unidades C de funções/tabelas completas permitiu compilar
+os gadgets no runner ARM64 sem alterar suas instruções. A execução
+37537140549 falhou na ligação: o gerador fixava `bl _helper_*`, nomenclatura
+Mach-O, também em ELF Linux. O ajuste mantém `_` em Darwin e usa símbolos
+sem prefixo em Linux. O build anterior levou 18m42s e registrou RSS máximo
+de 976268 KiB; isso não demonstra execução Android. O workflow agora também
+usa `pipefail` para preservar a falha de ninja através de tee.

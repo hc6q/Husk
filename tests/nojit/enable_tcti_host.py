@@ -45,4 +45,18 @@ change('tcg/aarch64-tcti/tcg-target.c.inc', '"x25", "x26", "x27", "x28", "cc", "
         "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23",
         "v24", "v25", "v26", "v27", "v28", "v29", "v30", "v31",
         "cc", "memory"''')
+# The pinned generator hardcodes Mach-O's leading underscore. Generated
+# Linux/ELF branches must refer to the actual undecorated helper symbols.
+change('tcg/aarch64-tcti/tcti-gadget-gen.py', 'import itertools',
+       'import itertools\n\nHUSK_ASM_SYMBOL_PREFIX = "_" if sys.platform == "darwin" else ""')
+generator = root/'tcg/aarch64-tcti/tcti-gadget-gen.py'
+body = generator.read_text()
+old = 'f"bl _{slowpath_helper}"'
+new = 'f"bl {HUSK_ASM_SYMBOL_PREFIX}{slowpath_helper}"'
+if old in body:
+    assert body.count(old) == 2, 'Pinned load/store helper branch shape changed'
+    generator.write_text(body.replace(old, new))
+else:
+    assert body.count(new) == 2, 'Pinned helper prefix patch changed'
+
 print('[NoJIT] Isolated TCTI host experiment configured; allocator remains RW')

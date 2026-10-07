@@ -43,6 +43,7 @@ jobs:
           path: build/
       - name: Compile exact integrated ARM64 TCTI backend
         run: |
+          set -euo pipefail
           mkdir -p third_party/build build/logs
           curl -fL --retry 3 https://github.com/utmapp/qemu/releases/download/v10.0.12-utm/qemu-10.0.12-utm.tar.xz -o build/qemu.tar.xz
           tar -xf build/qemu.tar.xz -C third_party/build
