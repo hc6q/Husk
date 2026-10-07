@@ -334,9 +334,8 @@ try:
         assert 'package:com.android.bluetooth' in disabled, 'Guest Bluetooth package disable not confirmed'
         exchange('am force-stop --user 0 com.android.bluetooth',timeout=300)
         report['guest_bluetooth_package_disabled'] = True
-    if a.disable_guest_bluetooth_package:
-        # Global error-dialog dismissal can force-close unrelated ANR processes.
-        # Keep recovery scoped to the absent Bluetooth package.
+    # Global error-dialog dismissal can force-close unrelated ANR processes.
+    # Keep recovery scoped to the absent Bluetooth package.
     report['guest_optimized_profile_requested'] = a.optimized_guest
     before = exchange('wm size; wm density; settings get global window_animation_scale; settings get system show_touches', timeout=300)
     (a.output/'guest-rendering-before.txt').write_text(before)
