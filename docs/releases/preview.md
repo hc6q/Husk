@@ -4,11 +4,12 @@ Android APK launcher for iOS arm64, based on Husk and QEMU 10.0.12-utm TCI.
 This is an experimental test build, not a validated daily-use release.
 
 ## Changes
-- Reversible Android performance profile: 75% linear render size, animations and touch overlays disabled, original settings saved for restoration.
-- Bluetooth startup blocking now runs on the first responding guest shell, before waiting for boot completion. It verifies disabled-user state and checks that the primary Bluetooth process has stopped; snapshot restoration reapplies the block.
-- Settings → Performance allows restoring the previous Android rendering settings on the next guest start.
-- Independent No-JIT app version 0.8.2, build 25. The original JIT app version is unchanged.
-- Runtime performance and successful iPhone APK interaction remain unverified; this is a test profile, not a measured speedup.
+- Recover cached processes retained in a frozen state after snapshot restoration. Disabling the cached-app freezer alone did not thaw them in the Android 16 guest.
+- Recovery uses Android's supported `am unfreeze --sticky` command, then requires `use_freezer=false` and `Apps frozen: 0` before logging success. It runs once per readiness cycle and does not replay timed-out mutations.
+- Early Bluetooth package blocking and the reversible rendering profile remain included.
+- Independent No-JIT app version **0.8.3, build 26**. The original JIT app version is unchanged.
+- Successful physical iPhone APK interaction and a performance improvement remain unverified.
+- The real ARM64 Android recovery/UI test in run 37722375200 is still pending at publication. This preview makes the candidate available for testing; it does not certify that the SystemUI hang is resolved.
 
 ## Installation
 Download `Rottweiler.ipa`, sign it with your normal sideload tool and install it on an iOS arm64 device. The IPA is unsigned. No JIT helper, debugger, pairing, TrollStore or jailbreak is required by the No-JIT target.

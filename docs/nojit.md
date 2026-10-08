@@ -549,7 +549,7 @@ visible offline APK and USB counter checks. Performance gain and touch acceptanc
 remain pending until real reports support them.
 
 The independent No-JIT version is tracked in `config/nojit-version.json`:
-version 0.8.0, build 23. Future releases must increment both and use matching tags.
+version 0.8.3, build 26. Future releases must increment both and use matching tags.
 
 ### Runtime debugging follow-up (7 October 2026)
 
@@ -636,3 +636,49 @@ CachedAppOptimizer waiting for RCU while reading file locks; this is a candidate
 for isolation, not a proven deadlock or accepted fix. [Completed reports and
 limits](../tests/nojit/evidence/activitymanager-cpu-pressure/README.md).
 No new runtime tuning or IPA release is justified solely by this diagnostic.
+
+### Cached snapshot process recovery (0.8.3 / build 26)
+
+Run 37717382710 confirmed the global override became `use_freezer=false`,
+but the restored guest retained 30 frozen processes in single-thread TCI and
+24 in parallel TCI. Both controls stopped before APK installation; they did
+not pass interaction acceptance. Earlier run 37713905306 queried the wrong
+ActivityManager dump (`processes` instead of `cao`), so its assertion failure
+did not establish whether the override became effective.
+
+AOSP Android 16 CachedAppOptimizer changes mUseFreezer before calling
+enableFreezer(false); that method returns immediately when mUseFreezer is false.
+This explains why a settings-only override can leave restored processes frozen.
+The new bundled `nojit-thaw-cached.sh` applies the override, verifies its
+asynchronous effective state, reads only numeric PIDs from the frozen list,
+then invokes the supported `am unfreeze --sticky` path once per process.
+It verifies `use_freezer=false` and `Apps frozen: 0` after recovery. No cgroup,
+root, SELinux or immutable image edits are involved.
+
+The No-JIT readiness task runs recovery outside the main actor after the first
+responding shell. Snapshot restoration rewinds guest state, so each new
+readiness cycle applies recovery once; timed-out mutations are never replayed.
+Five controlled-command tests cover thawing, an empty snapshot, false success,
+a partial dump and invalid PID rejection. They do not certify real Android UI.
+
+Real Android run 37722375200 uses the same bundled script with the exact
+ARM64 TCI backend, continuous executable-memory guard, original snapshot,
+and visible software Java APK + USB counter 0→1 requirement. Results will be
+recorded after completion. No physical iPhone or audio acceptance is claimed.
+
+The iOS build in run 37723137466 succeeded at source commit
+`4a91f9f069f1c5eae486fbd857f6eeccf6966fa0`. Its audited IPA is arm64,
+Rottweiler 0.8.3 build 26, bundle `com.husk.nojit`, ExecutionMode TCI; the
+bundled thaw script matches the tested source byte for byte. Build evidence
+confirms CONFIG_TCG_INTERPRETER, excludes the threaded interpreter and native
+JIT substrate, and retains HUSK_NO_JIT=1 memory guards. The public memory
+entitlements and legal credits remain intact. This is a binary/build audit,
+not evidence of physical interaction.
+
+- Artifact ZIP SHA-256: `f6089250247d99e9d5e61f40e43b3f7e727c0a919e8497d2920a9f6eca757bdc`.
+- IPA SHA-256: `07fac54ea19d3c2e883f8937f65958a12b3236a8e39d8cdc21984cba35fe42b9` (42,125,440 bytes).
+
+A first candidate build (37722398230) failed because its Swift source transfer
+was truncated. The complete AndroidHost source was restored and its Git blob
+hash verified against the local file before the successful build. No failed
+candidate binary is shipped.

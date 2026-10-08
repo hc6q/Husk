@@ -27,7 +27,8 @@ jobs:
           assert run['conclusion']=='success' and run['head_sha']==config['source_sha']
           assert run['head_repository']['full_name']==os.environ['GH_REPO']
           comparison=json.loads(subprocess.check_output(['gh','api',f"repos/{os.environ['GH_REPO']}/compare/{config['source_sha']}...{os.environ['GITHUB_SHA']}"]))
-          allowed={'.github/workflows/nojit.yml','.github/workflows/publish-preview.yml','config/publish-preview.json'}
+          allowed={'.github/workflows/nojit.yml','.github/workflows/publish-preview.yml','config/publish-preview.json',
+                   'docs/releases/preview.md','docs/nojit.md'}
           assert all(f['filename'] in allowed for f in comparison['files']), 'Application source changed since the audited build'
           with open(os.environ['GITHUB_OUTPUT'],'a') as out:
               out.write(f"run={config['run_id']}\nsha={config['source_sha']}\n")
@@ -61,6 +62,7 @@ jobs:
               assert info['CFBundleIdentifier']=='com.husk.nojit' and info['HuskExecutionMode']=='TCI'
               assert 'Payload/Husk-NoJIT.app/nojit-performance.sh' in ipa.namelist()
               assert 'Payload/Husk-NoJIT.app/nojit-disable-bluetooth.sh' in ipa.namelist()
+              assert 'Payload/Husk-NoJIT.app/nojit-thaw-cached.sh' in ipa.namelist()
           PY
           version=$(python3 -c 'import json; print(json.load(open("config/nojit-version.json"))["version"])')
           sha256sum release-assets/Rottweiler.ipa release-assets/NoJITSmoke.apk > release-assets/SHA256SUMS.txt
