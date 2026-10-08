@@ -769,7 +769,8 @@ final class GuestBridge {
                 // shell going silent is an idle rule on the guest's side, and
                 // regular traffic is both the cheapest test of that theory and
                 // its cure. It is one `echo` on a connection we already hold.
-                Thread.sleep(forTimeInterval: 5)
+                // TCI needs fewer background shell/logcat round trips.
+                Thread.sleep(forTimeInterval: ExecutionMode.noJIT ? 30 : 5)
             }
         }
     }
@@ -919,34 +920,40 @@ final class AndroidHost: ObservableObject {
     /// Own imported files before the document picker's security scope expires.
     /// Preserve each split APK set as one transaction until Android is ready.
     private var pendingInstalls: [[URL]] = []
+    private var discoveredImportDirectories: Set<URL> = []
     private var pendingDirectory: URL {
         Self.support.appendingPathComponent("husk-pending-apks", isDirectory: true)
     }
 
     private func queueInstall(_ apks: [URL]) {
-        let directory = pendingDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
-        do {
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            var copies: [URL] = []
-            for (index, source) in apks.enumerated() {
-                let scoped = source.startAccessingSecurityScopedResource()
-                defer { if scoped { source.stopAccessingSecurityScopedResource() } }
-                let copy = directory.appendingPathComponent("\(index)-\(source.lastPathComponent)")
-                try FileManager.default.copyItem(at: source, to: copy)
-                copies.append(copy)
+        let root = pendingDirectory
+        say("Importing APK…", "Copying the selected files; Android can continue starting.")
+        Task.detached { [weak self] in
+            do {
+                // File providers and large APKs can block for seconds. Never
+                // copy on the main actor. Publish only a complete transaction.
+                let copies = try PendingAPKStage.copy(apks, into: root)
+                await MainActor.run {
+                    guard let self else { return }
+                    if let directory = copies.first?.deletingLastPathComponent(),
+                       self.discoveredImportDirectories.insert(directory).inserted {
+                        self.pendingInstalls.append(copies)
+                    }
+                    self.say("APK imported", "Installation starts when Android is ready.")
+                    NotificationCenter.default.post(name: .huskStartAndroid, object: nil)
+                    self.installNextPending()
+                }
+            } catch {
+                await MainActor.run {
+                    self?.say("Import failed", error.localizedDescription, good: false)
+                }
             }
-            pendingInstalls.append(copies)
-            say("APK imported", "Starting Android; installation waits for boot completion.")
-            NotificationCenter.default.post(name: .huskStartAndroid, object: nil)
-        } catch {
-            try? FileManager.default.removeItem(at: directory)
-            say("Import failed", error.localizedDescription, good: false)
         }
     }
 
     private func restorePendingImports() {
         let fm = FileManager.default
-        let known = Set(pendingInstalls.compactMap { $0.first?.deletingLastPathComponent() })
+        let known = discoveredImportDirectories
         guard let directories = try? fm.contentsOfDirectory(at: pendingDirectory,
                 includingPropertiesForKeys: [.isDirectoryKey], options: [.skipsHiddenFiles]) else { return }
         for directory in directories.sorted(by: { $0.lastPathComponent < $1.lastPathComponent }) {
@@ -956,7 +963,10 @@ final class AndroidHost: ObservableObject {
                         includingPropertiesForKeys: nil, options: [.skipsHiddenFiles]) else { continue }
             let apks = files.filter { $0.pathExtension.lowercased() == "apk" }
                 .sorted { $0.lastPathComponent < $1.lastPathComponent }
-            if !apks.isEmpty { pendingInstalls.append(apks) }
+            if !apks.isEmpty {
+                discoveredImportDirectories.insert(directory)
+                pendingInstalls.append(apks)
+            }
         }
         ExecutionMode.log("Recovered \(pendingInstalls.count) pending APK imports")
     }
@@ -995,6 +1005,7 @@ final class AndroidHost: ObservableObject {
             #if HUSK_NO_JIT
             var bluetoothAttempted = false
             var cachedThawAttempted = false
+            var performanceAttempted = false
             #endif
             while true {
                 attempt += 1
@@ -1009,13 +1020,15 @@ final class AndroidHost: ObservableObject {
                         HuskLog.log("bridge", "guest shell: "
                                   + who.trimmingCharacters(in: .whitespacesAndNewlines))
                         #if HUSK_NO_JIT
-                        if !cachedThawAttempted && who.contains("uid=") {
-                            cachedThawAttempted = true
-                            await self?.thawRestoredProcesses()
-                        }
                         if !bluetoothAttempted && who.contains("uid=") {
                             bluetoothAttempted = true
+                            await MainActor.run { self?.status = "Blocking unavailable Bluetooth…" }
                             await self?.blockAbsentBluetooth()
+                        }
+                        if !cachedThawAttempted && who.contains("uid=") {
+                            cachedThawAttempted = true
+                            await MainActor.run { self?.status = "Recovering Android processes…" }
+                            await self?.thawRestoredProcesses()
                         }
                         #endif
                     }
@@ -1038,17 +1051,38 @@ final class AndroidHost: ObservableObject {
                         // guest first answers is the moment to claim one.
                         GuestBridge.shared.holdConnection()
                         #if HUSK_NO_JIT
-                        if !cachedThawAttempted {
-                            cachedThawAttempted = true
-                            await self?.thawRestoredProcesses()
-                        }
                         if !bluetoothAttempted {
                             bluetoothAttempted = true
+                            await MainActor.run { self?.status = "Blocking unavailable Bluetooth…" }
                             await self?.blockAbsentBluetooth()
                         }
+                        if !cachedThawAttempted {
+                            cachedThawAttempted = true
+                            await MainActor.run { self?.status = "Recovering Android processes…" }
+                            await self?.thawRestoredProcesses()
+                        }
                         #endif
-                        await self?.quietAbsentHardware()
                         #if HUSK_NO_JIT
+                        if !performanceAttempted {
+                            performanceAttempted = true
+                            await MainActor.run { self?.status = "Preparing Android rendering…" }
+                            await self?.quietAbsentHardware()
+                        }
+                        #else
+                        await self?.quietAbsentHardware()
+                        #endif
+                        #if HUSK_NO_JIT
+                        // sys.boot_completed can survive a framework failure in
+                        // restored state. Require a live package service before
+                        // consuming an imported APK from the durable queue.
+                        await MainActor.run { self?.status = "Checking Android package service…" }
+                        let packageService = try GuestBridge.shared.run("pm path android", timeout: 120)
+                        guard packageService.status == 0,
+                              packageService.out.split(separator: "\n").contains(where: {
+                                  $0.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("package:/")
+                              }) else {
+                            throw BridgeError.io("Android package service is not ready")
+                        }
                         // Do not enable launches while initial guest settings
                         // still compete for the held shell connection.
                         await MainActor.run {

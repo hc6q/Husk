@@ -700,3 +700,25 @@ A first candidate build (37722398230) failed because its Swift source transfer
 was truncated. The complete AndroidHost source was restored and its Git blob
 hash verified against the local file before the successful build. No failed
 candidate binary is shipped.
+
+
+### Import responsiveness and startup ordering (0.8.4 / build 27)
+
+The completed single result in run 37722375200 thawed 31 processes and independently
+confirmed zero frozen processes. APK installation succeeded; ActivityManager later
+stopped answering and UI/USB acceptance failed. Recovery consumed roughly 13 minutes
+before Bluetooth blocking began. Artifact 11527068428 has ZIP SHA-256
+`6287d60646dbdd74a1090425b3f1b9e74764b43e50a9a5dcc70b23e75e6401e2`.
+
+The next build blocks Bluetooth first and displays each preparation phase. PackageManager
+must answer `pm path android` successfully before pending imports are consumed; the
+restored `sys.boot_completed` value alone cannot establish package-service readiness.
+Read-only probes may repeat, while preparation mutations remain one-shot per cycle.
+
+Pending imports previously copied file-provider data synchronously on the main actor.
+They now copy in a detached task to a hidden staging directory and commit the complete
+split set by same-filesystem rename. Recovery ignores incomplete hidden transactions.
+The Swift test exercises successful split copies, failed partial copies and preservation
+of originals. Background health polling is reduced from 5 to 30 seconds in No-JIT only.
+These are host responsiveness/ordering fixes, not a resolution of guest CPU pressure,
+watchdog restarts or a claim of physical UI, touch or audio acceptance.

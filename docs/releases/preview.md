@@ -4,12 +4,12 @@ Android APK launcher for iOS arm64, based on Husk and QEMU 10.0.12-utm TCI.
 This is an experimental test build, not a validated daily-use release.
 
 ## Changes
-- Recover cached processes retained in a frozen state after snapshot restoration. Disabling the cached-app freezer alone did not thaw them in the Android 16 guest.
-- Recovery uses Android's supported `am unfreeze --sticky` command, then requires `use_freezer=false` and `Apps frozen: 0` before logging success. It runs once per readiness cycle and does not replay timed-out mutations.
-- Early Bluetooth package blocking and the reversible rendering profile remain included.
-- Independent No-JIT app version **0.8.3, build 26**. The original JIT app version is unchanged.
-- Successful physical iPhone APK interaction and a performance improvement remain unverified.
-- Real ARM64 parallel-TCI test (run 37722375200): recovery changed **24 frozen processes to 0**, independently verified by ActivityManager. The offline Java APK installed and resumed, but its visible counter and USB touch acceptance **failed**. The Bluetooth error dialog remained over the app and later the framework restarted. Single-TCI results are still pending; this does not certify that the SystemUI hang is resolved.
+- Move pending APK file-provider copies off the iOS main actor. Commit complete split sets atomically; failed copies leave no installable partial transaction.
+- Block the unavailable Bluetooth package before slow cached-process recovery, with visible startup stages.
+- Require a responding PackageManager before releasing queued imports; a restored boot property alone is insufficient. Timed-out mutations are not replayed.
+- Reduce No-JIT background health polling from every 5 seconds to every 30 seconds; the original JIT mode is unchanged.
+- No-JIT version **0.8.4, build 27**. No measured speedup or successful physical APK interaction is claimed.
+- Previous exact-TCI controls recovered **31 frozen processes in single mode and 24 in multi mode**, and installed the offline APK. Both still failed visible UI/USB acceptance and later lost framework services. The remaining SystemUI/Android hang is not resolved.
 
 ## Installation
 Download `Rottweiler.ipa`, sign it with your normal sideload tool and install it on an iOS arm64 device. The IPA is unsigned. No JIT helper, debugger, pairing, TrollStore or jailbreak is required by the No-JIT target.

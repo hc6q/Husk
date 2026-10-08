@@ -36,14 +36,14 @@ Start with offline Java/Kotlin apps that do not require Google Play Services. He
 
 ## What changes in this fork?
 
-Rottweiler keeps Husk's Android VM, LineageOS v12 image, QCOW2 disks, APK bridge, display, USB input and audio infrastructure. The CPU executes QEMU TCI bytecode instead of dynamically generated native code.
+Rottweiler keeps Husk's Android VM, LineageOS image revision v12 (Android 16), QCOW2 disks, APK bridge, display, USB input and audio infrastructure. The CPU executes QEMU TCI bytecode instead of dynamically generated native code.
 
 | Component | Rottweiler No-JIT |
 | :--- | :--- |
 | CPU backend | Exact **UTM QEMU 10.0.12-utm**, standard TCG Interpreter / TCI |
 | Build selection | `HUSK_NO_JIT=1` |
 | Translation buffer | Read/write bytecode; no executable JIT buffer |
-| Android | Existing Husk LineageOS v12 image and snapshot infrastructure |
+| Android | Existing Husk LineageOS image revision v12 (Android 16) and snapshot infrastructure |
 | Graphics | Existing VM ANGLE/Metal path retained; software display available |
 | APK import | Existing guest bridge with framing, staging and readiness fixes |
 | App identity | **Rottweiler**, bundle identifier `com.husk.nojit` |
@@ -67,7 +67,7 @@ The repository is **`hc6q/Rottweiler`**. Rottweiler is the fork's user-facing na
 | Touch counter changing from 0 to 1 | **Not confirmed** |
 | Audio | **Not confirmed** |
 
-Bluetooth crash dialogs, System UI failures and slow guest responses still block acceptance. A fix moves Bluetooth shell commands off the iOS main actor to address the unresponsive import interface; it still needs build and physical validation.
+Bluetooth crash dialogs, System UI failures and slow guest responses still block acceptance. APK staging runs off the iOS main actor and commits complete split sets atomically. Bluetooth blocking precedes cached-process recovery. These host-side fixes do not certify a usable Android UI.
 
 “Android boot completed” after loading a snapshot proves restored guest readiness, not a successful cold boot. Low-performance guest settings and alternate backends remain separate experiments; failed trials are documented and are not silently included in the IPA.
 
