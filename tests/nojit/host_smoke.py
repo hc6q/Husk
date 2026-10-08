@@ -35,6 +35,7 @@ p.add_argument('--framebuffer-ui', action='store_true', help='Verify actual fram
 p.add_argument('--optimized-guest', action='store_true', help='Apply reversible 75% rendering and animation profile')
 p.add_argument('--quiet-guest-radio', action='store_true', help='Apply the app radio settings before APK installation')
 p.add_argument('--collect-guest-diagnostics', action='store_true')
+p.add_argument('--disable-cached-freezer', action='store_true')
 p.add_argument('--disable-guest-bluetooth-package', action='store_true',
                help='Experimental: disable only the Android Bluetooth package in this disposable guest')
 p.add_argument('--low-performance-guest', action='store_true',
@@ -320,6 +321,16 @@ try:
     log('[NoJIT] Android boot completed')
     assert f'[NoJIT] {a.backend} bytecode buffer RW' in (a.output/'qemu.log').read_text(), 'Expected interpreter backend not confirmed by allocator'
     audit_maps('boot')
+    if a.disable_cached_freezer:
+        # Never replay an ambiguous mutation after a timeout.
+        exchange('settings put global cached_apps_freezer disabled', timeout=180)
+        assert exchange('settings get global cached_apps_freezer', timeout=120).strip() == 'disabled'
+        freezer = exchange('dumpsys activity processes', timeout=180)
+        (a.output/'guest-freezer-after.txt').write_text(freezer)
+        assert re.search(r'^\s*use_freezer=false\s*$', freezer, re.M), 'Freezer disable not effective'
+        assert re.search(r'^\s*Apps frozen: 0\s*$', freezer, re.M), 'Snapshot retains frozen processes'
+        report['guest_cached_freezer_disabled'] = True
+        log('[NoJIT] Cached apps freezer disabled; no frozen processes')
     if a.quiet_guest_radio and not report.get('guest_radio_disabled_before_reboot'):
         log('[NoJIT] Disable absent guest radio before installation')
         exchange('settings put global bluetooth_on 0; settings put global ble_scan_always_enabled 0',timeout=180)
