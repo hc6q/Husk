@@ -722,3 +722,16 @@ The Swift test exercises successful split copies, failed partial copies and pres
 of originals. Background health polling is reduced from 5 to 30 seconds in No-JIT only.
 These are host responsiveness/ordering fixes, not a resolution of guest CPU pressure,
 watchdog restarts or a claim of physical UI, touch or audio acceptance.
+
+Build 37762010302 succeeded at `acf0b6f3677f0d9e2e3e4f1d2887d0073016f56f`.
+The new Swift staging test passed on macOS, as did fragmented bridge framing,
+16 Python target/guest-script checks and the two executable-memory guard tests.
+The downloaded artifact ZIP matched GitHub's digest, and its IPA passed ZIP,
+arm64, version/build, bundle identity, script byte-match and No-JIT bundle checks.
+Build evidence again confirms standard CONFIG_TCG_INTERPRETER, guarded TCI
+sources and exclusion of native JIT substrate. No new Android UI acceptance
+result or physical test is claimed for this build.
+
+- IPA: Rottweiler 0.8.4 build 27, 42,131,265 bytes.
+- IPA SHA-256: `291dc08ee41b1ed974e38b593df1299c42f91c800aa2ddeb5d69cdbe09b56bd6`.
+- Artifact ZIP SHA-256: `9b00a58c3dcb8682d6bb6ff8d235d8d70a1fa58e01047c4ca24b4e3c93cbf266`.

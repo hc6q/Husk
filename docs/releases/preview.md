@@ -32,10 +32,10 @@ Keep your existing Android data when upgrading; the bundle identifier remains `c
 - [ ] Confirm the Bluetooth crash dialog no longer blocks the Android UI.
 - [ ] Diagnose remaining Android service and SystemUI failures without changing the base image unnecessarily.
 - [ ] Validate GPU/Metal rendering, touch coordinates and audio on physical hardware.
-- [ ] Repeat backend and executable-memory audits on the release binary.
+- [x] Repeat static backend/bundle audits and executable-memory guard tests in CI. Runtime iPhone auditing remains pending.
 - [ ] Measure JIT versus No-JIT with the same image and workload.
 
 ## Validation and credits
-CI compilation and static target checks are required before publishing these assets. Successful compilation is not physical acceptance. See `docs/nojit.md` in the tagged source for evidence and limitations.
+Build 37762010302 passed iOS compilation, Swift import staging and bridge tests, target isolation and No-JIT backend/bundle audits. Successful compilation is not physical acceptance. See `docs/nojit.md` in the tagged source for evidence and limitations.
 
 Based on [Husk by Leviidev](https://github.com/Leviidev/Husk). Original credits and GPL-2.0-or-later obligations remain in the source and Settings menu. The original JIT target is preserved; this preview uses `HUSK_NO_JIT`.
