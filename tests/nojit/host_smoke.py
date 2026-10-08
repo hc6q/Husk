@@ -323,9 +323,11 @@ try:
     assert f'[NoJIT] {a.backend} bytecode buffer RW' in (a.output/'qemu.log').read_text(), 'Expected interpreter backend not confirmed by allocator'
     audit_maps('boot')
     if a.disable_cached_freezer:
-        # Never replay an ambiguous mutation after a timeout.
-        exchange('settings put global cached_apps_freezer disabled', timeout=180)
-        assert exchange('settings get global cached_apps_freezer', timeout=120).strip() == 'disabled'
+        # Run the same bundled recovery as iOS, once, never replay on timeout.
+        script = (Path(__file__).resolve().parents[2]/'src/app/Husk/Resources/nojit-thaw-cached.sh').read_text()
+        thaw = exchange('sh -c ' + shlex.quote(script), timeout=900)
+        assert 'Apps frozen: 0' in thaw, 'Thaw recovery not confirmed'
+        (a.output/'guest-thaw-result.txt').write_text(thaw)
         wait_disabled(exchange, lambda state: (a.output/'guest-freezer-after.txt').write_text(state))
         report['guest_cached_freezer_disabled'] = True
         log('[NoJIT] Cached apps freezer disabled; no frozen processes')

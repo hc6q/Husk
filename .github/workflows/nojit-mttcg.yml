@@ -22,6 +22,7 @@ jobs:
       - name: Build offline APK
         run: |
           python3 tests/nojit/test_freezer_state.py
+          python3 tests/nojit/test_cached_thaw.py
           python3 tests/nojit/test_boot_readiness.py
           python3 tests/nojit/test_guest_preboot.py
           python3 tests/nojit/test_guest_performance.py
