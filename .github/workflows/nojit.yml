@@ -156,5 +156,7 @@ jobs:
           RELEASE_REPO: ${{ github.repository }}
         run: |
           cp docs/releases/preview.md release-notes.md
-          printf '\nSource commit: `7460c80ecc8bae5b3a079b8f78af33882057b60b`\n' >> release-notes.md
-          gh release edit preview-7460c80 --repo "$RELEASE_REPO" --notes-file release-notes.md
+          version=$(python3 -c 'import json; print(json.load(open("config/nojit-version.json"))["version"])')
+          source=$(python3 -c 'import json; print(json.load(open("config/publish-preview.json"))["source_sha"])')
+          printf '\nSource commit: `%s`\n' "$source" >> release-notes.md
+          gh release edit "v${version}-preview" --repo "$RELEASE_REPO" --notes-file release-notes.md

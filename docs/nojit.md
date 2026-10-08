@@ -666,6 +666,24 @@ ARM64 TCI backend, continuous executable-memory guard, original snapshot,
 and visible software Java APK + USB counter 0→1 requirement. Results will be
 recorded after completion. No physical iPhone or audio acceptance is claimed.
 
+Completed parallel-TCI result: the shipped recovery thawed 24 processes and
+the independent `dumpsys activity cao` check confirmed `use_freezer=false` and
+`Apps frozen: 0`. The offline software Java APK installed and resumed. The
+framebuffer remained covered by the Bluetooth error dialog during three bounded
+USB close attempts, and the fixture never reached counter 0. USB 0→1 acceptance
+therefore failed. Later diagnostics lost the guest bridge, serial logs recorded
+zygote restart, and the final frame displayed the Lineage boot animation.
+Recovering frozen state is confirmed; resolving the remaining framework/UI
+failure or improving latency is not. Both boot and APK memory-map samples had
+zero W+X regions under the continuous executable-memory guard.
+
+Parallel evidence artifact: 11527705067, ZIP SHA-256
+`0dbf672e7833efa8c8c5394f78026216777a1ee6a4f595cc01957a1f8cf1b06f`.
+Boot readiness after snapshot restore: 19.4 seconds; primary test elapsed
+503.2 seconds, including diagnostics 1056.4 seconds. The single-TCI control
+was still running when this result was recorded. No iPhone measurement is
+derived from these Linux timings.
+
 The iOS build in run 37723137466 succeeded at source commit
 `4a91f9f069f1c5eae486fbd857f6eeccf6966fa0`. Its audited IPA is arm64,
 Rottweiler 0.8.3 build 26, bundle `com.husk.nojit`, ExecutionMode TCI; the

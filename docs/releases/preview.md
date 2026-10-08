@@ -9,7 +9,7 @@ This is an experimental test build, not a validated daily-use release.
 - Early Bluetooth package blocking and the reversible rendering profile remain included.
 - Independent No-JIT app version **0.8.3, build 26**. The original JIT app version is unchanged.
 - Successful physical iPhone APK interaction and a performance improvement remain unverified.
-- The real ARM64 Android recovery/UI test in run 37722375200 is still pending at publication. This preview makes the candidate available for testing; it does not certify that the SystemUI hang is resolved.
+- Real ARM64 parallel-TCI test (run 37722375200): recovery changed **24 frozen processes to 0**, independently verified by ActivityManager. The offline Java APK installed and resumed, but its visible counter and USB touch acceptance **failed**. The Bluetooth error dialog remained over the app and later the framework restarted. Single-TCI results are still pending; this does not certify that the SystemUI hang is resolved.
 
 ## Installation
 Download `Rottweiler.ipa`, sign it with your normal sideload tool and install it on an iOS arm64 device. The IPA is unsigned. No JIT helper, debugger, pairing, TrollStore or jailbreak is required by the No-JIT target.
